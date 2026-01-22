@@ -93,6 +93,18 @@ dependencies {
     implementation(libs.google.arcore)
     implementation(libs.google.sceneform)
 
+    // MediaPipe for face detection (used by L2CS-Net pipeline)
+    implementation(libs.mediapipe.tasks.vision)
+
+    // ONNX Runtime for L2CS-Net gaze estimation
+    implementation(libs.onnxruntime.android)
+
+    // CameraX for MediaPipe camera input
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
     // Kotlin Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)

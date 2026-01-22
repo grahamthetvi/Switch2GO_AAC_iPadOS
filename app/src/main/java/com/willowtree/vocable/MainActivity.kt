@@ -11,13 +11,18 @@ import androidx.lifecycle.lifecycleScope
 import com.willowtree.vocable.customviews.PointerListener
 import com.willowtree.vocable.customviews.PointerView
 import com.willowtree.vocable.databinding.ActivityMainBinding
+import com.willowtree.vocable.eyegazetracking.EyeGazeTrackingViewModel
 import com.willowtree.vocable.facetracking.FaceTrackingViewModel
+import com.willowtree.vocable.utils.EyeGazePointerUpdates
+import com.willowtree.vocable.utils.EyeGazeTrackingManager
 import com.willowtree.vocable.utils.FaceTrackingManager
 import com.willowtree.vocable.utils.FaceTrackingPointerUpdates
 import com.willowtree.vocable.utils.IVocableSharedPreferences
+import com.willowtree.vocable.utils.SelectionMode
 import com.willowtree.vocable.utils.VocableEnvironment
 import com.willowtree.vocable.utils.VocableEnvironmentType
 import com.willowtree.vocable.utils.VocableTextToSpeech
+import com.willowtree.vocable.utils.VocableSpeechRecognizer
 import io.github.inflationx.viewpump.ViewPump
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import kotlinx.coroutines.launch
@@ -34,33 +39,55 @@ class MainActivity : ScopeActivity() {
     private val allViews = mutableListOf<View>()
 
     private val faceTrackingManager: FaceTrackingManager by inject()
+    private val eyeGazeTrackingManager: EyeGazeTrackingManager by inject()
     private val environment: VocableEnvironment by inject()
 
     private lateinit var faceTrackingViewModel: FaceTrackingViewModel
+    private lateinit var eyeGazeTrackingViewModel: EyeGazeTrackingViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         faceTrackingViewModel = getViewModel()
+        eyeGazeTrackingViewModel = getViewModel()
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         if (environment.environmentType != VocableEnvironmentType.TESTING) {
             lifecycleScope.launch {
+                // Initialize head tracking (ARCore)
                 faceTrackingManager.initialize(
                     faceTrackingPointerUpdates = object : FaceTrackingPointerUpdates {
                         override fun toggleVisibility(visible: Boolean) {
-                            binding.pointerView.isVisible = visible
+                            // Only show pointer if head tracking is the active mode
+                            if (sharedPrefs.getSelectionMode() == SelectionMode.HEAD_TRACKING) {
+                                binding.pointerView.isVisible = visible
+                            }
                         }
                     })
             }
+
+            lifecycleScope.launch {
+                // Initialize eye gaze tracking (MediaPipe)
+                eyeGazeTrackingManager.initialize(
+                    eyeGazePointerUpdates = object : EyeGazePointerUpdates {
+                        override fun toggleVisibility(visible: Boolean) {
+                            // Only show pointer if eye gaze is the active mode
+                            if (sharedPrefs.getSelectionMode() == SelectionMode.EYE_GAZE) {
+                                binding.pointerView.isVisible = visible
+                            }
+                        }
+                    })
+            }
+
+            // Set display metrics for eye gaze ViewModel
+            eyeGazeTrackingViewModel.setDisplayMetrics(eyeGazeTrackingManager.displayMetrics)
         }
 
+        // Head tracking error handling
         faceTrackingViewModel.showError.observe(this) { showError ->
-            if (!sharedPrefs.getHeadTrackingEnabled()) {
-                getPointerView().isVisible = false
-                getErrorView().isVisible = false
+            if (!sharedPrefs.getHeadTrackingEnabled() || sharedPrefs.getSelectionMode() != SelectionMode.HEAD_TRACKING) {
                 return@observe
             }
             if (showError) {
@@ -70,15 +97,53 @@ class MainActivity : ScopeActivity() {
             getPointerView().isVisible = !showError
         }
 
+        // Eye gaze error handling
+        eyeGazeTrackingViewModel.showError.observe(this) { showError ->
+            if (!sharedPrefs.getEyeGazeEnabled() || sharedPrefs.getSelectionMode() != SelectionMode.EYE_GAZE) {
+                return@observe
+            }
+            if (showError) {
+                (currentView as? PointerListener)?.onPointerExit()
+            }
+            getErrorView().isVisible = showError
+            getPointerView().isVisible = !showError
+        }
 
+        // Eye gaze out-of-bounds handling (auto-hide cursor when looking far away)
+        eyeGazeTrackingViewModel.gazeInBounds.observe(this) { isInBounds ->
+            if (!sharedPrefs.getEyeGazeEnabled() || sharedPrefs.getSelectionMode() != SelectionMode.EYE_GAZE) {
+                return@observe
+            }
+            // Only handle visibility if there's no error already being shown
+            if (eyeGazeTrackingViewModel.showError.value != true) {
+                if (!isInBounds) {
+                    // Gaze is out of bounds - hide cursor and cancel any dwell
+                    (currentView as? PointerListener)?.onPointerExit()
+                    currentView = null
+                }
+                getPointerView().isVisible = isInBounds
+            }
+        }
+
+        // Head tracking pointer updates
         faceTrackingViewModel.pointerLocation.observe(this) {
-            updatePointer(it.x, it.y)
+            if (sharedPrefs.getSelectionMode() == SelectionMode.HEAD_TRACKING) {
+                updatePointer(it.x, it.y)
+            }
+        }
+
+        // Eye gaze pointer updates
+        eyeGazeTrackingViewModel.pointerLocation.observe(this) { (x, y) ->
+            if (sharedPrefs.getSelectionMode() == SelectionMode.EYE_GAZE) {
+                updatePointer(x, y)
+            }
         }
 
         supportActionBar?.hide()
         VocableTextToSpeech.initialize(this)
+        VocableSpeechRecognizer.initialize(this)
 
-        binding.mainNavHostFragment.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+        binding.mainNavHostFragment?.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             allViews.clear()
         }
     }
@@ -90,6 +155,7 @@ class MainActivity : ScopeActivity() {
     override fun onDestroy() {
         super.onDestroy()
         VocableTextToSpeech.shutdown()
+        VocableSpeechRecognizer.shutdown()
     }
 
     private fun getErrorView(): View = binding.errorView.root

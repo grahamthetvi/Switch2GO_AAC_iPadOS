@@ -8,7 +8,13 @@ class FakeVocableSharedPreferences(
     private var dwellTime: Long = 0,
     private var sensitivity: Float = 0f,
     private var headTrackingEnabled: Boolean = false,
-    private var firstTime: Boolean = false
+    private var firstTime: Boolean = false,
+    private var selectionMode: SelectionMode = SelectionMode.HEAD_TRACKING,
+    private var eyeGazeEnabled: Boolean = false,
+    private var gpuRenderingEnabled: Boolean = false,
+    private var eyeTrackingMode: String = "2D",
+    private var eyeSelection: String = "BOTH_EYES",
+    private var gazeAmplification: Float = 1.0f
 ) : IVocableSharedPreferences {
 
     override fun registerOnSharedPreferenceChangeListener(vararg listeners: SharedPreferences.OnSharedPreferenceChangeListener) {
@@ -57,5 +63,53 @@ class FakeVocableSharedPreferences(
 
     override fun getFirstTime(): Boolean {
         return firstTime
+    }
+
+    override fun getSelectionMode(): SelectionMode {
+        return selectionMode
+    }
+
+    override fun setSelectionMode(mode: SelectionMode) {
+        selectionMode = mode
+    }
+
+    override fun getEyeGazeEnabled(): Boolean {
+        return eyeGazeEnabled
+    }
+
+    override fun setEyeGazeEnabled(enabled: Boolean) {
+        eyeGazeEnabled = enabled
+    }
+
+    override fun getGpuRenderingEnabled(): Boolean {
+        return gpuRenderingEnabled
+    }
+
+    override fun setGpuRenderingEnabled(enabled: Boolean) {
+        gpuRenderingEnabled = enabled
+    }
+
+    override fun getEyeTrackingMode(): String {
+        return eyeTrackingMode
+    }
+
+    override fun setEyeTrackingMode(mode: String) {
+        eyeTrackingMode = mode
+    }
+
+    override fun getEyeSelection(): String {
+        return eyeSelection
+    }
+
+    override fun setEyeSelection(selection: String) {
+        eyeSelection = selection
+    }
+
+    override fun getGazeAmplification(): Float {
+        return gazeAmplification
+    }
+
+    override fun setGazeAmplification(amplification: Float) {
+        gazeAmplification = amplification
     }
 }

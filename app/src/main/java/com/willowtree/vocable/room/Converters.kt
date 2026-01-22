@@ -12,6 +12,11 @@ import org.koin.core.component.inject
 object Converters : KoinComponent {
 
     private val moshi: Moshi by inject()
+    
+    // PhraseStyle adapter for JSON serialization
+    private val phraseStyleAdapter: JsonAdapter<PhraseStyle> by lazy {
+        moshi.adapter(PhraseStyle::class.java)
+    }
 
     @TypeConverter
     @JvmStatic
@@ -49,6 +54,27 @@ object Converters : KoinComponent {
                 LocalesWithText(stringMap)
             }
 
+        }
+    }
+    
+    @TypeConverter
+    @JvmStatic
+    fun phraseStyleToJson(style: PhraseStyle?): String? {
+        return style?.let { phraseStyleAdapter.toJson(it) }
+    }
+    
+    @TypeConverter
+    @JvmStatic
+    fun jsonToPhraseStyle(json: String?): PhraseStyle? {
+        // Handle null, empty, or literal "null" string (from bad migration)
+        if (json.isNullOrBlank() || json == "null") {
+            return null
+        }
+        return try {
+            phraseStyleAdapter.fromJson(json)
+        } catch (e: Exception) {
+            // Return null if parsing fails
+            null
         }
     }
 }

@@ -3,6 +3,7 @@ package com.willowtree.vocable.presets
 import android.content.Context
 import android.os.Parcelable
 import com.willowtree.vocable.room.PhraseDto
+import com.willowtree.vocable.room.PhraseStyle
 import com.willowtree.vocable.room.PresetPhraseDto
 import com.willowtree.vocable.utils.locale.LocalesWithText
 import com.willowtree.vocable.utils.locale.text
@@ -12,8 +13,12 @@ sealed interface Phrase : Parcelable {
     val phraseId: String
     val sortOrder: Int
     val lastSpokenDate: Long?
+    val style: PhraseStyle?
 
     fun text(context: Context): String
+    
+    /** Returns the effective style, using defaults if not set */
+    fun effectiveStyle(): PhraseStyle = style ?: PhraseStyle.DEFAULT
 }
 
 @Parcelize
@@ -22,6 +27,7 @@ data class CustomPhrase(
     override val sortOrder: Int,
     val localizedUtterance: LocalesWithText?,
     override val lastSpokenDate: Long?,
+    override val style: PhraseStyle? = null,
 ) : Phrase, Parcelable {
 
     override fun text(context: Context): String {
@@ -36,6 +42,7 @@ data class PresetPhrase(
     override val lastSpokenDate: Long?,
     val deleted: Boolean,
     val parentCategoryId: String?,
+    override val style: PhraseStyle? = null,
 ) : Phrase {
 
     override fun text(context: Context): String {
@@ -54,6 +61,7 @@ fun PhraseDto.asPhrase(): Phrase =
         sortOrder = sortOrder,
         localizedUtterance = localizedUtterance,
         lastSpokenDate = lastSpokenDate,
+        style = style,
     )
 
 fun PresetPhraseDto.asPhrase(): PresetPhrase =
@@ -63,4 +71,5 @@ fun PresetPhraseDto.asPhrase(): PresetPhrase =
         lastSpokenDate = lastSpokenDate,
         parentCategoryId = parentCategoryId,
         deleted = deleted,
+        style = style,
     )

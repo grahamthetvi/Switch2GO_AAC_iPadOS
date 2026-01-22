@@ -5,219 +5,449 @@
     android:id="@+id/presets_parent"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:background="@color/colorPrimaryDark">
+    android:background="@color/cviBackground">
 
-    <TextView
-        android:id="@+id/current_text"
-        style="@style/SpokenTextView"
+    <!-- Ultra-compact top bar: minimal spoken text + tiny action buttons -->
+    <LinearLayout
+        android:id="@+id/top_bar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:ellipsize="end"
-        android:gravity="start|center_vertical"
-        android:lines="2"
-        android:text="@string/select_something"
-        app:layout_constrainedWidth="true"
-        app:layout_constraintBottom_toTopOf="@+id/action_button_container"
-        app:layout_constraintEnd_toStartOf="@+id/speaker_icon"
-        app:layout_constraintHorizontal_bias="0"
-        app:layout_constraintHorizontal_chainStyle="packed"
+        android:background="@color/cviSpokenTextBg"
+        android:gravity="center_vertical"
+        android:minHeight="32dp"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="4dp"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/current_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="start|center_vertical"
+            android:maxLines="1"
+            android:text="@string/select_something"
+            android:textColor="@color/cviTextOnSymbol"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/speaker_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="2dp"
+            android:src="@drawable/ic_speaker"
+            android:visibility="gone"
+            app:tint="@color/cviTextOnSymbol" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/microphone_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="4dp"
+            android:src="@drawable/ic_microphone"
+            android:visibility="gone"
+            app:tint="@color/colorAccent" />
+
+        <!-- Tiny action buttons -->
+        <com.willowtree.vocable.customviews.VocableImageButton
+            android:id="@+id/keyboard_button"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/button_compact_background"
+            android:padding="4dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/keyboard_action_button_icon" />
+
+        <com.willowtree.vocable.customviews.VocableImageButton
+            android:id="@+id/recenter_button"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/button_compact_background"
+            android:contentDescription="@string/recenter_cursor"
+            android:padding="4dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_recenter" />
+
+        <com.willowtree.vocable.customviews.VocableImageButton
+            android:id="@+id/choice_button"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/button_compact_background"
+        android:contentDescription="@string/choice_button_description"
+            android:padding="4dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_choice" />
+
+        <com.willowtree.vocable.customviews.VocableImageButton
+            android:id="@+id/settings_button"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:background="@drawable/button_compact_background"
+            android:padding="4dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/settings_action_button_icon" />
+    </LinearLayout>
+
+    <!-- Hidden action button container for compatibility -->
+    <include
+        android:id="@+id/action_button_container"
+        layout="@layout/presets_action_buttons"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/speaker_icon"
-        android:layout_width="wrap_content"
+    <!-- Minimal category strip -->
+    <HorizontalScrollView
+        android:id="@+id/category_scroll_view"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/speech_button_margin"
-        android:layout_marginEnd="@dimen/main_activity_side_margin"
-        android:src="@drawable/ic_speaker"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@+id/current_text"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:background="@color/cviSpokenTextBg"
+        android:paddingTop="0dp"
+        android:paddingBottom="2dp"
+        android:scrollbars="none"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_chainStyle="packed"
-        app:layout_constraintStart_toEndOf="@+id/current_text"
-        app:layout_constraintTop_toTopOf="@+id/current_text"
-        app:layout_goneMarginEnd="@dimen/main_activity_side_margin" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/top_bar">
 
+        <LinearLayout
+            android:id="@+id/category_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/category_view"
+                android:layout_width="match_parent"
+                android:layout_height="28dp" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Hidden category navigation buttons (compatibility) -->
     <com.willowtree.vocable.customviews.VocableImageButton
         android:id="@+id/category_back_button"
-        android:layout_width="@dimen/categories_paging_button_width"
-        android:layout_height="@dimen/categories_paging_button_height"
-        android:layout_marginStart="@dimen/main_activity_side_margin"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/category_button_background"
-        android:gravity="center"
-        android:scaleType="center"
-        android:src="@drawable/category_back_button_icon"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/action_button_container" />
-
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/category_view"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="@dimen/categories_side_margin"
-        android:layout_marginEnd="@dimen/categories_side_margin"
-        app:layout_constraintBottom_toBottomOf="@+id/category_back_button"
-        app:layout_constraintEnd_toStartOf="@+id/category_forward_button"
-        app:layout_constraintStart_toEndOf="@+id/category_back_button"
-        app:layout_constraintTop_toTopOf="@+id/category_back_button" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.willowtree.vocable.customviews.VocableImageButton
         android:id="@+id/category_forward_button"
-        android:layout_width="@dimen/categories_paging_button_width"
-        android:layout_height="@dimen/categories_paging_button_height"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="@dimen/main_activity_side_margin"
-        android:background="@drawable/category_button_background"
-        android:gravity="center"
-        android:scaleType="center"
-        android:src="@drawable/category_forward_button_icon"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/action_button_container" />
+        app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- CVI Symbol Grid - FULLY MAXIMIZED to fill all available space -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/symbol_grid"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="2dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="2dp"
+        android:layout_marginBottom="2dp"
+        app:layout_constraintBottom_toTopOf="@id/page_indicator"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/category_scroll_view">
+
+        <!-- Symbol 1 - Top Left -->
+        <com.willowtree.vocable.customviews.VocablePhraseButton
+            android:id="@+id/symbol_1"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="2dp"
+            android:background="@drawable/cvi_symbol_background_1"
+            android:gravity="center"
+            android:padding="4dp"
+            android:textColor="@color/cviTextOnSymbol"
+            android:textSize="48sp"
+            android:textStyle="bold"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="18sp"
+            android:autoSizeMaxTextSize="120sp"
+            app:layout_constraintBottom_toTopOf="@id/symbol_3"
+            app:layout_constraintEnd_toStartOf="@id/symbol_center"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Yes" />
+
+        <!-- Symbol 2 - Top Right -->
+        <com.willowtree.vocable.customviews.VocablePhraseButton
+            android:id="@+id/symbol_2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="2dp"
+            android:background="@drawable/cvi_symbol_background_2"
+            android:gravity="center"
+            android:padding="4dp"
+            android:textColor="@color/cviTextOnSymbol"
+            android:textSize="48sp"
+            android:textStyle="bold"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="18sp"
+            android:autoSizeMaxTextSize="120sp"
+            app:layout_constraintBottom_toTopOf="@id/symbol_4"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/symbol_center"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="No" />
+
+        <!-- Symbol Center - only visible when 5+ symbols -->
+        <com.willowtree.vocable.customviews.VocablePhraseButton
+            android:id="@+id/symbol_center"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="2dp"
+            android:background="@drawable/cvi_symbol_background_5"
+            android:gravity="center"
+            android:padding="4dp"
+            android:textColor="@color/cviTextOnSymbol"
+            android:textSize="48sp"
+            android:textStyle="bold"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="18sp"
+            android:autoSizeMaxTextSize="120sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/guideline_vertical_center"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right"
+            app:layout_constraintStart_toEndOf="@id/guideline_left"
+            app:layout_constraintTop_toBottomOf="@id/guideline_vertical_top"
+            tools:text="Maybe" />
+
+        <!-- Symbol 3 - Bottom Left -->
+        <com.willowtree.vocable.customviews.VocablePhraseButton
+            android:id="@+id/symbol_3"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="2dp"
+            android:background="@drawable/cvi_symbol_background_3"
+            android:gravity="center"
+            android:padding="4dp"
+            android:textColor="@color/cviTextOnSymbol"
+            android:textSize="48sp"
+            android:textStyle="bold"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="18sp"
+            android:autoSizeMaxTextSize="120sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/symbol_center"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/symbol_1"
+            tools:text="Help" />
+
+        <!-- Symbol 4 - Bottom Right -->
+        <com.willowtree.vocable.customviews.VocablePhraseButton
+            android:id="@+id/symbol_4"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="2dp"
+            android:background="@drawable/cvi_symbol_background_4"
+            android:gravity="center"
+            android:padding="4dp"
+            android:textColor="@color/cviTextOnSymbol"
+            android:textSize="48sp"
+            android:textStyle="bold"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="18sp"
+            android:autoSizeMaxTextSize="120sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/symbol_center"
+            app:layout_constraintTop_toBottomOf="@id/symbol_2"
+            tools:text="More" />
+
+        <!-- Guidelines for center symbol positioning -->
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_left"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.35" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_right"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.65" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_vertical_top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.35" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_vertical_center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.65" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- ViewPager2 for phrases (hidden, used for swipe handling) -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/phrases_view"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginStart="@dimen/main_activity_side_margin"
-        android:layout_marginTop="@dimen/main_activity_category_margin"
-        android:layout_marginEnd="@dimen/main_activity_side_margin"
-        android:layout_marginBottom="@dimen/phrases_margin"
-        app:layout_constraintBottom_toTopOf="@+id/phrases_back_button"
-        app:layout_constraintTop_toBottomOf="@+id/category_view" />
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
+    <!-- Page indicator at bottom - ultra minimal -->
+    <TextView
+        android:id="@+id/page_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="1dp"
+        android:gravity="center"
+        android:textColor="@color/textColor"
+        android:textSize="10sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Swipe" />
+
+    <!-- Hidden pagination buttons (kept for backwards compatibility) -->
+    <com.willowtree.vocable.customviews.VocableImageButton
+        android:id="@+id/phrases_back_button"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/phrases_page_number"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.willowtree.vocable.customviews.VocableImageButton
+        android:id="@+id/phrases_forward_button"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Empty states -->
     <TextView
         android:id="@+id/empty_categories_text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:text="@string/all_categories_hidden_text"
-        style="@style/CustomCategoryEmptyText"
-        app:layout_constraintVertical_chainStyle="packed"
-        app:layout_constraintWidth_percent=".75"
-        app:layout_constraintTop_toTopOf="parent"
+        android:textColor="@color/cviTextOnSymbol"
+        android:textSize="18sp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent=".75" />
 
     <TextView
         android:id="@+id/empty_phrases_text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:text="@string/custom_category_empty"
-        style="@style/CustomCategoryEmptyText"
-        app:layout_constraintVertical_chainStyle="packed"
-        app:layout_constraintWidth_percent=".75"
-        app:layout_constraintTop_toTopOf="@id/phrases_view"
+        android:textColor="@color/cviTextOnSymbol"
+        android:textSize="18sp"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/empty_add_phrase_button"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toTopOf="@id/symbol_grid"
+        app:layout_constraintWidth_percent=".75" />
 
+    <com.willowtree.vocable.customviews.NoSayTextButton
+        android:id="@+id/empty_add_phrase_button"
+        android:layout_width="0dp"
+        android:layout_height="64dp"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/button_default_background"
+        android:gravity="center"
+        android:text="@string/add_phrase"
+        android:textAllCaps="false"
+        android:textColor="@color/cviTextOnSymbol"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/symbol_grid"
+        app:layout_constraintEnd_toEndOf="@id/empty_phrases_text"
+        app:layout_constraintStart_toStartOf="@id/empty_phrases_text"
+        app:layout_constraintTop_toBottomOf="@id/empty_phrases_text"
+        app:layout_constraintWidth_percent="0.4" />
+
+    <!-- No recents states -->
     <ImageView
         android:id="@+id/clock_icon"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:src="@drawable/ic_clock"
-        android:visibility="invisible"
         android:layout_marginBottom="16dp"
+        android:src="@drawable/ic_clock"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/no_recents_title"
+        app:layout_constraintEnd_toEndOf="@id/no_recents_title"
         app:layout_constraintStart_toStartOf="@id/no_recents_title"
-        app:layout_constraintEnd_toEndOf="@id/no_recents_title" />
+        app:tint="@color/cviTextOnSymbol" />
 
     <TextView
         android:id="@+id/no_recents_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:text="@string/no_recent_phrases_title"
-        style="@style/CustomCategoryEmptyText"
-        app:layout_constraintVertical_chainStyle="packed"
-        app:layout_constraintWidth_percent=".75"
-        app:layout_constraintTop_toTopOf="@id/phrases_view"
+        android:textColor="@color/cviTextOnSymbol"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/no_recents_message"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toTopOf="@id/symbol_grid"
+        app:layout_constraintWidth_percent=".75" />
 
     <TextView
         android:id="@+id/no_recents_message"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@string/no_recent_phrases_message"
-        android:textSize="14sp"
-        style="@style/CustomCategoryEmptyText"
         android:layout_marginTop="16dp"
-        app:layout_constraintVertical_chainStyle="packed"
-        app:layout_constraintWidth_percent=".75"
-        app:layout_constraintTop_toBottomOf="@id/no_recents_title"
-        app:layout_constraintBottom_toBottomOf="@id/phrases_view"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-
-    <com.willowtree.vocable.customviews.NoSayTextButton
-        android:id="@+id/empty_add_phrase_button"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/custom_category_button_height"
-        android:background="@drawable/button_default_background"
-        android:text="@string/add_phrase"
-        style="@style/CustomCategoryEmptyButton"
-        android:visibility="visible"
-        app:layout_constraintWidth_percent="0.4"
-        app:layout_constraintTop_toBottomOf="@id/empty_phrases_text"
-        app:layout_constraintStart_toStartOf="@id/empty_phrases_text"
-        app:layout_constraintEnd_toEndOf="@id/empty_phrases_text"
-        app:layout_constraintBottom_toBottomOf="@id/phrases_view"/>
-
-    <com.willowtree.vocable.customviews.VocableImageButton
-        android:id="@+id/phrases_back_button"
-        android:layout_width="@dimen/phrases_paging_button_width"
-        android:layout_height="@dimen/phrases_paging_button_height"
-        android:layout_marginBottom="@dimen/phrases_paging_margin_bottom"
-        android:background="@drawable/button_default_background"
         android:gravity="center"
-        android:scaleType="center"
-        android:src="@drawable/phrases_back_button_icon"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@id/category_back_button" />
-
-    <TextView
-        android:id="@+id/phrases_page_number"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_marginStart="@dimen/phrases_page_number_margin"
-        android:layout_marginEnd="@dimen/phrases_page_number_margin"
-        android:layout_marginBottom="@dimen/phrases_paging_margin_bottom"
-        android:gravity="center"
-        android:textColor="@color/textColor"
-        android:textSize="@dimen/phrases_page_number_text_size"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/phrases_forward_button"
-        app:layout_constraintStart_toEndOf="@+id/phrases_back_button"
-        app:layout_constraintTop_toTopOf="@+id/phrases_back_button"
-        tools:text="Page 1 of 2" />
-
-    <include
-        android:id="@+id/action_button_container"
-        layout="@layout/presets_action_buttons"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/main_activity_side_margin"
-        android:layout_marginTop="@dimen/main_activity_side_margin"
-        android:layout_marginEnd="@dimen/main_activity_side_margin"
+        android:text="@string/no_recent_phrases_message"
+        android:textColor="@color/cviTextOnSymbol"
+        android:textSize="14sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/symbol_grid"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/current_text" />
-
-    <com.willowtree.vocable.customviews.VocableImageButton
-        android:id="@+id/phrases_forward_button"
-        android:layout_width="@dimen/phrases_paging_button_width"
-        android:layout_height="@dimen/phrases_paging_button_height"
-        android:layout_marginBottom="@dimen/phrases_paging_margin_bottom"
-        android:background="@drawable/button_default_background"
-        android:gravity="center"
-        android:scaleType="center"
-        android:src="@drawable/phrases_forward_button_icon"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@id/category_forward_button" />
+        app:layout_constraintTop_toBottomOf="@id/no_recents_title"
+        app:layout_constraintWidth_percent=".75" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

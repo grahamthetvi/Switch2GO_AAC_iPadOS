@@ -1,9 +1,11 @@
 package com.willowtree.vocable.presets
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.willowtree.vocable.ICategoriesUseCase
 import com.willowtree.vocable.IPhrasesUseCase
@@ -56,10 +58,28 @@ class PresetsViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), null)
     val selectedCategoryLiveData: LiveData<Category?> = selectedCategory.asLiveData()
 
-    val currentPhrases: LiveData<List<PhraseGridItem>> = selectedCategoryId
-        .filterNotNull()
-        .flatMapLatest { categoryId ->
-            phrasesUseCase.getPhrasesForCategoryFlow(categoryId).map { phrases ->
+    private val choicePhrases = MutableLiveData<List<PhraseGridItem>?>()
+    val isChoiceMode: LiveData<Boolean> = choicePhrases.map { it != null }
+
+    private val _currentPhrases = MutableLiveData<List<PhraseGridItem>>()
+    val currentPhrases: LiveData<List<PhraseGridItem>> = _currentPhrases
+
+    init {
+        // Initialize with default category phrases
+        viewModelScope.launch {
+            val initialCategory = categoriesUseCase.categories().first().first()
+            updateCurrentPhrasesForCategory(initialCategory.categoryId)
+        }
+    }
+
+    // Override onCleared to clean up observers if needed
+    override fun onCleared() {
+        super.onCleared()
+    }
+
+    private fun updateCurrentPhrasesForCategory(categoryId: String) {
+        viewModelScope.launch {
+            phrasesUseCase.getPhrasesForCategoryFlow(categoryId).collect { phrases ->
                 val phraseGridItems: List<PhraseGridItem> = phrases.run {
                     if (categoryId != PresetCategories.RECENTS.id) {
                         sortedBy { it.sortOrder }
@@ -68,19 +88,20 @@ class PresetsViewModel(
                     }
                 }.map {
                     PhraseGridItem.Phrase(
-                        it.phraseId,
-                        localizedResourceUtility.getTextFromPhrase(it)
+                        phraseId = it.phraseId,
+                        text = localizedResourceUtility.getTextFromPhrase(it),
+                        style = it.style
                     )
                 }
-                if (categoryId != PresetCategories.RECENTS.id && categoryId != PresetCategories.USER_KEYPAD.id && phrases.isNotEmpty()) {
+                val finalItems = if (categoryId != PresetCategories.RECENTS.id && categoryId != PresetCategories.USER_KEYPAD.id && phrases.isNotEmpty()) {
                     phraseGridItems + PhraseGridItem.AddPhrase
                 } else {
                     phraseGridItems
                 }
+                _currentPhrases.value = finalItems
             }
         }
-        .distinctUntilChanged()
-        .asLiveData()
+    }
 
     private val liveNavToAddPhrase = MutableLiveData<Boolean>()
     val navToAddPhrase: LiveData<Boolean> = liveNavToAddPhrase
@@ -97,6 +118,10 @@ class PresetsViewModel(
 
     fun onCategorySelected(categoryId: String) {
         selectedCategoryId.update { categoryId }
+        // Update phrases if not in choice mode
+        if (choicePhrases.value == null) {
+            updateCurrentPhrasesForCategory(categoryId)
+        }
     }
 
     fun addToRecents(phraseId: String) {
@@ -110,5 +135,31 @@ class PresetsViewModel(
     fun navToAddPhrase() {
         liveNavToAddPhrase.value = true
         liveNavToAddPhrase.value = false
+    }
+
+    fun showChoices(optionA: String, optionB: String) {
+        val choiceItems = listOf(
+            PhraseGridItem.Phrase(
+                phraseId = "choice_a",
+                text = optionA,
+                style = null
+            ),
+            PhraseGridItem.Phrase(
+                phraseId = "choice_b",
+                text = optionB,
+                style = null
+            )
+        )
+        choicePhrases.value = choiceItems
+        _currentPhrases.value = choiceItems
+    }
+
+    fun clearChoices() {
+        choicePhrases.value = null
+        // Restore normal phrases
+        val currentCategoryId = selectedCategoryId.value
+        if (currentCategoryId != null) {
+            updateCurrentPhrasesForCategory(currentCategoryId)
+        }
     }
 }

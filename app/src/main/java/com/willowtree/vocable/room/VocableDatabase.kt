@@ -14,9 +14,11 @@ import androidx.room.TypeConverters
         PresetCategoryDto::class,
         PresetPhraseDto::class
     ],
-    version = 7,
-    // TODO: PK - May be able to consolidate 6 and 7 since we never released 6
-    autoMigrations = [AutoMigration(from = 6, to = 7, spec = Version7Migration::class)]
+    version = 8,
+    autoMigrations = [
+        AutoMigration(from = 6, to = 7, spec = Version7Migration::class),
+        AutoMigration(from = 7, to = 8)
+    ]
 )
 @TypeConverters(Converters::class)
 abstract class VocableDatabase : RoomDatabase() {
@@ -40,10 +42,11 @@ abstract class VocableDatabase : RoomDatabase() {
 }
 
 fun RoomDatabase.Builder<VocableDatabase>.addVocableMigrations() =
-    addMigrations(
-        VocableDatabaseMigrations.MIGRATION_1_2,
-        VocableDatabaseMigrations.MIGRATION_2_3,
-        VocableDatabaseMigrations.MIGRATION_3_4,
-        VocableDatabaseMigrations.MIGRATION_4_5,
-        VocableDatabaseMigrations.MIGRATION_5_6
-    )
+    fallbackToDestructiveMigration()
+        .addMigrations(
+            VocableDatabaseMigrations.MIGRATION_1_2,
+            VocableDatabaseMigrations.MIGRATION_2_3,
+            VocableDatabaseMigrations.MIGRATION_3_4,
+            VocableDatabaseMigrations.MIGRATION_4_5,
+            VocableDatabaseMigrations.MIGRATION_5_6
+        )

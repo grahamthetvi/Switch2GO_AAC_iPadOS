@@ -134,17 +134,40 @@ class EditCategoriesListFragment : BaseFragment<FragmentEditCategoriesListBindin
         size: Int
     ) {
         with(editButtonBinding) {
-            individualEditCategoryButton.text = localizedResourceUtility.getTextFromCategory(category)
+            // Set category name with position for screen reader accessibility
+            val categoryName = localizedResourceUtility.getTextFromCategory(category)
+            individualEditCategoryButton.text = categoryName
+            individualEditCategoryButton.contentDescription = getString(
+                R.string.current_position,
+                overallIndex + 1,
+                size
+            ) + ", $categoryName"
 
-            moveCategoryUpButton.isEnabled = !category.hidden && overallIndex > 0
-            moveCategoryDownButton.isEnabled =
-                !category.hidden && overallIndex + 1 < size
+            // Enable/disable reorder buttons based on position
+            val canMoveUp = !category.hidden && overallIndex > 0
+            val canMoveDown = !category.hidden && overallIndex + 1 < size
+            
+            moveCategoryUpButton.isEnabled = canMoveUp
+            moveCategoryDownButton.isEnabled = canMoveDown
+            
+            moveCategoryUpButton.alpha = if (canMoveUp) 1.0f else 0.5f
+            moveCategoryDownButton.alpha = if (canMoveDown) 1.0f else 0.5f
+            
+            // Set accessible content descriptions
+            moveCategoryUpButton.contentDescription = getString(R.string.move_up) + 
+                if (!canMoveUp) " (disabled - already at top)" else ""
+            moveCategoryDownButton.contentDescription = getString(R.string.move_down) + 
+                if (!canMoveDown) " (disabled - already at bottom)" else ""
 
+            // Set actions for reorder buttons
             moveCategoryUpButton.action = {
                 editCategoriesViewModel.moveCategoryUp(category.categoryId)
+                // Announce the change for accessibility
+                root.announceForAccessibility("$categoryName moved up")
             }
             moveCategoryDownButton.action = {
                 editCategoriesViewModel.moveCategoryDown(category.categoryId)
+                root.announceForAccessibility("$categoryName moved down")
             }
 
             individualEditCategoryButton.action = {

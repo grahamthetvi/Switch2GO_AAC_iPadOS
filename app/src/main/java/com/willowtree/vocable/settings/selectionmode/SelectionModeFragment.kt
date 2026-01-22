@@ -26,7 +26,8 @@ class SelectionModeFragment : BaseFragment<FragmentSelectionModeBinding>() {
             findNavController().popBackStack()
         }
 
-        binding.selectionModeOptions.selectionModeSwitch.text = (getString(R.string.settings_head_tracking))
+        // Head Tracking switch
+        binding.selectionModeOptions.selectionModeSwitch.text = getString(R.string.settings_head_tracking)
 
         viewModel.headTrackingEnabled.observe(viewLifecycleOwner) {
             binding.selectionModeOptions.selectionModeSwitch.isChecked = it
@@ -37,6 +38,21 @@ class SelectionModeFragment : BaseFragment<FragmentSelectionModeBinding>() {
                 viewModel.requestHeadTracking()
             } else {
                 viewModel.disableHeadTracking()
+            }
+        }
+
+        // Eye Gaze switch
+        binding.selectionModeOptions.eyeGazeSwitch.text = getString(R.string.settings_eye_gaze)
+
+        viewModel.eyeGazeEnabled.observe(viewLifecycleOwner) {
+            binding.selectionModeOptions.eyeGazeSwitch.isChecked = it
+        }
+
+        binding.selectionModeOptions.eyeGazeSwitch.action = {
+            if (!binding.selectionModeOptions.eyeGazeSwitch.isChecked) {
+                viewModel.requestEyeGaze()
+            } else {
+                viewModel.disableEyeGaze()
             }
         }
     }

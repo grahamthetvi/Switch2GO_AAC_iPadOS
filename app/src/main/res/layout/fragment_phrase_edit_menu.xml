@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/parent_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:theme="@style/SettingsTheme">
+
+    <include layout="@layout/guidelines_settings" />
+
+    <com.willowtree.vocable.customviews.VocableImageButton
+        android:id="@+id/back_button"
+        style="@style/CloseButton"
+        android:layout_width="@dimen/settings_close_button_width"
+        android:layout_height="@dimen/settings_close_button_height"
+        android:layout_marginTop="@dimen/settings_close_button_top_margin"
+        android:scaleType="center"
+        android:src="@drawable/category_back_button_icon"
+        android:contentDescription="@string/navigate_back"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/title"
+        style="@style/ScalableSettingsTitle"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:paddingStart="@dimen/settings_title_padding_start"
+        android:paddingEnd="@dimen/settings_title_padding_end"
+        android:text="@string/phrase_edit_menu_title"
+        app:layout_constraintBottom_toBottomOf="@+id/back_button"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintStart_toEndOf="@+id/back_button"
+        app:layout_constraintTop_toTopOf="@+id/back_button" />
+
+    <!-- Phrase Preview -->
+    <com.willowtree.vocable.customviews.VocablePhraseButton
+        android:id="@+id/phrase_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/button_default_background"
+        android:gravity="center"
+        android:padding="16dp"
+        android:text=""
+        android:textColor="@color/textColor"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintTop_toBottomOf="@id/back_button" />
+
+    <!-- Position indicator for screen readers -->
+    <TextView
+        android:id="@+id/position_indicator"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:textColor="@color/colorAccent"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintTop_toBottomOf="@id/phrase_text" />
+
+    <!-- Actions container -->
+    <LinearLayout
+        android:id="@+id/actions_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintTop_toBottomOf="@id/position_indicator">
+
+        <!-- Edit Text Button -->
+        <com.willowtree.vocable.customviews.ActionButton
+            android:id="@+id/edit_text_button"
+            style="@style/SettingsButton"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="8dp"
+            android:layout_weight="1"
+            android:text="@string/edit_text" />
+
+        <!-- Edit Appearance Button -->
+        <com.willowtree.vocable.customviews.ActionButton
+            android:id="@+id/edit_style_button"
+            style="@style/SettingsButton"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="8dp"
+            android:layout_weight="1"
+            android:text="@string/edit_phrase_style" />
+
+        <!-- Reordering section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="8dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/move_up_button"
+                style="@style/SettingsButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:text="@string/move_up" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/move_down_button"
+                style="@style/SettingsButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:text="@string/move_down" />
+
+        </LinearLayout>
+
+        <!-- Move to specific position -->
+        <com.willowtree.vocable.customviews.ActionButton
+            android:id="@+id/move_to_position_button"
+            style="@style/SettingsButton"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="8dp"
+            android:layout_weight="1"
+            android:text="@string/move_to_position" />
+
+        <!-- Delete Button -->
+        <com.willowtree.vocable.customviews.ActionButton
+            android:id="@+id/delete_button"
+            style="@style/SettingsButton"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:text="@string/delete_phrase" />
+
+    </LinearLayout>
+
+    <!-- Position picker dialog -->
+    <include
+        android:id="@+id/position_picker_dialog"
+        layout="@layout/position_picker_dialog"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Delete confirmation dialog -->
+    <include
+        android:id="@+id/delete_confirmation"
+        layout="@layout/vocable_confirmation_dialog"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

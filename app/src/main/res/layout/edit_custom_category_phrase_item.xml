@@ -5,13 +5,15 @@
     android:layout_height="wrap_content"
     android:clickable="false">
 
+    <!-- Edit icon button - tapping opens the phrase edit menu -->
     <com.willowtree.vocable.customviews.VocableImageButton
         android:id="@+id/remove_category_button"
         style="@style/DeletePhraseButton"
         android:scaleType="center"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:src="@drawable/keyboard_delete_button_icon"
+        android:src="@drawable/ic_edit_24dp"
+        android:contentDescription="@string/edit_phrases"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
@@ -28,7 +30,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/remove_category_button"
         app:layout_constraintEnd_toEndOf="parent" />
-
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

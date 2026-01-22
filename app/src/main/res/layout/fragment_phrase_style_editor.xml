@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/parent_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/SettingsTheme"
+        android:paddingBottom="24dp">
+
+        <include layout="@layout/guidelines_settings" />
+
+        <com.willowtree.vocable.customviews.VocableImageButton
+            android:id="@+id/back_button"
+            style="@style/CloseButton"
+            android:layout_width="@dimen/settings_close_button_width"
+            android:layout_height="@dimen/settings_close_button_height"
+            android:layout_marginTop="@dimen/settings_close_button_top_margin"
+            android:scaleType="center"
+            android:src="@drawable/category_back_button_icon"
+        android:contentDescription="@string/navigate_back"
+            app:layout_constraintStart_toStartOf="@id/guideline_start"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/title"
+            style="@style/ScalableSettingsTitle"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:gravity="center"
+            android:paddingStart="@dimen/settings_title_padding_start"
+            android:paddingEnd="@dimen/settings_title_padding_end"
+            android:text="@string/phrase_style_title"
+            app:layout_constraintBottom_toBottomOf="@+id/back_button"
+            app:layout_constraintEnd_toEndOf="@id/guideline_end"
+            app:layout_constraintStart_toEndOf="@+id/back_button"
+            app:layout_constraintTop_toTopOf="@+id/back_button" />
+
+        <LinearLayout
+            android:id="@+id/content_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="@id/guideline_end"
+            app:layout_constraintStart_toStartOf="@id/guideline_start"
+            app:layout_constraintTop_toBottomOf="@id/back_button">
+
+            <!-- Preview Section -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/style_preview"
+                android:textColor="@color/textColor"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <com.willowtree.vocable.customviews.VocablePhraseButton
+                android:id="@+id/preview_button"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/button_default_background"
+                android:gravity="center"
+                android:text="Sample Text"
+                android:textColor="@color/textColor"
+                android:textSize="18sp" />
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="16dp"
+                android:background="@color/textColorDisabled" />
+
+            <!-- Background Color -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/background_color"
+                android:textColor="@color/textColor"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/background_color_button"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/select_color" />
+
+            <!-- Text Color -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/text_color"
+                android:textColor="@color/textColor"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/text_color_button"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/select_color" />
+
+            <!-- Text Size -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/text_size"
+                android:textColor="@color/textColor"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/text_size_button"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/select_size" />
+
+            <!-- Bold Toggle -->
+            <com.willowtree.vocable.customviews.VocableSwitch
+                android:id="@+id/bold_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Border Color -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/border_color"
+                android:textColor="@color/textColor"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/border_color_button"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="24dp"
+                android:text="@string/select_color" />
+
+            <!-- Reset Button -->
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/reset_style_button"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="@string/reset_style" />
+
+        </LinearLayout>
+
+        <!-- Color picker dialog container -->
+        <include
+            android:id="@+id/color_picker_dialog"
+            layout="@layout/color_picker_dialog"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Size picker dialog -->
+        <include
+            android:id="@+id/size_picker_dialog"
+            layout="@layout/size_picker_dialog"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>
+

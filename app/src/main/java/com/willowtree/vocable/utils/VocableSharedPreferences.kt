@@ -24,6 +24,35 @@ class VocableSharedPreferences :
         const val KEY_DWELL_TIME = "KEY_DWELL_TIME"
         const val DEFAULT_DWELL_TIME = SensitivityFragment.DWELL_TIME_ONE_SECOND
         const val KEY_FIRST_TIME = "KEY_FIRST_TIME_OPENING"
+        const val KEY_SELECTION_MODE = "KEY_SELECTION_MODE"
+        const val KEY_EYE_GAZE_ENABLED = "KEY_EYE_GAZE_ENABLED"
+        const val KEY_GPU_RENDERING_ENABLED = "KEY_GPU_RENDERING_ENABLED"
+        const val KEY_EYE_TRACKING_MODE = "KEY_EYE_TRACKING_MODE"
+        const val EYE_TRACKING_MODE_2D = "2D"
+        const val EYE_TRACKING_MODE_3D = "3D"
+        const val KEY_EYE_SELECTION = "KEY_EYE_SELECTION"
+        const val EYE_SELECTION_BOTH = "BOTH_EYES"
+        const val EYE_SELECTION_LEFT = "LEFT_EYE_ONLY"
+        const val EYE_SELECTION_RIGHT = "RIGHT_EYE_ONLY"
+
+        // CVI Display settings
+        const val KEY_SYMBOL_COUNT = "KEY_SYMBOL_COUNT"
+        const val DEFAULT_SYMBOL_COUNT = 2
+        const val MIN_SYMBOL_COUNT = 2
+        const val MAX_SYMBOL_COUNT = 9
+
+        // Symbol colors - stored as hex color integers
+        const val KEY_SYMBOL_COLOR_PREFIX = "KEY_SYMBOL_COLOR_"
+
+        // Gaze amplification
+        const val KEY_GAZE_AMPLIFICATION = "KEY_GAZE_AMPLIFICATION"
+        const val DEFAULT_GAZE_AMPLIFICATION = 1.0f
+
+        // Choice mode settings
+        const val KEY_CHOICE_MODE_ENABLED = "KEY_CHOICE_MODE_ENABLED"
+        const val DEFAULT_CHOICE_MODE_ENABLED = true
+        const val KEY_CHOICE_VISUAL_FEEDBACK_ENABLED = "KEY_CHOICE_VISUAL_FEEDBACK_ENABLED"
+        const val DEFAULT_CHOICE_VISUAL_FEEDBACK_ENABLED = true
     }
 
     private val encryptedPrefs: SharedPreferences by lazy {
@@ -85,6 +114,107 @@ class VocableSharedPreferences :
 
     override fun getFirstTime(): Boolean =
         encryptedPrefs.getBoolean(KEY_FIRST_TIME, true)
+
+    override fun getSelectionMode(): SelectionMode =
+        SelectionMode.fromString(encryptedPrefs.getString(KEY_SELECTION_MODE, null))
+
+    override fun setSelectionMode(mode: SelectionMode) {
+        encryptedPrefs.edit().putString(KEY_SELECTION_MODE, mode.name).apply()
+    }
+
+    override fun getEyeGazeEnabled(): Boolean =
+        encryptedPrefs.getBoolean(KEY_EYE_GAZE_ENABLED, false)
+
+    override fun setEyeGazeEnabled(enabled: Boolean) {
+        encryptedPrefs.edit().putBoolean(KEY_EYE_GAZE_ENABLED, enabled).apply()
+    }
+
+    override fun getGpuRenderingEnabled(): Boolean =
+        encryptedPrefs.getBoolean(KEY_GPU_RENDERING_ENABLED, false)
+
+    override fun setGpuRenderingEnabled(enabled: Boolean) {
+        encryptedPrefs.edit().putBoolean(KEY_GPU_RENDERING_ENABLED, enabled).apply()
+    }
+
+    override fun getEyeTrackingMode(): String =
+        encryptedPrefs.getString(KEY_EYE_TRACKING_MODE, EYE_TRACKING_MODE_2D) ?: EYE_TRACKING_MODE_2D
+
+    override fun setEyeTrackingMode(mode: String) {
+        encryptedPrefs.edit().putString(KEY_EYE_TRACKING_MODE, mode).apply()
+    }
+
+    override fun getEyeSelection(): String =
+        encryptedPrefs.getString(KEY_EYE_SELECTION, EYE_SELECTION_BOTH) ?: EYE_SELECTION_BOTH
+
+    override fun setEyeSelection(selection: String) {
+        encryptedPrefs.edit().putString(KEY_EYE_SELECTION, selection).apply()
+    }
+
+    override fun getGazeAmplification(): Float =
+        encryptedPrefs.getFloat(KEY_GAZE_AMPLIFICATION, DEFAULT_GAZE_AMPLIFICATION)
+
+    override fun setGazeAmplification(amplification: Float) {
+        encryptedPrefs.edit().putFloat(KEY_GAZE_AMPLIFICATION, amplification).apply()
+    }
+
+    fun getSymbolCount(): Int =
+        encryptedPrefs.getInt(KEY_SYMBOL_COUNT, DEFAULT_SYMBOL_COUNT).coerceIn(MIN_SYMBOL_COUNT, MAX_SYMBOL_COUNT)
+
+    fun setSymbolCount(count: Int) {
+        encryptedPrefs.edit().putInt(KEY_SYMBOL_COUNT, count.coerceIn(MIN_SYMBOL_COUNT, MAX_SYMBOL_COUNT)).apply()
+    }
+
+    /**
+     * Gets the color for a specific symbol position (1-9).
+     * Returns null if no custom color is set (use default).
+     */
+    fun getSymbolColor(position: Int): Int? {
+        val key = KEY_SYMBOL_COLOR_PREFIX + position
+        return if (encryptedPrefs.contains(key)) {
+            encryptedPrefs.getInt(key, 0)
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Sets the color for a specific symbol position (1-9).
+     * Pass null to reset to default color.
+     */
+    fun setSymbolColor(position: Int, color: Int?) {
+        val key = KEY_SYMBOL_COLOR_PREFIX + position
+        if (color != null) {
+            encryptedPrefs.edit().putInt(key, color).apply()
+        } else {
+            encryptedPrefs.edit().remove(key).apply()
+        }
+    }
+
+    /**
+     * Gets all symbol colors as a map of position to color.
+     * Only includes positions with custom colors set.
+     */
+    fun getAllSymbolColors(): Map<Int, Int> {
+        val colors = mutableMapOf<Int, Int>()
+        for (i in 1..MAX_SYMBOL_COUNT) {
+            getSymbolColor(i)?.let { colors[i] = it }
+        }
+        return colors
+    }
+
+    fun getChoiceModeEnabled(): Boolean =
+        encryptedPrefs.getBoolean(KEY_CHOICE_MODE_ENABLED, DEFAULT_CHOICE_MODE_ENABLED)
+
+    fun setChoiceModeEnabled(enabled: Boolean) {
+        encryptedPrefs.edit().putBoolean(KEY_CHOICE_MODE_ENABLED, enabled).apply()
+    }
+
+    fun getChoiceVisualFeedbackEnabled(): Boolean =
+        encryptedPrefs.getBoolean(KEY_CHOICE_VISUAL_FEEDBACK_ENABLED, DEFAULT_CHOICE_VISUAL_FEEDBACK_ENABLED)
+
+    fun setChoiceVisualFeedbackEnabled(enabled: Boolean) {
+        encryptedPrefs.edit().putBoolean(KEY_CHOICE_VISUAL_FEEDBACK_ENABLED, enabled).apply()
+    }
 
     @SuppressLint("ApplySharedPref")
     fun clearAll() {

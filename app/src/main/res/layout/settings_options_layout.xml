@@ -6,11 +6,11 @@
     android:rowCount="@integer/settings_options_rows">
 
     <com.willowtree.vocable.customviews.NoSayTextButton
-        android:id="@+id/edit_categories_button"
+        android:id="@+id/categories_display_button"
         style="@style/SettingsOptionButtons"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:text="@string/edit_categories_title" />
+        android:text="@string/settings_categories_display" />
 
     <com.willowtree.vocable.customviews.NoSayTextButton
         android:id="@+id/timing_sensitivity_button"
@@ -33,5 +33,19 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:text="@string/settings_selection_mode" />
-  
+
+    <com.willowtree.vocable.customviews.NoSayTextButton
+        android:id="@+id/advanced_eye_tracking_button"
+        style="@style/SettingsOptionButtons"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:text="@string/advanced_eye_tracking_title" />
+
+    <com.willowtree.vocable.customviews.NoSayTextButton
+        android:id="@+id/choice_settings_button"
+        style="@style/SettingsOptionButtons"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:text="@string/choice_settings_title" />
+
 </GridLayout>

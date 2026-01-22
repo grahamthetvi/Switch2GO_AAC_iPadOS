@@ -16,4 +16,5 @@ data class PhraseDto(
     @ColumnInfo(name = "last_spoken_date") val lastSpokenDate: Long?,
     @ColumnInfo(name = "localized_utterance") val localizedUtterance: LocalesWithText?,
     @ColumnInfo(name = "sort_order") val sortOrder: Int,
+    @ColumnInfo(name = "style", defaultValue = "NULL") val style: PhraseStyle? = null,
 ) : Parcelable

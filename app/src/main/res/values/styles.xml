@@ -61,6 +61,24 @@
         <item name="android:stateListAnimator">@null</item>
     </style>
 
+    <!-- Compact category theme for CVI layouts - smaller text, minimal padding -->
+    <style name="CategoryThemeCompact" parent="VocableButton">
+        <item name="android:background">@drawable/category_button_compact_background</item>
+        <item name="autoSizeMaxTextSize">12sp</item>
+        <item name="autoSizeMinTextSize">8sp</item>
+        <item name="android:textColor">@color/category_button_text_colors</item>
+        <item name="android:gravity">center</item>
+        <item name="android:button">@android:color/transparent</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingBottom">2dp</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
     <style name="PauseButton" parent="ScalableText">
         <item name="android:layout_marginStart">@dimen/pause_button_margin</item>
         <item name="android:layout_marginTop">@dimen/pause_button_margin</item>

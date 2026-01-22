@@ -26,28 +26,28 @@
         app:layout_constraintEnd_toEndOf="@id/category_container"
         app:layout_constraintTop_toTopOf="parent"/>
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.willowtree.vocable.customviews.ActionButton
         android:id="@+id/move_category_up_button"
+        style="@style/SettingsButton"
         android:layout_width="@dimen/settings_edit_individual_category_arrow_width"
         android:layout_height="@dimen/settings_edit_individual_category_arrow_height"
         android:layout_marginTop="@dimen/settings_edit_individual_category_arrow_top"
-        android:padding="@dimen/settings_edit_individual_category_arrow_padding"
-        android:scaleType="centerInside"
-        android:background="@drawable/button_default_background"
-        android:src="@drawable/ic_up_arrow"
+        android:text="@string/move_up"
+        android:textSize="10sp"
+        android:contentDescription="@string/move_up"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.willowtree.vocable.customviews.ActionButton
         android:id="@+id/move_category_down_button"
+        style="@style/SettingsButton"
         android:layout_width="@dimen/settings_edit_individual_category_arrow_width"
         android:layout_height="@dimen/settings_edit_individual_category_arrow_height"
         android:layout_marginTop="@dimen/settings_edit_individual_category_arrow_top"
         android:layout_marginStart="@dimen/settings_edit_individual_category_arrow_top"
-        android:background="@drawable/button_default_background"
-        android:src="@drawable/ic_down_arrow"
-        android:padding="@dimen/settings_edit_individual_category_arrow_padding"
-        android:scaleType="centerInside"
+        android:text="@string/move_down"
+        android:textSize="10sp"
+        android:contentDescription="@string/move_down"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toEndOf="@id/move_category_up_button" />
 

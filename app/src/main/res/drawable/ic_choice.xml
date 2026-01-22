@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Choice icon - two arrows pointing in opposite directions -->
+
+    <!-- Left arrow -->
+    <path
+        android:pathData="M15,18l-6,-6 6,-6v4h8v4h-8v4z"
+        android:fillColor="#FFFFFF"/>
+
+    <!-- Right arrow -->
+    <path
+        android:pathData="M9,6l6,6 -6,6v-4H1v-4h8V6z"
+        android:fillColor="#FFFFFF"/>
+</vector>

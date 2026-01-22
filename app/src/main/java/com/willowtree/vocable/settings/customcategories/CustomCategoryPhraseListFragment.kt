@@ -36,17 +36,21 @@ class CustomCategoryPhraseListFragment : BaseFragment<FragmentCustomCategoryPhra
     private lateinit var category: Category
 
     private val onPhraseEdit = { phrase: Phrase ->
+        // Navigate to the new phrase edit menu which provides accessible reordering
+        // and style editing options
         val action =
-            EditCategoryPhrasesFragmentDirections.actionEditCategoryPhrasesFragmentToEditPhrasesKeyboardFragment(
-                phrase
+            EditCategoryPhrasesFragmentDirections.actionEditCategoryPhrasesFragmentToPhraseEditMenuFragment(
+                phrase,
+                category
             )
         if (findNavController().currentDestination?.id == R.id.editCategoryPhrasesFragment) {
             findNavController().navigate(action)
         }
     }
 
-    private val onPhraseDelete = { phrase: Phrase ->
-        showDeletePhraseDialog(phrase)
+    // Delete is now handled in the phrase edit menu
+    private val onPhraseDelete = { _: Phrase ->
+        // No-op - delete is now in the PhraseEditMenuFragment
     }
 
     override val bindingInflater: BindingInflater<FragmentCustomCategoryPhraseListBinding> =
@@ -74,36 +78,6 @@ class CustomCategoryPhraseListFragment : BaseFragment<FragmentCustomCategoryPhra
                 )
             }
         }
-    }
-
-    private fun showDeletePhraseDialog(phrase: Phrase) {
-
-        with(binding.deleteConfirmation) {
-            dialogTitle.setText(R.string.are_you_sure)
-
-            dialogMessage.setText(R.string.delete_warning)
-
-            with(dialogPositiveButton) {
-                setText(R.string.delete)
-                action = {
-                    viewModel.deletePhraseFromCategory(phrase)
-                    toggleDialogVisibility(false)
-                }
-            }
-
-            with(dialogNegativeButton) {
-                setText(R.string.settings_dialog_cancel)
-                action = {
-                    toggleDialogVisibility(false)
-                }
-            }
-        }
-
-        toggleDialogVisibility(true)
-    }
-
-    private fun toggleDialogVisibility(visible: Boolean) {
-        binding.deleteConfirmation.root.isVisible = visible
     }
 
     override fun getAllViews(): List<View> = emptyList()

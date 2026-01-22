@@ -4,7 +4,7 @@
 
     <!-- Presets -->
     <string name="select_something">Select something below to speak.</string>
-    <string name="phrases_page_number">Page %1d of %2d</string>
+    <string name="phrases_page_number">Page %1$d of %2$d</string>
     <string name="my_sayings_empty"><b>Your sayings will appear\nhere.</b>\n\nNavigate to the keyboard, type something\n then select the \"☆\" to save it here.</string>
     <string name="my_sayings_empty_handset_port"><b>Your sayings will appear\nhere.</b>\n\nNavigate to the keyboard, type something then select the \"☆\" to save it here.</string>
     <string name="my_sayings_empty_handset_land"><b>Your sayings will appear here.</b>\n\nNavigate to the keyboard, type something\n then select the \"☆\" to save it here.</string>
@@ -13,10 +13,23 @@
 
     <!-- Settings Page -->
     <string name="settings">Settings</string>
+    <string name="settings_categories_display">Categories, Phrases &amp; Display</string>
+    <string name="settings_categories_display_title">Categories, Phrases, and Display</string>
+    <string name="settings_categories_display_summary">Manage categories and phrases and set how many symbols show per page.</string>
+    <string name="settings_categories_section_title">Categories and Phrases</string>
+    <string name="settings_categories_section_description">Add, rename, reorder, hide, and organize categories and phrases.</string>
+    <string name="settings_open_categories_phrases">Open Categories and Phrases</string>
+    <string name="settings_display_section_title">Display</string>
+    <string name="settings_display_section_description">Adjust how many symbols appear on each page.</string>
+    <string name="settings_open_display_settings">Open Display Settings</string>
+    <string name="navigate_back">Navigate back</string>
+    <string name="previous_page">Previous page</string>
+    <string name="next_page">Next page</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="contact_developers">Contact Developers</string>
     <string name="version" translatable="false">V %s</string>
     <string name="settings_head_tracking">Head Tracking</string>
+    <string name="settings_eye_gaze">Eye Gaze</string>
     <string name="settings_dialog_title">Leaving the app</string>
     <string name="settings_dialog_message">You\'re about to be taken outside the app. You may lose head tracking control.</string>
     <string name="settings_dialog_continue">Continue</string>
@@ -30,6 +43,85 @@
 
     <!-- Selection Mode -->
     <string name="selection_mode_title">Selection Mode</string>
+
+    <!-- Advanced Eye Tracking -->
+    <string name="advanced_eye_tracking_title">Advanced Eye Tracking</string>
+    <string name="advanced_eye_tracking_restart_notice">Some changes may require app restart to take effect.</string>
+    <string name="gpu_rendering_label">GPU Rendering</string>
+
+    <!-- CVI Display Settings -->
+    <string name="cvi_display_settings_title">Display Settings</string>
+    <string name="decrease_symbol_count">Decrease symbols per page</string>
+    <string name="increase_symbol_count">Increase symbols per page</string>
+    <string name="symbol_color_button_description">Change color for position %1$d</string>
+    <string name="color_option_description">Color option: %1$s</string>
+    <string name="symbol_count_label">Symbols Per Page</string>
+    <string name="symbol_count_description">Adjust how many symbols appear on the main communication screen. Start with fewer symbols for easier visual processing.</string>
+    <string name="symbol_count_preview">Preview your layout on the main screen</string>
+    <string name="layout_description_2">2 symbols: Top left and top right corners</string>
+    <string name="layout_description_3">3 symbols: Two top corners + bottom left</string>
+    <string name="layout_description_4">4 symbols: All four corners (Kahoot style)</string>
+    <string name="layout_description_5">5 symbols: Four corners + center</string>
+    <string name="layout_description_more">%d symbols: Multiple pages with swipe navigation</string>
+    <string name="symbol_colors_label">Symbol Colors</string>
+    <string name="symbol_colors_description">Tap a symbol position to change its color. Use high-contrast colors for better visibility.</string>
+    <string name="position_1">Top Left</string>
+    <string name="position_2">Top Right</string>
+    <string name="position_3">Bot Left</string>
+    <string name="position_4">Bot Right</string>
+    <string name="position_5">Center</string>
+    <string name="position_6">Pos 6</string>
+    <string name="position_7">Pos 7</string>
+    <string name="position_8">Pos 8</string>
+    <string name="position_9">Pos 9</string>
+    <string name="choose_color">Choose a Color</string>
+    <string name="choose_color_for_position">Choose a color for position %1$d</string>
+    <string name="reset_colors">Reset to Default Colors</string>
+    <string name="cancel">Cancel</string>
+    <string name="emoji_keyboard">Emoji keyboard</string>
+    <string name="emoji_hint">Tap to type with emojis</string>
+
+    <!-- Eye Gaze Calibration -->
+    <string name="calibrate_eye_gaze">Calibrate Eye Gaze</string>
+    <string name="calibration_title">Eye Gaze Calibration</string>
+    <string name="calibration_instruction">Look at each dot as it appears and hold your gaze steady.</string>
+    <string name="calibration_point_progress">Point %1$d of %2$d</string>
+    <string name="calibration_collecting">Collecting samples… %1$d/%2$d</string>
+    <string name="calibration_look_at_dot">Look at the dot</string>
+    <string name="calibration_complete">Calibration complete!</string>
+    <string name="calibration_error">Calibration error: %.1f pixels</string>
+    <string name="calibration_saved">Calibration saved successfully</string>
+    <string name="calibration_failed">Calibration failed. Please try again.</string>
+    <string name="calibration_reset">Reset Calibration</string>
+    <string name="calibration_start">Start Calibration</string>
+    <string name="calibration_skip">Skip</string>
+    <string name="calibration_retry">Retry</string>
+    <string name="calibration_done">Done</string>
+    <string name="calibration_status_not_calibrated">Not calibrated</string>
+    <string name="calibration_status_calibrated">Calibrated (%.1f px accuracy)</string>
+    <string name="smoothing_mode_simple">Smoothing: Simple Lerp</string>
+    <string name="smoothing_mode_kalman">Smoothing: Kalman Filter</string>
+    <string name="smoothing_mode_adaptive">Smoothing: Adaptive Kalman</string>
+    <string name="smoothing_mode_combined">Smoothing: Combined</string>
+    <string name="tracking_mode_2d">Tracking: 2D Eye</string>
+    <string name="tracking_mode_3d">Tracking: 3D Eyeball</string>
+    <string name="eye_selection_both">Eyes: Both</string>
+    <string name="eye_selection_left">Eyes: Left Only</string>
+    <string name="eye_selection_right">Eyes: Right Only</string>
+    <string name="reset_to_defaults">Reset to Defaults</string>
+    <string name="gaze_amplification_off">Amplification: Off</string>
+    <string name="gaze_amplification_level">Amplification: %.1fx</string>
+    <string name="recenter_cursor">Recenter Cursor</string>
+    <string name="recenter_double_blink">Double-blink to recenter</string>
+    <string name="recenter_auto">Auto-recenter: On</string>
+    <string name="recenter_auto_off">Auto-recenter: Off</string>
+    <string name="cursor_recentered">Cursor recentered</string>
+    <string name="cursor_recentered_blink">Recentered (double-blink)</string>
+    <string name="cursor_recentered_auto">Recentered (looking straight)</string>
+    <string name="gpu_enabled">GPU: Enabled</string>
+    <string name="gpu_disabled">GPU: Disabled</string>
+    <string name="calibration_mode_affine">Calibration: Linear</string>
+    <string name="calibration_mode_poly">Calibration: Polynomial</string>
 
     <!-- Button Text -->
     <string name="button_pause">Pause</string>
@@ -178,6 +270,7 @@
     <string name="all_categories_hidden_text">All of your categories have been hidden. You can show them again from the category settings page.</string>
     <string name="no_recent_phrases_title">No recently used phrases</string>
     <string name="no_recent_phrases_message">Start using the app to see your most recently used phrases here.</string>
+    <string name="swipe_for_more">Page %1$d of %2$d • Swipe for more</string>
     <string name="categories_edit_title">Categories</string>
 
     <!-- Camera Permissions -->
@@ -190,5 +283,50 @@
     <string name="show_category">Show Category</string>
     <string name="edit_phrases">Edit Phrases</string>
     <string name="remove_category">Remove Category</string>
+
+    <!-- Accessible Phrase/Category Management -->
+    <string name="move_up">Move Up</string>
+    <string name="move_down">Move Down</string>
+    <string name="move_to_position">Move to Position</string>
+    <string name="current_position">Current position: %1$d of %2$d</string>
+    <string name="enter_position">Enter position (1 to %1$d):</string>
+    <string name="position_hint">Position number</string>
+    <string name="invalid_position">Please enter a valid position between 1 and %d</string>
+    <string name="move">Move</string>
+    
+    <!-- Phrase Style Settings -->
+    <string name="phrase_style_title">Phrase Appearance</string>
+    <string name="edit_phrase_style">Edit Appearance</string>
+    <string name="background_color">Background Color</string>
+    <string name="text_color">Text Color</string>
+    <string name="text_size">Text Size</string>
+    <string name="text_bold">Bold Text</string>
+    <string name="border_color">Border Color</string>
+    <string name="reset_style">Reset to Default</string>
+    <string name="style_preview">Preview:</string>
+    <string name="select_color">Select Color</string>
+    <string name="select_size">Select Size</string>
+    <string name="size_small">Small</string>
+    <string name="size_medium_small">Medium Small</string>
+    <string name="size_medium">Medium</string>
+    <string name="size_medium_large">Medium Large</string>
+    <string name="size_large">Large</string>
+    <string name="size_extra_large">Extra Large</string>
+    <string name="size_huge">Huge</string>
+    <string name="phrase_edit_menu_title">Edit Phrase</string>
+    <string name="edit_text">Edit Text</string>
+    <string name="reorder_phrase">Reorder</string>
+    <string name="delete_phrase">Delete Phrase</string>
+    
+    <!-- Category Edit Menu -->
+    <string name="category_edit_menu_title">Edit Category</string>
+    <string name="reorder_category">Reorder Category</string>
+
+    <!-- Choice Settings -->
+    <string name="choice_settings_title">Choice Mode Settings</string>
+    <string name="choice_mode_enabled">Enable Choice Mode</string>
+    <string name="choice_visual_feedback">Visual Feedback</string>
+    <string name="choice_settings_help">Choice Mode allows you to tap the choice button and speak two options (like "Pizza or Pasta") to quickly create a decision between two choices. Enable visual feedback to see microphone status when listening.</string>
+    <string name="choice_button_description">Make a choice</string>
 
 </resources>

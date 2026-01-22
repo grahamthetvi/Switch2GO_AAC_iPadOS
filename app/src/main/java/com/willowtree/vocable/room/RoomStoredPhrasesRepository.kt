@@ -54,6 +54,19 @@ class RoomStoredPhrasesRepository(
         )
     }
 
+    override suspend fun updatePhraseStyle(phraseId: String, style: PhraseStyle?) {
+        database.phraseDao().updatePhraseStyle(
+            PhraseStyleUpdate(
+                phraseId = phraseId,
+                style = style
+            )
+        )
+    }
+    
+    override suspend fun updatePhraseSortOrders(sortOrders: List<PhraseSortOrderUpdate>) {
+        database.phraseDao().updatePhraseSortOrders(sortOrders)
+    }
+
     override suspend fun deletePhrase(phraseId: String) {
         database.phraseDao().deletePhrase(phraseId)
     }

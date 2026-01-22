@@ -6,6 +6,8 @@ import com.willowtree.vocable.presets.Phrase
 import com.willowtree.vocable.presets.PresetCategories
 import com.willowtree.vocable.presets.PresetPhrase
 import com.willowtree.vocable.room.PhraseDto
+import com.willowtree.vocable.room.PhraseSortOrderUpdate
+import com.willowtree.vocable.room.PhraseStyle
 import com.willowtree.vocable.room.PresetPhrasesRepository
 import com.willowtree.vocable.room.StoredPhrasesRepository
 import com.willowtree.vocable.utils.DateProvider
@@ -107,6 +109,92 @@ class PhrasesUseCase(
                         " it is a filter applied to true categories. Therefore, saving phrases from " +
                         "the Recents 'category' is not supported."
             )
+        }
+    }
+    
+    override suspend fun updatePhraseStyle(phraseId: String, style: PhraseStyle?) {
+        // Try stored phrases first, then preset phrases
+        val storedPhrase = storedPhrasesRepository.getPhrase(phraseId)
+        if (storedPhrase != null) {
+            storedPhrasesRepository.updatePhraseStyle(phraseId, style)
+        } else {
+            presetPhrasesRepository.updatePhraseStyle(phraseId, style)
+        }
+    }
+    
+    override suspend fun movePhraseUp(categoryId: String, phraseId: String) {
+        val phrases = getPhrasesForCategory(categoryId).sortedBy { it.sortOrder }
+        val index = phrases.indexOfFirst { it.phraseId == phraseId }
+        
+        if (index > 0) {
+            val currentPhrase = phrases[index]
+            val previousPhrase = phrases[index - 1]
+            
+            val updates = listOf(
+                PhraseSortOrderUpdate(currentPhrase.phraseId, previousPhrase.sortOrder),
+                PhraseSortOrderUpdate(previousPhrase.phraseId, currentPhrase.sortOrder)
+            )
+            
+            updateSortOrders(updates, phrases)
+        }
+    }
+    
+    override suspend fun movePhraseDown(categoryId: String, phraseId: String) {
+        val phrases = getPhrasesForCategory(categoryId).sortedBy { it.sortOrder }
+        val index = phrases.indexOfFirst { it.phraseId == phraseId }
+        
+        if (index >= 0 && index < phrases.size - 1) {
+            val currentPhrase = phrases[index]
+            val nextPhrase = phrases[index + 1]
+            
+            val updates = listOf(
+                PhraseSortOrderUpdate(currentPhrase.phraseId, nextPhrase.sortOrder),
+                PhraseSortOrderUpdate(nextPhrase.phraseId, currentPhrase.sortOrder)
+            )
+            
+            updateSortOrders(updates, phrases)
+        }
+    }
+    
+    override suspend fun movePhraseToPosition(categoryId: String, phraseId: String, newPosition: Int) {
+        val phrases = getPhrasesForCategory(categoryId).sortedBy { it.sortOrder }.toMutableList()
+        val currentIndex = phrases.indexOfFirst { it.phraseId == phraseId }
+        
+        if (currentIndex < 0 || newPosition < 0 || newPosition >= phrases.size || currentIndex == newPosition) {
+            return
+        }
+        
+        // Remove and reinsert at new position
+        val phrase = phrases.removeAt(currentIndex)
+        phrases.add(newPosition, phrase)
+        
+        // Update all sort orders
+        val updates = phrases.mapIndexed { index, p ->
+            PhraseSortOrderUpdate(p.phraseId, index)
+        }
+        
+        updateSortOrders(updates, phrases)
+    }
+    
+    private suspend fun updateSortOrders(updates: List<PhraseSortOrderUpdate>, phrases: List<Phrase>) {
+        // Separate updates for stored vs preset phrases
+        val storedUpdates = mutableListOf<PhraseSortOrderUpdate>()
+        val presetUpdates = mutableListOf<PhraseSortOrderUpdate>()
+        
+        updates.forEach { update ->
+            val phrase = phrases.find { it.phraseId == update.phraseId }
+            when (phrase) {
+                is CustomPhrase -> storedUpdates.add(update)
+                is PresetPhrase -> presetUpdates.add(update)
+                null -> {} // Ignore
+            }
+        }
+        
+        if (storedUpdates.isNotEmpty()) {
+            storedPhrasesRepository.updatePhraseSortOrders(storedUpdates)
+        }
+        if (presetUpdates.isNotEmpty()) {
+            presetPhrasesRepository.updatePhraseSortOrders(presetUpdates)
         }
     }
 }

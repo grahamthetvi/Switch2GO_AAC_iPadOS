@@ -13,4 +13,21 @@
     <color name="colorAccent">#FEA430</color>
     <color name="selectedColor">#00FA9A</color>
     <color name="errorColor">#AD006C</color>
+
+    <!-- CVI-friendly colors for Kahoot-style communication screen -->
+    <color name="cviBackground">#000000</color>
+    <color name="cviSymbol1">#E53935</color>  <!-- Red - top left -->
+    <color name="cviSymbol2">#1E88E5</color>  <!-- Blue - top right -->
+    <color name="cviSymbol3">#43A047</color>  <!-- Green - bottom left -->
+    <color name="cviSymbol4">#FB8C00</color>  <!-- Orange - bottom right -->
+    <color name="cviSymbol5">#8E24AA</color>  <!-- Purple - center -->
+    <color name="cviSymbol6">#00ACC1</color>  <!-- Cyan -->
+    <color name="cviSymbol7">#F06292</color>  <!-- Pink -->
+    <color name="cviSymbol8">#FFEE58</color>  <!-- Yellow -->
+    <color name="cviSymbol9">#78909C</color>  <!-- Blue Grey -->
+    <color name="cviTextOnSymbol">#FFFFFF</color>  <!-- White text for high contrast -->
+    <color name="cviSpokenTextBg">#1A1A1A</color>  <!-- Slightly lighter black for spoken text area -->
+    
+    <!-- Dialog/Card colors -->
+    <color name="cardBackgroundColor">#2D2D2D</color>  <!-- Dark gray for card backgrounds -->
 </resources>

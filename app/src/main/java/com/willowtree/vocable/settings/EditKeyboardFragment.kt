@@ -1,9 +1,11 @@
 package com.willowtree.vocable.settings
 
+import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.navigation.findNavController
@@ -107,6 +109,26 @@ abstract class EditKeyboardFragment : BaseFragment<FragmentEditKeyboardBinding>(
                         keyboardInput.setText(R.string.keyboard_select_letters)
                     }
                 }
+            }
+        }
+
+        // Emoji button - shows system keyboard for emoji input
+        binding.emojiButton?.action = {
+            // Clear default text if showing
+            if (isDefaultTextVisible()) {
+                binding.keyboardInput.text = null
+            }
+
+            // Focus the EditText and show system keyboard
+            binding.keyboardInput.requestFocus()
+            val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(binding.keyboardInput, InputMethodManager.SHOW_IMPLICIT)
+        }
+
+        // When EditText gains focus, clear default text
+        binding.keyboardInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus && isDefaultTextVisible()) {
+                binding.keyboardInput.text = null
             }
         }
 

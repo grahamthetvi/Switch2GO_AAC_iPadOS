@@ -2,18 +2,23 @@
 <resources>
     <integer name="max_categories">1</integer>
     <integer name="max_phrases">8</integer>
+
+    <!-- CVI Symbol count settings -->
+    <integer name="default_symbol_count">2</integer>
+    <integer name="min_symbol_count">2</integer>
+    <integer name="max_symbol_count">9</integer>
     <integer name="max_edit_phrases">3</integer>
     <integer name="phrases_columns">2</integer>
     <integer name="phrases_rows">4</integer>
     <integer name="edit_phrases_columns">1</integer>
     <integer name="edit_phrases_rows">4</integer>
-    <integer name="settings_options_rows">5</integer>
+    <integer name="settings_options_rows">6</integer>
     <integer name="settings_options_columns">1</integer>
     <integer name="edit_keyboard_columns">5</integer>
     <integer name="edit_keyboard_rows">6</integer>
     <integer name="number_pad_columns">3</integer>
     <integer name="number_pad_rows">4</integer>
-    <integer name="selection_modes_rows">2</integer>
+    <integer name="selection_modes_rows">3</integer>
     <integer name="selection_modes_columns">1</integer>
     <integer name="max_edit_categories">4</integer>
     <integer name="keyboard_columns">5</integer>

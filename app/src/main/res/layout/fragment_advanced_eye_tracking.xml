@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/parent_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:theme="@style/SettingsTheme">
+
+    <include layout="@layout/guidelines_settings" />
+
+    <com.willowtree.vocable.customviews.VocableImageButton
+        android:id="@+id/back_button"
+        style="@style/CloseButton"
+        android:layout_width="@dimen/settings_close_button_width"
+        android:layout_height="@dimen/settings_close_button_height"
+        android:layout_marginTop="@dimen/settings_close_button_top_margin"
+        android:scaleType="center"
+        android:src="@drawable/category_back_button_icon"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/settings_title"
+        style="@style/ScalableSettingsTitle"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:paddingStart="@dimen/settings_title_padding_start"
+        android:paddingEnd="@dimen/settings_title_padding_end"
+        android:text="@string/advanced_eye_tracking_title"
+        app:layout_constraintBottom_toBottomOf="@+id/back_button"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintStart_toEndOf="@+id/back_button"
+        app:layout_constraintTop_toTopOf="@+id/back_button" />
+
+    <ScrollView
+        android:id="@+id/scroll_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/settings_options_margin_top"
+        android:fillViewport="true"
+        android:scrollbars="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintStart_toStartOf="@id/guideline_start"
+        app:layout_constraintTop_toBottomOf="@id/back_button">
+
+        <LinearLayout
+            android:id="@+id/options_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="16dp">
+
+            <!-- GPU Toggle -->
+            <com.willowtree.vocable.customviews.VocableSwitch
+                android:id="@+id/gpu_switch"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/selection_mode_button_height"
+                android:layout_marginBottom="@dimen/selection_mode_buttom_bottom_margin" />
+
+            <!-- Tracking Mode (2D/3D) -->
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/tracking_mode_button"
+                style="@style/SettingsOptionButtons"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/selection_mode_button_height"
+                android:layout_marginBottom="@dimen/selection_mode_buttom_bottom_margin"
+                android:text="@string/tracking_mode_2d" />
+
+            <!-- Smoothing Mode -->
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/smoothing_mode_button"
+                style="@style/SettingsOptionButtons"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/selection_mode_button_height"
+                android:layout_marginBottom="@dimen/selection_mode_buttom_bottom_margin"
+                android:text="@string/smoothing_mode_adaptive" />
+
+            <!-- Eye Selection -->
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/eye_selection_button"
+                style="@style/SettingsOptionButtons"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/selection_mode_button_height"
+                android:layout_marginBottom="@dimen/selection_mode_buttom_bottom_margin"
+                android:text="@string/eye_selection_both" />
+
+            <!-- Gaze Amplification -->
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/gaze_amplification_button"
+                style="@style/SettingsOptionButtons"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/selection_mode_button_height"
+                android:layout_marginBottom="@dimen/selection_mode_buttom_bottom_margin"
+                android:text="@string/gaze_amplification_off" />
+
+            <!-- Auto-Recenter Toggle -->
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/auto_recenter_button"
+                style="@style/SettingsOptionButtons"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/selection_mode_button_height"
+                android:layout_marginBottom="@dimen/selection_mode_buttom_bottom_margin"
+                android:text="@string/recenter_auto" />
+
+            <!-- Recenter Cursor Button -->
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/recenter_cursor_button"
+                style="@style/SettingsOptionButtons"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/selection_mode_button_height"
+                android:layout_marginBottom="@dimen/selection_mode_buttom_bottom_margin"
+                android:text="@string/recenter_cursor" />
+
+            <!-- Reset to Defaults -->
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/reset_button"
+                style="@style/SettingsOptionButtons"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/selection_mode_button_height"
+                android:layout_marginTop="16dp"
+                android:text="@string/reset_to_defaults" />
+
+            <!-- Restart Notice -->
+            <TextView
+                android:id="@+id/restart_notice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:text="@string/advanced_eye_tracking_restart_notice"
+                android:textColor="@color/colorAccent"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

@@ -15,4 +15,5 @@ data class PresetPhraseDto(
     @ColumnInfo(name = "last_spoken_date") val lastSpokenDate: Long?,
     @ColumnInfo(name = "sort_order") val sortOrder: Int,
     @ColumnInfo(name = "deleted") val deleted: Boolean = false,
+    @ColumnInfo(name = "style", defaultValue = "NULL") val style: PhraseStyle? = null,
 ) : Parcelable

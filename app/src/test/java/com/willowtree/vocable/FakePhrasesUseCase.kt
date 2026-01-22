@@ -4,6 +4,7 @@ import com.willowtree.vocable.presets.Phrase
 import com.willowtree.vocable.presets.asPhrase
 import com.willowtree.vocable.room.CategoryDto
 import com.willowtree.vocable.room.PhraseDto
+import com.willowtree.vocable.room.PhraseStyle
 import com.willowtree.vocable.utils.locale.LocalesWithText
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,6 +57,22 @@ class FakePhrasesUseCase : IPhrasesUseCase {
     }
 
     override suspend fun addPhrase(localizedUtterance: LocalesWithText, parentCategoryId: String) {
+        error("Not implemented")
+    }
+
+    override suspend fun updatePhraseStyle(phraseId: String, style: PhraseStyle?) {
+        error("Not implemented")
+    }
+
+    override suspend fun movePhraseUp(categoryId: String, phraseId: String) {
+        error("Not implemented")
+    }
+
+    override suspend fun movePhraseDown(categoryId: String, phraseId: String) {
+        error("Not implemented")
+    }
+
+    override suspend fun movePhraseToPosition(categoryId: String, phraseId: String, newPosition: Int) {
         error("Not implemented")
     }
 

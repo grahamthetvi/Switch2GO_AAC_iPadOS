@@ -3,8 +3,12 @@ package com.willowtree.vocable.settings.selectionmode
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.willowtree.vocable.MainDispatcherRule
 import com.willowtree.vocable.getOrAwaitValue
+import com.willowtree.vocable.utils.FakeEyeGazePermissions
 import com.willowtree.vocable.utils.FakeFaceTrackingPermissions
+import com.willowtree.vocable.utils.FakeVocableSharedPreferences
+import com.willowtree.vocable.utils.IEyeGazePermissions
 import com.willowtree.vocable.utils.IFaceTrackingPermissions
+import com.willowtree.vocable.utils.IVocableSharedPreferences
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -20,8 +24,12 @@ class SelectionModeViewModelTest {
     @get:Rule
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 
-    private fun createViewModel(permissions: IFaceTrackingPermissions): SelectionModeViewModel {
-        return SelectionModeViewModel(permissions)
+    private fun createViewModel(
+        faceTrackingPermissions: IFaceTrackingPermissions,
+        eyeGazePermissions: IEyeGazePermissions = FakeEyeGazePermissions(false),
+        sharedPrefs: IVocableSharedPreferences = FakeVocableSharedPreferences()
+    ): SelectionModeViewModel {
+        return SelectionModeViewModel(faceTrackingPermissions, eyeGazePermissions, sharedPrefs)
     }
 
     private fun createTrackingPermissions(headTrackingEnabled: Boolean): IFaceTrackingPermissions {

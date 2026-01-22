@@ -36,6 +36,19 @@ class RoomPresetPhrasesRepository(
         )
     }
 
+    override suspend fun updatePhraseStyle(phraseId: String, style: PhraseStyle?) {
+        presetPhrasesDao.updatePhraseStyle(
+            PhraseStyleUpdate(
+                phraseId = phraseId,
+                style = style
+            )
+        )
+    }
+    
+    override suspend fun updatePhraseSortOrders(sortOrders: List<PhraseSortOrderUpdate>) {
+        presetPhrasesDao.updatePhraseSortOrders(sortOrders)
+    }
+
     override suspend fun getRecentPhrases(): List<PresetPhrase> {
         return presetPhrasesDao.getRecentPhrases()
             .filterDeletedPresets()

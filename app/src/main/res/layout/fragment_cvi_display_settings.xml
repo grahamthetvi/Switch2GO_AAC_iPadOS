@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/parent_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:theme="@style/SettingsTheme"
+        android:paddingBottom="24dp">
+
+        <include layout="@layout/guidelines_settings" />
+
+        <com.willowtree.vocable.customviews.VocableImageButton
+            android:id="@+id/back_button"
+            style="@style/CloseButton"
+            android:layout_width="@dimen/settings_close_button_width"
+            android:layout_height="@dimen/settings_close_button_height"
+            android:layout_marginTop="@dimen/settings_close_button_top_margin"
+            android:contentDescription="@string/navigate_back"
+            android:scaleType="center"
+            android:src="@drawable/category_back_button_icon"
+            app:layout_constraintStart_toStartOf="@id/guideline_start"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/settings_title"
+            style="@style/ScalableSettingsTitle"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:gravity="center"
+            android:paddingStart="@dimen/settings_title_padding_start"
+            android:paddingEnd="@dimen/settings_title_padding_end"
+            android:text="@string/cvi_display_settings_title"
+            app:layout_constraintBottom_toBottomOf="@+id/back_button"
+            app:layout_constraintEnd_toEndOf="@id/guideline_end"
+            app:layout_constraintStart_toEndOf="@+id/back_button"
+            app:layout_constraintTop_toTopOf="@+id/back_button" />
+
+        <LinearLayout
+            android:id="@+id/options_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/settings_options_margin_top"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="@id/guideline_end"
+            app:layout_constraintStart_toStartOf="@id/guideline_start"
+            app:layout_constraintTop_toBottomOf="@id/back_button">
+
+            <!-- Symbol Count Section -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/symbol_count_label"
+                android:textColor="@color/textColor"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/symbol_count_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:text="@string/symbol_count_description"
+                android:textColor="@color/textColor"
+                android:textSize="14sp"
+                android:lineSpacingExtra="4dp" />
+
+            <!-- Symbol count control row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <com.willowtree.vocable.customviews.VocableImageButton
+                    android:id="@+id/decrease_button"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/button_default_background"
+                    android:contentDescription="@string/decrease_symbol_count"
+                    android:scaleType="center"
+                    android:src="@drawable/ic_decrease_40dp" />
+
+                <TextView
+                    android:id="@+id/symbol_count_value"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="2"
+                    android:textColor="@color/textColor"
+                    android:textSize="36sp"
+                    android:textStyle="bold" />
+
+                <com.willowtree.vocable.customviews.VocableImageButton
+                    android:id="@+id/increase_button"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/button_default_background"
+                    android:contentDescription="@string/increase_symbol_count"
+                    android:scaleType="center"
+                    android:src="@drawable/ic_add_40dp" />
+
+            </LinearLayout>
+
+            <!-- Preview text -->
+            <TextView
+                android:id="@+id/preview_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="24dp"
+                android:gravity="center"
+                android:text="@string/symbol_count_preview"
+                android:textColor="@color/colorAccent"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>
+

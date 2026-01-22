@@ -24,7 +24,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
         private const val PRIVACY_POLICY = "https://vocable.app/privacy.html"
         private const val MAIL_TO =
             "mailto:vocable@willowtreeapps.com?subject=Feedback for Android Vocable "
-        private const val SETTINGS_OPTION_COUNT = 5
+        private const val SETTINGS_OPTION_COUNT = 6
     }
 
     override val bindingInflater: BindingInflater<FragmentSettingsBinding> = FragmentSettingsBinding::inflate
@@ -94,9 +94,21 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
             }
         }
 
-        binding.settingsOptionsContainer.editCategoriesButton.action = {
+        binding.settingsOptionsContainer.categoriesDisplayButton.action = {
             if (findNavController().currentDestination?.id == R.id.settingsFragment) {
-                findNavController().navigate(R.id.action_settingsFragment_to_editCategoriesFragment)
+                findNavController().navigate(R.id.action_settingsFragment_to_categoriesDisplaySettingsFragment)
+            }
+        }
+
+        binding.settingsOptionsContainer.advancedEyeTrackingButton.action = {
+            if (findNavController().currentDestination?.id == R.id.settingsFragment) {
+                findNavController().navigate(R.id.action_settingsFragment_to_advancedEyeTrackingFragment)
+            }
+        }
+
+        binding.settingsOptionsContainer.choiceSettingsButton.action = {
+            if (findNavController().currentDestination?.id == R.id.settingsFragment) {
+                findNavController().navigate(R.id.action_settingsFragment_to_choiceSettingsFragment)
             }
         }
     }
@@ -132,10 +144,12 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
             settingsCloseButton.isEnabled = enable
             privacyPolicyButton.isEnabled = enable
             contactDevsButton.isEnabled = enable
-            settingsOptionsContainer.editCategoriesButton.isEnabled = enable
+            settingsOptionsContainer.categoriesDisplayButton.isEnabled = enable
             settingsOptionsContainer.resetAppButton.isEnabled = enable
             settingsOptionsContainer.selectionModeButton.isEnabled = enable
             settingsOptionsContainer.timingSensitivityButton.isEnabled = enable
+            settingsOptionsContainer.advancedEyeTrackingButton.isEnabled = enable
+            settingsOptionsContainer.choiceSettingsButton.isEnabled = enable
         }
     }
 

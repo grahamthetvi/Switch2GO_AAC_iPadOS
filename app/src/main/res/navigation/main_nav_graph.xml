@@ -48,6 +48,36 @@
         <action
             android:id="@+id/action_editCategoryPhrasesFragment_to_editPhrasesKeyboardFragment"
             app:destination="@id/editPhrasesKeyboardFragment" />
+        <action
+            android:id="@+id/action_editCategoryPhrasesFragment_to_phraseEditMenuFragment"
+            app:destination="@id/phraseEditMenuFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/phraseEditMenuFragment"
+        android:name="com.willowtree.vocable.settings.PhraseEditMenuFragment"
+        android:label="PhraseEditMenuFragment"
+        tools:layout="@layout/fragment_phrase_edit_menu">
+        <argument
+            android:name="phrase"
+            app:argType="com.willowtree.vocable.presets.Phrase" />
+        <argument
+            android:name="category"
+            app:argType="com.willowtree.vocable.presets.Category" />
+        <action
+            android:id="@+id/action_phraseEditMenuFragment_to_editPhrasesKeyboardFragment"
+            app:destination="@id/editPhrasesKeyboardFragment" />
+        <action
+            android:id="@+id/action_phraseEditMenuFragment_to_phraseStyleEditorFragment"
+            app:destination="@id/phraseStyleEditorFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/phraseStyleEditorFragment"
+        android:name="com.willowtree.vocable.settings.PhraseStyleEditorFragment"
+        android:label="PhraseStyleEditorFragment"
+        tools:layout="@layout/fragment_phrase_style_editor">
+        <argument
+            android:name="phrase"
+            app:argType="com.willowtree.vocable.presets.Phrase" />
     </fragment>
     <fragment
         android:id="@+id/sensitivityFragment"
@@ -88,9 +118,42 @@
             android:id="@+id/action_settingsFragment_to_selectionModeFragment"
             app:destination="@id/selectionModeFragment" />
         <action
-            android:id="@+id/action_settingsFragment_to_editCategoriesFragment"
-            app:destination="@id/editCategoriesFragment" />
+            android:id="@+id/action_settingsFragment_to_categoriesDisplaySettingsFragment"
+            app:destination="@id/categoriesDisplaySettingsFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_advancedEyeTrackingFragment"
+            app:destination="@id/advancedEyeTrackingFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_choiceSettingsFragment"
+            app:destination="@id/choiceSettingsFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/categoriesDisplaySettingsFragment"
+        android:name="com.willowtree.vocable.settings.CategoriesDisplaySettingsFragment"
+        android:label="CategoriesDisplaySettingsFragment"
+        tools:layout="@layout/fragment_categories_display_settings">
+        <action
+            android:id="@+id/action_categoriesDisplaySettingsFragment_to_editCategoriesFragment"
+            app:destination="@id/editCategoriesFragment" />
+        <action
+            android:id="@+id/action_categoriesDisplaySettingsFragment_to_cviDisplaySettingsFragment"
+            app:destination="@id/cviDisplaySettingsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/advancedEyeTrackingFragment"
+        android:name="com.willowtree.vocable.settings.AdvancedEyeTrackingFragment"
+        android:label="AdvancedEyeTrackingFragment"
+        tools:layout="@layout/fragment_advanced_eye_tracking" />
+    <fragment
+        android:id="@+id/cviDisplaySettingsFragment"
+        android:name="com.willowtree.vocable.settings.CVIDisplaySettingsFragment"
+        android:label="CVIDisplaySettingsFragment"
+        tools:layout="@layout/fragment_cvi_display_settings" />
+    <fragment
+        android:id="@+id/choiceSettingsFragment"
+        android:name="com.willowtree.vocable.settings.ChoiceSettingsFragment"
+        android:label="ChoiceSettingsFragment"
+        tools:layout="@layout/fragment_choice_settings" />
     <fragment
         android:id="@+id/presetsFragment"
         android:name="com.willowtree.vocable.presets.PresetsFragment"

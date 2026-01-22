@@ -12,6 +12,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!-- Container for eye gaze tracking fragment (MediaPipe) - must remain visible for fragment restoration -->
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/eye_gaze_fragment"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"

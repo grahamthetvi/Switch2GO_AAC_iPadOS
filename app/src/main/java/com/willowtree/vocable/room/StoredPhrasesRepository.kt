@@ -15,5 +15,7 @@ interface StoredPhrasesRepository {
         phraseId: String,
         localizedUtterance: LocalesWithText,
     )
+    suspend fun updatePhraseStyle(phraseId: String, style: PhraseStyle?)
+    suspend fun updatePhraseSortOrders(sortOrders: List<PhraseSortOrderUpdate>)
     suspend fun deletePhrase(phraseId: String)
 }

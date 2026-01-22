@@ -28,4 +28,28 @@ interface IVocableSharedPreferences {
     fun setFirstTime()
 
     fun getFirstTime(): Boolean
+
+    fun getSelectionMode(): SelectionMode
+
+    fun setSelectionMode(mode: SelectionMode)
+
+    fun getEyeGazeEnabled(): Boolean
+
+    fun setEyeGazeEnabled(enabled: Boolean)
+
+    fun getGpuRenderingEnabled(): Boolean
+
+    fun setGpuRenderingEnabled(enabled: Boolean)
+
+    fun getEyeTrackingMode(): String
+
+    fun setEyeTrackingMode(mode: String)
+
+    fun getEyeSelection(): String
+
+    fun setEyeSelection(selection: String)
+
+    fun getGazeAmplification(): Float
+
+    fun setGazeAmplification(amplification: Float)
 }

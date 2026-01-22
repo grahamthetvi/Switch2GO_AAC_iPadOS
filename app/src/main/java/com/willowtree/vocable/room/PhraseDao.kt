@@ -29,10 +29,19 @@ interface PhraseDao {
     @Update(entity = PhraseDto::class)
     suspend fun updatePhraseLocalizedUtterance(phraseLocalizedUtterance: PhraseLocalizedUtterance)
 
+    @Update(entity = PhraseDto::class)
+    suspend fun updatePhraseStyle(phraseStyleUpdate: PhraseStyleUpdate)
+
+    @Update(entity = PhraseDto::class)
+    suspend fun updatePhraseSortOrder(phraseSortOrderUpdate: PhraseSortOrderUpdate)
+    
+    @Update(entity = PhraseDto::class)
+    suspend fun updatePhraseSortOrders(sortOrders: List<PhraseSortOrderUpdate>)
+
     @Query("SELECT * FROM Phrase WHERE last_spoken_date IS NOT NULL ORDER BY last_spoken_date DESC LIMIT 8")
     fun getRecentPhrases(): Flow<List<PhraseDto>>
 
-    @Query("SELECT * FROM Phrase WHERE parent_category_id == :categoryId")
+    @Query("SELECT * FROM Phrase WHERE parent_category_id == :categoryId ORDER BY sort_order ASC")
     fun getPhrasesForCategory(categoryId: String): Flow<List<PhraseDto>>
 
     @Query("SELECT * FROM Phrase WHERE phrase_id == :phraseId")

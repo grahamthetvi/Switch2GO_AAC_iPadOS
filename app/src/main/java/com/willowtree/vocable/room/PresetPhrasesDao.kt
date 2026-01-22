@@ -19,16 +19,25 @@ interface PresetPhrasesDao {
     @Update(entity = PresetPhraseDto::class)
     suspend fun updatePhraseSpokenDate(phraseSpokenDate: PhraseSpokenDate)
 
+    @Update(entity = PresetPhraseDto::class)
+    suspend fun updatePhraseStyle(phraseStyleUpdate: PhraseStyleUpdate)
+    
+    @Update(entity = PresetPhraseDto::class)
+    suspend fun updatePhraseSortOrder(phraseSortOrderUpdate: PhraseSortOrderUpdate)
+    
+    @Update(entity = PresetPhraseDto::class)
+    suspend fun updatePhraseSortOrders(sortOrders: List<PhraseSortOrderUpdate>)
+
     @Query("SELECT * FROM PresetPhrase WHERE last_spoken_date IS NOT NULL ORDER BY last_spoken_date DESC LIMIT 8")
     suspend fun getRecentPhrases(): List<PresetPhraseDto>
 
     @Query("SELECT * FROM PresetPhrase WHERE last_spoken_date IS NOT NULL ORDER BY last_spoken_date DESC LIMIT 8")
     fun getRecentPhrasesFlow(): Flow<List<PresetPhraseDto>>
 
-    @Query("SELECT * FROM PresetPhrase WHERE parent_category_id = :categoryId")
+    @Query("SELECT * FROM PresetPhrase WHERE parent_category_id = :categoryId ORDER BY sort_order ASC")
     suspend fun getPhrasesForCategory(categoryId: String): List<PresetPhraseDto>
 
-    @Query("SELECT * FROM PresetPhrase WHERE parent_category_id = :categoryId")
+    @Query("SELECT * FROM PresetPhrase WHERE parent_category_id = :categoryId ORDER BY sort_order ASC")
     fun getPhrasesForCategoryFlow(categoryId: String): Flow<List<PresetPhraseDto>>
 
     @Query("SELECT * FROM PresetPhrase WHERE phrase_id = :phraseId")

@@ -23,9 +23,13 @@ import com.willowtree.vocable.settings.customcategories.CustomCategoryPhraseView
 import com.willowtree.vocable.settings.selectionmode.SelectionModeViewModel
 import com.willowtree.vocable.splash.SplashActivity
 import com.willowtree.vocable.splash.SplashViewModel
+import com.willowtree.vocable.eyegazetracking.EyeGazeTrackingViewModel
 import com.willowtree.vocable.utils.DateProvider
+import com.willowtree.vocable.utils.EyeGazePermissions
+import com.willowtree.vocable.utils.EyeGazeTrackingManager
 import com.willowtree.vocable.utils.FaceTrackingManager
 import com.willowtree.vocable.utils.FaceTrackingPermissions
+import com.willowtree.vocable.utils.IEyeGazePermissions
 import com.willowtree.vocable.utils.IFaceTrackingPermissions
 import com.willowtree.vocable.utils.ILocalizedResourceUtility
 import com.willowtree.vocable.utils.IVocableSharedPreferences
@@ -63,6 +67,9 @@ val vocableKoinModule = module {
         scoped {
             FaceTrackingManager(get(), get())
         }
+        scoped {
+            EyeGazeTrackingManager(get(), get())
+        }
         scoped<PermissionsRationaleDialogShower> {
             ActivityPermissionsRationaleDialogShower(get())
         }
@@ -75,8 +82,12 @@ val vocableKoinModule = module {
         scoped<IFaceTrackingPermissions> {
             FaceTrackingPermissions(get(), androidContext().packageName, get(), get(), get())
         }
+        scoped<IEyeGazePermissions> {
+            EyeGazePermissions(get(), androidContext().packageName, get(), get(), get())
+        }
         viewModel { FaceTrackingViewModel(get()) }
-        viewModel { SelectionModeViewModel(get()) }
+        viewModel { EyeGazeTrackingViewModel(get()) }
+        viewModel { SelectionModeViewModel(get(), get(), get()) }
     }
 
     single<IdlingResourceContainer>(named<SplashViewModel>()) { IdlingResourceContainerImpl() }
