@@ -141,6 +141,9 @@ dependencies {
     // Koin (DI)
     implementation(libs.koin.android)
 
+    // KMP Shared Module
+    implementation(project(":shared"))
+
     // Unit Tests
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
