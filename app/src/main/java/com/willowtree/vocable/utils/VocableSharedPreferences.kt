@@ -48,11 +48,6 @@ class VocableSharedPreferences :
         const val KEY_GAZE_AMPLIFICATION = "KEY_GAZE_AMPLIFICATION"
         const val DEFAULT_GAZE_AMPLIFICATION = 1.0f
 
-        // Choice mode settings
-        const val KEY_CHOICE_MODE_ENABLED = "KEY_CHOICE_MODE_ENABLED"
-        const val DEFAULT_CHOICE_MODE_ENABLED = true
-        const val KEY_CHOICE_VISUAL_FEEDBACK_ENABLED = "KEY_CHOICE_VISUAL_FEEDBACK_ENABLED"
-        const val DEFAULT_CHOICE_VISUAL_FEEDBACK_ENABLED = true
     }
 
     private val encryptedPrefs: SharedPreferences by lazy {
@@ -202,19 +197,6 @@ class VocableSharedPreferences :
         return colors
     }
 
-    fun getChoiceModeEnabled(): Boolean =
-        encryptedPrefs.getBoolean(KEY_CHOICE_MODE_ENABLED, DEFAULT_CHOICE_MODE_ENABLED)
-
-    fun setChoiceModeEnabled(enabled: Boolean) {
-        encryptedPrefs.edit().putBoolean(KEY_CHOICE_MODE_ENABLED, enabled).apply()
-    }
-
-    fun getChoiceVisualFeedbackEnabled(): Boolean =
-        encryptedPrefs.getBoolean(KEY_CHOICE_VISUAL_FEEDBACK_ENABLED, DEFAULT_CHOICE_VISUAL_FEEDBACK_ENABLED)
-
-    fun setChoiceVisualFeedbackEnabled(enabled: Boolean) {
-        encryptedPrefs.edit().putBoolean(KEY_CHOICE_VISUAL_FEEDBACK_ENABLED, enabled).apply()
-    }
 
     @SuppressLint("ApplySharedPref")
     fun clearAll() {

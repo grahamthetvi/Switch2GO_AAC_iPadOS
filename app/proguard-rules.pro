@@ -34,3 +34,10 @@
 -dontwarn com.google.ar.sceneform.assets.Loader
 -dontwarn com.google.ar.sceneform.assets.ModelData
 -dontwarn com.google.devtools.build.android.desugar.runtime.ThrowableExtension
+-dontwarn javax.lang.model.SourceVersion
+-dontwarn javax.lang.model.element.Element
+-dontwarn javax.lang.model.element.ElementKind
+-dontwarn javax.lang.model.element.Modifier
+-dontwarn javax.lang.model.type.TypeMirror
+-dontwarn javax.lang.model.type.TypeVisitor
+-dontwarn javax.lang.model.util.SimpleTypeVisitor8

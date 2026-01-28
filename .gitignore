@@ -60,3 +60,9 @@ app/release/
 app/.DS_Store
 .DS_Store
 .fake
+
+# Sensitive files
+Key_*
+
+# Kotlin build artifacts
+.kotlin/

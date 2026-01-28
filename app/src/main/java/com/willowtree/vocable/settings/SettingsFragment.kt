@@ -21,10 +21,9 @@ import com.willowtree.vocable.databinding.FragmentSettingsBinding
 class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
 
     companion object {
-        private const val PRIVACY_POLICY = "https://vocable.app/privacy.html"
         private const val MAIL_TO =
-            "mailto:vocable@willowtreeapps.com?subject=Feedback for Android Vocable "
-        private const val SETTINGS_OPTION_COUNT = 6
+            "mailto:grahamthetvi@icloud.com?subject=Feedback for Switch2Go "
+        private const val SETTINGS_OPTION_COUNT = 5
     }
 
     override val bindingInflater: BindingInflater<FragmentSettingsBinding> = FragmentSettingsBinding::inflate
@@ -63,8 +62,8 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
         binding.version.text = getString(R.string.version, BuildConfig.VERSION_NAME)
 
         binding.privacyPolicyButton.action = {
-            showLeavingAppDialog {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY)))
+            if (findNavController().currentDestination?.id == R.id.settingsFragment) {
+                findNavController().navigate(R.id.action_settingsFragment_to_privacyPolicyFragment)
             }
         }
 
@@ -105,12 +104,6 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
                 findNavController().navigate(R.id.action_settingsFragment_to_advancedEyeTrackingFragment)
             }
         }
-
-        binding.settingsOptionsContainer.choiceSettingsButton.action = {
-            if (findNavController().currentDestination?.id == R.id.settingsFragment) {
-                findNavController().navigate(R.id.action_settingsFragment_to_choiceSettingsFragment)
-            }
-        }
     }
 
 
@@ -149,7 +142,6 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
             settingsOptionsContainer.selectionModeButton.isEnabled = enable
             settingsOptionsContainer.timingSensitivityButton.isEnabled = enable
             settingsOptionsContainer.advancedEyeTrackingButton.isEnabled = enable
-            settingsOptionsContainer.choiceSettingsButton.isEnabled = enable
         }
     }
 

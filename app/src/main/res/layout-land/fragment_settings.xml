@@ -49,7 +49,7 @@
         style="@style/SettingsLinkOutButton"
         android:layout_width="0dp"
         android:text="@string/privacy_policy"
-        app:layout_constraintBottom_toTopOf="@id/version"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/contact_devs_button"
         app:layout_constraintStart_toStartOf="@id/settings_options_container"
         app:layout_constraintTop_toBottomOf="@id/settings_options_container" />
@@ -71,6 +71,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/settings_version_text_bottom_margin"
         android:text="@string/version"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

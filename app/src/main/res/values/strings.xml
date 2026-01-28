@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" tools:ignore="MissingTranslation">
 
-    <string name="app_name" translatable="false">Vocable</string>
+    <string name="app_name" translatable="false">Switch2Go</string>
 
     <!-- Presets -->
     <string name="select_something">Select something below to speak.</string>
@@ -26,6 +26,144 @@
     <string name="previous_page">Previous page</string>
     <string name="next_page">Next page</string>
     <string name="privacy_policy">Privacy Policy</string>
+    <string name="privacy_policy_full_text" formatted="false">PRIVACY POLICY
+Last Updated: January 26, 2026
+
+Our Commitment to Privacy
+This app is designed with privacy as a core principle. We do not collect, store, or transmit any personal information from your device. All features operate entirely on your device, with no data sent to external servers.
+
+1. INFORMATION WE COLLECT
+We collect ZERO information. This app does not:
+
+• Collect personal information
+• Track usage analytics
+• Send crash reports
+• Connect to external servers
+• Use cookies or tracking technologies
+• Collect advertising identifiers
+• Access your location
+• Store or transmit camera or microphone data
+
+
+2. HOW THE APP WORKS
+
+Camera Access (Eye Tracking)
+• Purpose: The app uses your device\'s front camera for eye tracking to control an on-screen pointer, allowing users with limited mobility to interact with the app
+• Processing: All eye tracking processing happens locally on your device using computer vision technology
+• Storage: No camera images, video, or eye tracking data is stored or transmitted
+• Your Control: You can revoke camera permission at any time in your device settings
+
+Microphone Access (Speech Features)
+• Purpose: The app may request microphone access for speech-based features
+• Processing: All voice processing happens locally on your device
+• Storage: No audio recordings are stored or transmitted
+• Your Control: You can revoke microphone permission at any time in your device settings
+
+Local Data Storage
+• The app stores user preferences, custom phrases, and calibration settings locally on your device
+• This data never leaves your device
+• You can delete this data by uninstalling the app or clearing app data in your device settings
+
+
+3. DATA SHARING
+We share NO data with anyone. Because we don\'t collect any data, there is nothing to share with:
+• Third-party services
+• Advertisers
+• Analytics companies
+• Other users
+• Anyone else
+
+
+4. CHILDREN\'S PRIVACY (COPPA &amp; FERPA COMPLIANCE)
+This app is safe for children and students of all ages:
+• No data collection: We don\'t collect personal information from anyone, including children under 13
+• Educational use: This app is designed for use in educational settings and complies with FERPA (Family Educational Rights and Privacy Act)
+• Parental control: Parents and educators have full control over the app through device-level permissions
+• No third parties: Children\'s data is never shared because no data is collected
+
+
+5. INTERNATIONAL USERS (GDPR COMPLIANCE)
+For users in the European Economic Area (EEA), UK, and Switzerland:
+• Data protection by design: This app is built with privacy as the foundation
+• Your rights: Because we don\'t collect data, there is no data to access, correct, delete, or transfer
+• No consent needed: We don\'t need your consent to collect data because we don\'t collect any
+• Legal basis: Not applicable - no processing of personal data occurs
+
+
+6. U.S. STATE PRIVACY RIGHTS
+For residents of California, Virginia, Colorado, Connecticut, and other states with privacy laws:
+• Right to know: We collect no personal information
+• Right to delete: Not applicable - no data is collected
+• Right to opt-out of sale: Not applicable - we don\'t sell data
+• Non-discrimination: Not applicable - no data practices to opt out of
+
+
+7. ACCESSIBILITY &amp; ASSISTIVE TECHNOLOGY
+This app is designed as an assistive communication tool:
+• All features work offline
+• No account or login required
+• Privacy-preserving by design for users with disabilities
+• Safe for use in schools, therapy settings, and homes
+
+
+8. DATA SECURITY
+Since no data is collected or transmitted:
+• There is no risk of data breaches
+• No passwords or accounts to protect
+• All processing stays on your device
+• Your privacy is protected by design
+
+
+9. PERMISSIONS EXPLAINED
+The app requests only essential permissions:
+
+Permission: Camera
+Purpose: Eye tracking for pointer control
+Data Storage: None - processed in real-time only
+
+Permission: Microphone
+Purpose: Optional speech features
+Data Storage: None - processed in real-time only
+
+You can review and change permissions in your device\'s Settings &gt; Apps &gt; [App Name] &gt; Permissions.
+
+
+10. THIRD-PARTY SERVICES
+This app uses no third-party services, including:
+• No analytics platforms
+• No crash reporting
+• No advertising networks
+• No cloud services
+• No AI/ML services requiring data transmission
+
+
+11. CHANGES TO THIS POLICY
+If we ever change our privacy practices (such as adding optional cloud features), we will:
+• Update this policy with a new \"Last Updated\" date
+• Notify users within the app
+• Obtain consent before collecting any data
+• Maintain opt-in requirements for any data collection features
+
+
+12. OPEN SOURCE &amp; TRANSPARENCY
+This app is based on open-source code, modified for enhanced privacy. You can review how the app works by examining the source code or consulting with technical experts.
+
+
+13. CONTACT INFORMATION
+If you have questions about this privacy policy or the app\'s privacy practices:
+
+Addison Graham
+grahamthetvi@icloud.com
+Illinois
+Switch2Go
+
+
+14. YOUR CONSENT
+By using this app, you acknowledge that:
+• You have read this privacy policy
+• You understand that no personal data is collected
+• You grant permission for camera/microphone access only for local, on-device processing
+• You can revoke these permissions at any time</string>
     <string name="contact_developers">Contact Developers</string>
     <string name="version" translatable="false">V %s</string>
     <string name="settings_head_tracking">Head Tracking</string>
@@ -80,6 +218,7 @@
     <string name="cancel">Cancel</string>
     <string name="emoji_keyboard">Emoji keyboard</string>
     <string name="emoji_hint">Tap to type with emojis</string>
+    <string name="use_emoji">Use Emoji</string>
 
     <!-- Eye Gaze Calibration -->
     <string name="calibrate_eye_gaze">Calibrate Eye Gaze</string>
@@ -302,10 +441,12 @@
     <string name="text_size">Text Size</string>
     <string name="text_bold">Bold Text</string>
     <string name="border_color">Border Color</string>
+    <string name="border_thickness">Border Thickness</string>
     <string name="reset_style">Reset to Default</string>
     <string name="style_preview">Preview:</string>
     <string name="select_color">Select Color</string>
     <string name="select_size">Select Size</string>
+    <string name="select_thickness">Select Thickness</string>
     <string name="size_small">Small</string>
     <string name="size_medium_small">Medium Small</string>
     <string name="size_medium">Medium</string>
@@ -313,6 +454,13 @@
     <string name="size_large">Large</string>
     <string name="size_extra_large">Extra Large</string>
     <string name="size_huge">Huge</string>
+    <string name="border_thickness_none">None</string>
+    <string name="border_thickness_thin">6dp</string>
+    <string name="border_thickness_medium">10dp</string>
+    <string name="border_thickness_thick">14dp</string>
+    <string name="border_thickness_xl">20dp</string>
+    <string name="border_thickness_xxl">28dp</string>
+    <string name="border_thickness_custom">%1$ddp</string>
     <string name="phrase_edit_menu_title">Edit Phrase</string>
     <string name="edit_text">Edit Text</string>
     <string name="reorder_phrase">Reorder</string>
@@ -322,11 +470,43 @@
     <string name="category_edit_menu_title">Edit Category</string>
     <string name="reorder_category">Reorder Category</string>
 
-    <!-- Choice Settings -->
-    <string name="choice_settings_title">Choice Mode Settings</string>
-    <string name="choice_mode_enabled">Enable Choice Mode</string>
-    <string name="choice_visual_feedback">Visual Feedback</string>
-    <string name="choice_settings_help">Choice Mode allows you to tap the choice button and speak two options (like "Pizza or Pasta") to quickly create a decision between two choices. Enable visual feedback to see microphone status when listening.</string>
-    <string name="choice_button_description">Make a choice</string>
+    
+    <!-- Phrase Image/Symbol -->
+    <string name="phrase_image">Symbol/Image</string>
+    <string name="select_image">Select Symbol</string>
+    <string name="choose_image">Choose a Symbol</string>
+    <string name="add_image">Add Image</string>
+    <string name="none">None</string>
+    <string name="image_happy">Happy face</string>
+    <string name="image_sad">Sad face</string>
+    <string name="image_yes">Yes / Checkmark</string>
+    <string name="image_no">No / X</string>
+    <string name="image_help">Help / Question</string>
+    <string name="image_food">Food</string>
+    <string name="image_drink">Drink</string>
+    <string name="image_pain">Pain / Alert</string>
+    <string name="image_bathroom">Bathroom</string>
+    <string name="image_sleep">Sleep / Bed</string>
+    <string name="image_love">Love / Heart</string>
+    <string name="image_home">Home</string>
+    <string name="image_person">Person</string>
+    <string name="image_question">Question</string>
+    <string name="image_custom">Custom image</string>
+    <string name="image_emoji">Emoji %1$s</string>
+    <string name="emoji_smile">Emoji: smile</string>
+    <string name="emoji_laugh">Emoji: laugh</string>
+    <string name="emoji_love">Emoji: heart eyes</string>
+    <string name="emoji_sad">Emoji: crying</string>
+    <string name="emoji_angry">Emoji: angry</string>
+    <string name="emoji_grin">Emoji: grin</string>
+    <string name="emoji_sunglasses">Emoji: sunglasses</string>
+    <string name="emoji_halo">Emoji: halo</string>
+    <string name="emoji_wink">Emoji: wink</string>
+    <string name="emoji_tongue">Emoji: tongue out</string>
+    <string name="emoji_hug">Emoji: hug</string>
+    <string name="emoji_think">Emoji: thinking</string>
+    <string name="emoji_sleep">Emoji: sleeping</string>
+    <string name="emoji_surprised">Emoji: surprised</string>
+    <string name="emoji_sick">Emoji: sick</string>
 
 </resources>

@@ -33,7 +33,6 @@ import com.willowtree.vocable.utils.VocableFragmentStateAdapter
 import com.willowtree.vocable.utils.VocableSharedPreferences
 import com.willowtree.vocable.utils.VocableTextToSpeech
 import com.willowtree.vocable.utils.PhraseTextBubble
-import com.willowtree.vocable.utils.VocableSpeechRecognizer
 import org.koin.android.ext.android.inject
 import org.koin.androidx.scope.scopeActivity
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
@@ -131,17 +130,6 @@ class PresetsFragment : BaseFragment<FragmentPresetsBinding>() {
             }
         }
 
-        binding.choiceButton?.action = {
-            if (sharedPrefs.getChoiceModeEnabled()) {
-                VocableSpeechRecognizer.startListening(requireContext())
-            } else {
-                // Show a brief message that choice mode is disabled
-                binding.currentText.text = "Choice mode is disabled in settings"
-                view?.postDelayed({
-                    binding.currentText.text = getString(R.string.select_something)
-                }, 2000)
-            }
-        }
 
         // Try to get the EyeGazeTrackingViewModel for recenter functionality
         try {
@@ -202,15 +190,8 @@ class PresetsFragment : BaseFragment<FragmentPresetsBinding>() {
                 if (phraseIndex < currentPhrases.size) {
                     val phraseItem = currentPhrases[phraseIndex]
                     if (phraseItem is PhraseGridItem.Phrase) {
-                        // Check if we're in choice mode (choice phrases have special IDs)
-                        if (phraseItem.phraseId.startsWith("choice_")) {
-                            // Speak the choice and clear choice mode
-                            VocableTextToSpeech.speak(resources.configuration.locale, phraseItem.text)
-                            presetsViewModel.clearChoices()
-                        } else {
-                            // Normal phrase selection
-                            presetsViewModel.addToRecents(phraseItem.phraseId)
-                        }
+                        // Normal phrase selection
+                        presetsViewModel.addToRecents(phraseItem.phraseId)
                     }
                 }
             }
@@ -516,43 +497,6 @@ class PresetsFragment : BaseFragment<FragmentPresetsBinding>() {
             binding.speakerIcon.isVisible = it
         }
 
-        VocableSpeechRecognizer.speechResult.observe(viewLifecycleOwner) { result ->
-            when (result) {
-                is VocableSpeechRecognizer.SpeechResult.ListeningStarted -> {
-                    // Show visual feedback that listening has started
-                    binding.currentText.text = "Listening for choices..."
-                    if (sharedPrefs.getChoiceVisualFeedbackEnabled()) {
-                        binding.microphoneIcon?.isVisible = true
-                    }
-                }
-                is VocableSpeechRecognizer.SpeechResult.ChoicesParsed -> {
-                    // Show the parsed choices
-                    presetsViewModel.showChoices(result.optionA, result.optionB)
-                    binding.currentText.text = "Say your choice"
-                }
-                is VocableSpeechRecognizer.SpeechResult.ListeningStopped -> {
-                    // Reset to normal text and hide microphone
-                    binding.currentText.text = getString(R.string.select_something)
-                    binding.microphoneIcon?.isVisible = false
-                }
-                is VocableSpeechRecognizer.SpeechResult.Error -> {
-                    // Show error message briefly and hide microphone
-                    binding.currentText.text = result.message
-                    binding.microphoneIcon?.isVisible = false
-                    // Reset after a delay
-                    view?.postDelayed({
-                        binding.currentText.text = getString(R.string.select_something)
-                    }, 3000)
-                }
-            }
-        }
-
-        presetsViewModel.isChoiceMode.observe(viewLifecycleOwner) { isChoiceMode ->
-            if (!isChoiceMode) {
-                // Clear any choice mode visual feedback
-                binding.currentText.text = getString(R.string.select_something)
-            }
-        }
 
         presetsViewModel.apply {
             categoryList.observe(viewLifecycleOwner, ::handleCategories)

@@ -64,7 +64,7 @@
         android:layout_width="0dp"
         android:layout_marginTop="@dimen/settings_contact_developers_top_margin"
         android:text="@string/contact_developers"
-        app:layout_constraintBottom_toTopOf="@id/version"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/guideline_end"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintTop_toBottomOf="@id/privacy_policy_button" />
@@ -76,6 +76,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/settings_version_text_bottom_margin"
         android:text="@string/version"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -92,17 +92,6 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_recenter" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
-        android:id="@+id/choice_button"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_marginEnd="8dp"
-        android:background="@drawable/button_compact_background"
-        android:contentDescription="@string/choice_button_description"
-        android:padding="6dp"
-        android:scaleType="fitCenter"
-        android:src="@drawable/ic_choice" />
-
         <com.willowtree.vocable.customviews.VocableImageButton
             android:id="@+id/settings_button"
             android:layout_width="32dp"

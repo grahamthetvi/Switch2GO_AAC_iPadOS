@@ -1,6 +1,16 @@
 package com.willowtree.vocable.room
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.os.Parcelable
+import android.text.TextPaint
+import androidx.core.content.ContextCompat
 import kotlinx.parcelize.Parcelize
 
 /**
@@ -26,10 +36,21 @@ data class PhraseStyle(
     val borderColor: Int? = null,
     
     /** Border width in density-independent pixels (dp) */
-    val borderWidthDp: Float? = null
+    val borderWidthDp: Float? = null,
+    
+    /**
+     * Image to display above the text.
+     * Can be:
+     * - A drawable resource name (e.g., "ic_emoji_smile") for built-in icons
+     * - A file URI (e.g., "file:///path/to/image.png") for user images
+     * - null for no image
+     */
+    val imageRef: String? = null
 ) : Parcelable {
     
     companion object {
+        const val EMOJI_PREFIX = "emoji:"
+
         /** Default style with no customizations (uses system defaults) */
         val DEFAULT = PhraseStyle()
         
@@ -74,6 +95,33 @@ data class PhraseStyle(
             32f to "Extra Large",
             40f to "Huge"
         )
+        
+        /**
+         * Built-in symbol/icon options that can be used for phrases.
+         * Maps display name to drawable resource name.
+         */
+        val PRESET_IMAGES = listOf(
+            "None" to null,
+            "Happy" to "ic_symbol_happy",
+            "Sad" to "ic_symbol_sad",
+            "Yes" to "ic_symbol_yes",
+            "No" to "ic_symbol_no",
+            "Help" to "ic_symbol_help",
+            "Food" to "ic_symbol_food",
+            "Drink" to "ic_symbol_drink",
+            "Pain" to "ic_symbol_pain",
+            "Bathroom" to "ic_symbol_bathroom",
+            "Sleep" to "ic_symbol_sleep",
+            "Love" to "ic_symbol_love",
+            "Home" to "ic_symbol_home",
+            "Person" to "ic_symbol_person",
+            "Question" to "ic_symbol_question"
+        )
+
+        fun extractEmoji(ref: String?): String? {
+            if (ref.isNullOrBlank()) return null
+            return if (ref.startsWith(EMOJI_PREFIX)) ref.removePrefix(EMOJI_PREFIX) else null
+        }
     }
     
     /** Returns the effective background color, using default if not set */
@@ -87,5 +135,72 @@ data class PhraseStyle(
     
     /** Returns the effective border width, using default if not set */
     fun effectiveBorderWidth(): Float = borderWidthDp ?: DEFAULT_BORDER_WIDTH_DP
+    
+    /** Returns true if this style has an image set */
+    fun hasImage(): Boolean = !imageRef.isNullOrBlank()
+    
+    /**
+     * Loads and returns the image drawable for this style.
+     * @param context The context to use for loading resources
+     * @return The drawable, or null if no image is set or loading fails
+     */
+    fun loadImageDrawable(context: Context): Drawable? {
+        val ref = imageRef ?: return null
+        if (ref.isBlank()) return null
+
+        extractEmoji(ref)?.let { emoji ->
+            return createEmojiDrawable(context, emoji)
+        }
+        
+        return try {
+            if (ref.startsWith("file://") || ref.startsWith("content://")) {
+                // Load from file/content URI
+                val uri = android.net.Uri.parse(ref)
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    val bitmap = BitmapFactory.decodeStream(stream)
+                    if (bitmap != null) {
+                        BitmapDrawable(context.resources, bitmap)
+                    } else {
+                        null
+                    }
+                }
+            } else {
+                // Load from drawable resource by name
+                val resId = context.resources.getIdentifier(ref, "drawable", context.packageName)
+                if (resId != 0) {
+                    ContextCompat.getDrawable(context, resId)
+                } else {
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    /**
+     * Returns the drawable resource ID for the image, or 0 if not a resource or not found.
+     */
+    fun getImageResId(context: Context): Int {
+        val ref = imageRef ?: return 0
+        if (ref.isBlank() || ref.startsWith(EMOJI_PREFIX) || ref.startsWith("file://") || ref.startsWith("content://")) return 0
+        return context.resources.getIdentifier(ref, "drawable", context.packageName)
+    }
+
+    private fun createEmojiDrawable(context: Context, emoji: String): Drawable? {
+        if (emoji.isBlank()) return null
+        val density = context.resources.displayMetrics.density
+        val sizePx = (48f * density).toInt().coerceAtLeast(24)
+        val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.BLACK
+            textSize = 32f * density
+            textAlign = Paint.Align.CENTER
+        }
+        val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val y = sizePx / 2f - (textPaint.descent() + textPaint.ascent()) / 2f
+        canvas.drawText(emoji, sizePx / 2f, y, textPaint)
+        return BitmapDrawable(context.resources, bitmap)
+    }
 }
 

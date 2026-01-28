@@ -41,11 +41,4 @@
         android:layout_height="0dp"
         android:text="@string/advanced_eye_tracking_title" />
 
-    <com.willowtree.vocable.customviews.NoSayTextButton
-        android:id="@+id/choice_settings_button"
-        style="@style/SettingsOptionButtons"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:text="@string/choice_settings_title" />
-
 </GridLayout>

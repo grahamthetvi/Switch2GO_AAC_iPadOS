@@ -1,63 +1,68 @@
-# Vocable AAC for Android
+# Switch2Go - Accessible AAC for CVI
+
 ![Platform Android](https://img.shields.io/badge/Platform-Android-blue.svg)
 ![license MIT](https://img.shields.io/badge/license-MIT-brightgreen.svg)
-[![Crowdin](https://badges.crowdin.net/vocable-android/localized.svg)](https://crowdin.com/project/vocable-android)
-[![Slack](https://img.shields.io/badge/Join%20our%20Slack-%23E01E5A?logo=slack)](https://docs.google.com/forms/d/1hiU2fJtta4BcalnybFMugUE9RXeG4oQXelG9B3KDtf8/viewform?edit_requested=true)
 
-> Empowering people to communicate with care takers and loved ones.
+> An accessible AAC application designed to support students with Cerebral Visual Impairment (CVI)
 
-[![Watch the video](marketing_assets/vocable_vimeo_still.gif)](https://player.vimeo.com/video/394212430)
+## About Switch2Go
 
-[![Play Store Link](marketing_assets/google-play-badge.svg)](https://play.google.com/store/apps/details?id=com.willowtree.vocable)
+Switch2Go is a fork of [Vocable AAC](https://github.com/willowtreeapps/vocable-android), originally developed by WillowTree, LLC. This adaptation has been created by **Addison Graham, Teacher of the Visually Impaired**, to provide specialized support for students with Cerebral Visual Impairment (CVI).
 
-Pre-release builds are available through Firebase [here](https://appdistribution.firebase.dev/i/ebf0696a3e643b20)
+The app has been customized with CVI-friendly features including:
+- Simplified, high-contrast symbol layouts
+- Customizable symbol colors and sizes
+- Reduced visual complexity
+- Configurable symbol count per page (2-9 symbols)
+- Eye gaze and head tracking support for hands-free operation
 
 ## Contents
-- [What is Vocable?](#what-is-vocable)
+- [What is Switch2Go?](#what-is-switch2go)
 - [Features](#features)
-- [Roadmap](#roadmap)
-- [Translations](#translations)
-- [Contributing](#contributing)
 - [Requirements](#requirements)
 - [Credits](#credits)
 - [License](#license)
 
-## What is Vocable?
-Vocable AAC allows those with conditions such as MS, stroke, ALS, or spinal cord injuries to communicate using an app that tracks head movements, without the need to spend tens of thousands of dollars on technology to do so.
+## What is Switch2Go?
+Switch2Go is an Augmentative and Alternative Communication (AAC) application designed specifically for students with Cerebral Visual Impairment. It allows users to communicate using customizable symbol-based interfaces, with support for head tracking and eye gaze technology for hands-free operation.
 
 ## Features
 
-### Multimodal User Interface
+### CVI-Optimized Interface
+- **Configurable Symbol Layouts**: Choose from 2-9 symbols per page to reduce visual complexity
+- **Customizable Colors**: Set high-contrast colors for each symbol position to improve visibility
+- **Adjustable Text Sizes**: Multiple text size options to accommodate different visual needs
+- **Simplified Design**: Clean, uncluttered interface designed for CVI users
 
-Vocable uses ARCore to track the user's head movements and understand where the user is looking at on the screen. This allows the app to be used completely hands-free: users can look around the screen and make selections by lingering their gaze at a particular element. 
+### Multimodal User Interface
+Switch2Go uses ARCore to track the user's head movements and eye gaze technology to understand where the user is looking on the screen. This allows the app to be used completely hands-free: users can look around the screen and make selections by lingering their gaze at a particular element.
 
 For users with more mobility, the app can be operated by touch.
 
 ### Saved Phrases
-Use a list of common phrases provided by speech language pathologists, or create and save your own.
+Use a list of common phrases, or create and save your own custom phrases with customizable appearance settings.
 
 ### Full QWERTY Keyboard
-Type with your head or your hands.
-
-## Roadmap
-For the current progress on features, please visit the [project board](https://github.com/orgs/willowtreeapps/projects/50/views/1).
-
-For a high-level roadmap, see the [Vocable Roadmap](./ROADMAP.md)
-
-## Translations
-We'd love to translate Vocable into as many languages as possible. If you'd like to help translate, please visit our [Crowdin project](https://crowdin.com/project/vocable-android). Thanks for helping people communicate all around the world! 🌎🌍🌏
-
-## Contributing
-We love contributions! To get started, please see our [Contributing Guidelines](./CONTRIBUTING.md).
+Type with your head, eyes, or hands.
 
 ## Device Requirements
 - [Android devices with ARCore](https://developers.google.com/ar/discover/supported-devices)
 
 ## Credits
-Matt Kubota, Kyle Ohanian, Duncan Lewis, Ameir Al-Zoubi, and many more from [WillowTree](https://willowtreeapps.com/) 💙.
+
+### Switch2Go Development
+- **Addison Graham** - Teacher of the Visually Impaired, Fork Maintainer
+  - Adapted Vocable AAC for students with Cerebral Visual Impairment (CVI)
+  - Customized interface and features for CVI accessibility
+
+### Original Vocable AAC Development
+Switch2Go is based on Vocable AAC, originally developed by:
+- Matt Kubota, Kyle Ohanian, Duncan Lewis, Ameir Al-Zoubi, and many more from [WillowTree](https://willowtreeapps.com/) 💙
+
+We are grateful to the original Vocable team for creating this excellent foundation for accessible communication.
 
 ## License
-vocable-android is released under the MIT license. See [LICENSE](LICENSE) for details.
+Switch2Go is released under the MIT license. See [LICENSE](LICENSE) for details.
 
-## Other Variants
-vocable-ios is available on [Apple Play Store](https://apps.apple.com/us/app/vocable-aac/id1497040547) and is also [open-source](https://github.com/willowtreeapps/vocable-ios). 
+## Original Project
+This project is a fork of [Vocable AAC for Android](https://github.com/willowtreeapps/vocable-android), originally developed by WillowTree, LLC. 

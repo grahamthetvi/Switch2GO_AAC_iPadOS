@@ -8,4 +8,4 @@ Once the .aab is generated, you can upload it to the Play Console.  We have been
 are able to update their apps successfully within WillowTree before promoting it to Production.  You can also do one last smoke test
 on the release build while it's in internal test, if you'd like.
 
-Once the release is promoted to Production, keep an eye on Crashlytics for a couple of days to make sure there aren't any major issues that come up.
+Once the release is promoted to Production, monitor user feedback and app store reviews for any issues that may arise.

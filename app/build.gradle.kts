@@ -3,8 +3,6 @@ plugins {
     id("kotlin-kapt")
     id("kotlin-parcelize")
     id("androidx.navigation.safeargs.kotlin")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
     alias(libs.plugins.compose.compiler)
 }
 
@@ -13,7 +11,7 @@ android {
 
     defaultConfig {
         targetSdk = 35
-        applicationId = "com.willowtree.vocable"
+        applicationId = "com.switch2connect.aac"
 
         val versionCodeEnv = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionCode = versionCodeEnv + 30
@@ -130,10 +128,8 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
-    // Logging & Analytics
+    // Logging
     implementation(libs.timber)
-    implementation(libs.firebase.analytics)
-    implementation(libs.firebase.crashlytics.ktx)
 
     // Moshi
     implementation(libs.moshi.kotlin)

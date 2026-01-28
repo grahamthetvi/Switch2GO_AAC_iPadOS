@@ -63,10 +63,11 @@
             <com.willowtree.vocable.customviews.VocablePhraseButton
                 android:id="@+id/preview_button"
                 android:layout_width="match_parent"
-                android:layout_height="80dp"
+                android:layout_height="120dp"
                 android:layout_marginBottom="24dp"
                 android:background="@drawable/button_default_background"
-                android:gravity="center"
+                android:gravity="center|bottom"
+                android:paddingBottom="12dp"
                 android:text="Sample Text"
                 android:textColor="@color/textColor"
                 android:textSize="18sp" />
@@ -154,8 +155,44 @@
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="16dp"
                 android:text="@string/select_color" />
+
+            <!-- Border Thickness -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/border_thickness"
+                android:textColor="@color/textColor"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/border_width_button"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/select_thickness" />
+
+            <!-- Image/Symbol -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/phrase_image"
+                android:textColor="@color/textColor"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/image_button"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="24dp"
+                android:text="@string/select_image" />
 
             <!-- Reset Button -->
             <com.willowtree.vocable.customviews.ActionButton
@@ -183,6 +220,42 @@
         <include
             android:id="@+id/size_picker_dialog"
             layout="@layout/size_picker_dialog"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Image picker dialog -->
+        <include
+            android:id="@+id/image_picker_dialog"
+            layout="@layout/image_picker_dialog"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Emoji keyboard dialog -->
+        <include
+            android:id="@+id/emoji_keyboard_dialog"
+            layout="@layout/emoji_keyboard_dialog"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Border width picker dialog -->
+        <include
+            android:id="@+id/border_width_picker_dialog"
+            layout="@layout/border_width_picker_dialog"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:visibility="gone"

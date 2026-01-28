@@ -124,9 +124,14 @@
             android:id="@+id/action_settingsFragment_to_advancedEyeTrackingFragment"
             app:destination="@id/advancedEyeTrackingFragment" />
         <action
-            android:id="@+id/action_settingsFragment_to_choiceSettingsFragment"
-            app:destination="@id/choiceSettingsFragment" />
+            android:id="@+id/action_settingsFragment_to_privacyPolicyFragment"
+            app:destination="@id/privacyPolicyFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/privacyPolicyFragment"
+        android:name="com.willowtree.vocable.settings.PrivacyPolicyFragment"
+        android:label="PrivacyPolicyFragment"
+        tools:layout="@layout/fragment_privacy_policy" />
     <fragment
         android:id="@+id/categoriesDisplaySettingsFragment"
         android:name="com.willowtree.vocable.settings.CategoriesDisplaySettingsFragment"
@@ -149,11 +154,6 @@
         android:name="com.willowtree.vocable.settings.CVIDisplaySettingsFragment"
         android:label="CVIDisplaySettingsFragment"
         tools:layout="@layout/fragment_cvi_display_settings" />
-    <fragment
-        android:id="@+id/choiceSettingsFragment"
-        android:name="com.willowtree.vocable.settings.ChoiceSettingsFragment"
-        android:label="ChoiceSettingsFragment"
-        tools:layout="@layout/fragment_choice_settings" />
     <fragment
         android:id="@+id/presetsFragment"
         android:name="com.willowtree.vocable.presets.PresetsFragment"

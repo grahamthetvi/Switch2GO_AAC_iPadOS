@@ -22,7 +22,6 @@ import com.willowtree.vocable.utils.SelectionMode
 import com.willowtree.vocable.utils.VocableEnvironment
 import com.willowtree.vocable.utils.VocableEnvironmentType
 import com.willowtree.vocable.utils.VocableTextToSpeech
-import com.willowtree.vocable.utils.VocableSpeechRecognizer
 import io.github.inflationx.viewpump.ViewPump
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import kotlinx.coroutines.launch
@@ -141,7 +140,6 @@ class MainActivity : ScopeActivity() {
 
         supportActionBar?.hide()
         VocableTextToSpeech.initialize(this)
-        VocableSpeechRecognizer.initialize(this)
 
         binding.mainNavHostFragment?.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             allViews.clear()
@@ -155,7 +153,6 @@ class MainActivity : ScopeActivity() {
     override fun onDestroy() {
         super.onDestroy()
         VocableTextToSpeech.shutdown()
-        VocableSpeechRecognizer.shutdown()
     }
 
     private fun getErrorView(): View = binding.errorView.root

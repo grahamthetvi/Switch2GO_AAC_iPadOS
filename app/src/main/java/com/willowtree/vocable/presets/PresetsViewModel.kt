@@ -58,9 +58,6 @@ class PresetsViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), null)
     val selectedCategoryLiveData: LiveData<Category?> = selectedCategory.asLiveData()
 
-    private val choicePhrases = MutableLiveData<List<PhraseGridItem>?>()
-    val isChoiceMode: LiveData<Boolean> = choicePhrases.map { it != null }
-
     private val _currentPhrases = MutableLiveData<List<PhraseGridItem>>()
     val currentPhrases: LiveData<List<PhraseGridItem>> = _currentPhrases
 
@@ -118,10 +115,7 @@ class PresetsViewModel(
 
     fun onCategorySelected(categoryId: String) {
         selectedCategoryId.update { categoryId }
-        // Update phrases if not in choice mode
-        if (choicePhrases.value == null) {
-            updateCurrentPhrasesForCategory(categoryId)
-        }
+        updateCurrentPhrasesForCategory(categoryId)
     }
 
     fun addToRecents(phraseId: String) {
@@ -135,31 +129,5 @@ class PresetsViewModel(
     fun navToAddPhrase() {
         liveNavToAddPhrase.value = true
         liveNavToAddPhrase.value = false
-    }
-
-    fun showChoices(optionA: String, optionB: String) {
-        val choiceItems = listOf(
-            PhraseGridItem.Phrase(
-                phraseId = "choice_a",
-                text = optionA,
-                style = null
-            ),
-            PhraseGridItem.Phrase(
-                phraseId = "choice_b",
-                text = optionB,
-                style = null
-            )
-        )
-        choicePhrases.value = choiceItems
-        _currentPhrases.value = choiceItems
-    }
-
-    fun clearChoices() {
-        choicePhrases.value = null
-        // Restore normal phrases
-        val currentCategoryId = selectedCategoryId.value
-        if (currentCategoryId != null) {
-            updateCurrentPhrasesForCategory(currentCategoryId)
-        }
     }
 }

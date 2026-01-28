@@ -1,6 +1,12 @@
 MIT License
 
 Copyright (c) 2019 WillowTree, LLC
+Copyright (c) 2025 Addison Graham
+
+This project is a fork of Vocable AAC (https://github.com/willowtreeapps/vocable-android),
+originally developed by WillowTree, LLC. Switch2Go has been adapted by Addison Graham,
+Teacher of the Visually Impaired, to support students with Cerebral Visual Impairment (CVI)
+by providing an accessible AAC application.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

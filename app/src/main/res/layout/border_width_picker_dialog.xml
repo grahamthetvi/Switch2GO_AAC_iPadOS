@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/border_width_picker_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#CC000000"
+    android:clickable="true"
+    android:focusable="true"
+    android:visibility="gone">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="32dp"
+        app:cardBackgroundColor="@color/cardBackgroundColor"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_max="400dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:id="@+id/border_width_picker_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:gravity="center"
+                android:text="@string/select_thickness"
+                android:textColor="@color/textColor"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/border_width_option_none"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/border_thickness_none" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/border_width_option_thin"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/border_thickness_thin" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/border_width_option_medium"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/border_thickness_medium" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/border_width_option_thick"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/border_thickness_thick" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/border_width_option_xl"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/border_thickness_xl" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/border_width_option_xxl"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/border_thickness_xxl" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/border_width_picker_cancel"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="@string/cancel" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

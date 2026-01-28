@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/image_picker_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#99000000"
+    android:clickable="true"
+    android:focusable="true">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        app:cardBackgroundColor="@color/colorPrimaryDark"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.85">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:id="@+id/image_picker_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:gravity="center"
+                android:text="@string/choose_image"
+                android:textColor="@color/textColor"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/image_option_add_image"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/add_image" />
+
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/image_option_emoji_keyboard"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/emoji_keyboard" />
+
+            <!-- Image options grid -->
+            <GridLayout
+                android:id="@+id/image_options_grid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="5"
+                android:rowCount="3">
+
+                <!-- Row 1: None, Happy, Sad, Yes, No -->
+                <com.willowtree.vocable.customviews.ActionButton
+                    android:id="@+id/image_option_none"
+                    style="@style/SettingsButton"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:text="@string/none"
+                    android:textSize="12sp" />
+
+                <ImageView
+                    android:id="@+id/image_option_happy"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:background="@drawable/button_default_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_symbol_happy"
+                    android:contentDescription="@string/image_happy" />
+
+                <ImageView
+                    android:id="@+id/image_option_sad"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:background="@drawable/button_default_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_symbol_sad"
+                    android:contentDescription="@string/image_sad" />
+
+                <ImageView
+                    android:id="@+id/image_option_yes"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:background="@drawable/button_default_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_symbol_yes"
+                    android:contentDescription="@string/image_yes" />
+
+                <ImageView
+                    android:id="@+id/image_option_no"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:background="@drawable/button_default_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_symbol_no"
+                    android:contentDescription="@string/image_no" />
+
+                <!-- Row 2: Help, Food, Drink, Pain, Bathroom -->
+                <ImageView
+                    android:id="@+id/image_option_help"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:background="@drawable/button_default_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_symbol_help"
+                    android:contentDescription="@string/image_help" />
+
+                <ImageView
+                    android:id="@+id/image_option_food"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:background="@drawable/button_default_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_symbol_food"
+                    android:contentDescription="@string/image_food" />
+
+                <ImageView
+                    android:id="@+id/image_option_drink"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:background="@drawable/button_default_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_symbol_drink"
+                    android:contentDescription="@string/image_drink" />
+
+                <ImageView
+                    android:id="@+id/image_option_pain"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:background="@drawable/button_default_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_symbol_pain"
+                    android:contentDescription="@string/image_pain" />
+
+                <ImageView
+                    android:id="@+id/image_option_bathroom"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:background="@drawable/button_default_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_symbol_bathroom"
+                    android:contentDescription="@string/image_bathroom" />
+
+                <!-- Row 3: Sleep, Love, Home, Person, Question -->
+                <ImageView
+                    android:id="@+id/image_option_sleep"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:background="@drawable/button_default_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_symbol_sleep"
+                    android:contentDescription="@string/image_sleep" />
+
+                <ImageView
+                    android:id="@+id/image_option_love"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:background="@drawable/button_default_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_symbol_love"
+                    android:contentDescription="@string/image_love" />
+
+                <ImageView
+                    android:id="@+id/image_option_home"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:background="@drawable/button_default_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_symbol_home"
+                    android:contentDescription="@string/image_home" />
+
+                <ImageView
+                    android:id="@+id/image_option_person"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:background="@drawable/button_default_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_symbol_person"
+                    android:contentDescription="@string/image_person" />
+
+                <ImageView
+                    android:id="@+id/image_option_question"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:layout_columnWeight="1"
+                    android:background="@drawable/button_default_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_symbol_question"
+                    android:contentDescription="@string/image_question" />
+
+            </GridLayout>
+
+            <!-- Cancel button -->
+            <com.willowtree.vocable.customviews.ActionButton
+                android:id="@+id/image_picker_cancel"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/cancel" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
