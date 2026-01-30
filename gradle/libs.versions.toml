@@ -2,6 +2,7 @@
 turbine = "1.2.1"
 kotlin = "2.2.0"
 agp = "8.12.0"
+compose-multiplatform = "1.8.0"
 safe-args = "2.9.3"
 google-services = "4.4.3"
 crashlytics = "3.0.6"
@@ -145,3 +146,5 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+kotlinCocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = "kotlin" }
