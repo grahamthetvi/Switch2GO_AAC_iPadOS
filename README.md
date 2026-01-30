@@ -47,7 +47,7 @@ Type with your head, eyes, or hands.
 
 ## Device Requirements
 - [Android devices with Android OS 8 or higher.]
-- [iOS some version or higher but honestly I didnt want to make so that only devices with IR sensors could use the app so I made it so more devices could use the app]
+- [iOS some version or higher but honestly I didnt want to make so that only devices with IR sensors could use the app so I made it so more devices could use the app, HEY REVISE THIS LATER]
 
 ## Credits
 
