@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     tools:background="@color/colorPrimaryDark">
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/back_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -43,7 +43,7 @@
         app:layout_constraintStart_toEndOf="@id/back_button"
         app:layout_constraintTop_toTopOf="@id/back_button" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/save_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -78,7 +78,7 @@
         app:layout_constraintEnd_toEndOf="@id/keyboard_key_holder"
         app:layout_constraintStart_toStartOf="@id/keyboard_key_holder">
 
-        <com.willowtree.vocable.customviews.VocableImageButton
+        <com.switch2go.aac.customviews.Switch2GOImageButton
             android:id="@+id/keyboard_clear_button"
             style="@style/EditKeyboardBottomBarButtons"
             android:layout_width="0dp"
@@ -88,7 +88,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.willowtree.vocable.customviews.VocableImageButton
+        <com.switch2go.aac.customviews.Switch2GOImageButton
             android:id="@+id/keyboard_space_button"
             style="@style/EditKeyboardBottomBarButtons"
             android:layout_width="0dp"
@@ -98,7 +98,7 @@
             app:layout_constraintStart_toEndOf="@+id/keyboard_clear_button"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.willowtree.vocable.customviews.VocableImageButton
+        <com.switch2go.aac.customviews.Switch2GOImageButton
             android:id="@+id/keyboard_backspace_button"
             style="@style/EditKeyboardBottomBarButtons"
             android:layout_width="0dp"

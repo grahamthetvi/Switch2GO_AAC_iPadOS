@@ -9,7 +9,7 @@
     android:theme="@style/SettingsTheme"
     tools:background="@color/colorPrimaryDark">
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/edit_options_back_button"
         style="@style/CloseButton"
         android:layout_width="@dimen/settings_close_button_width"
@@ -21,7 +21,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/remove_category_button"
         style="@style/CloseButton"
         android:layout_width="@dimen/settings_close_button_width"
@@ -32,7 +32,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/edit_options_back_button" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/add_phrase_button"
         style="@style/CloseButton"
         android:layout_width="@dimen/settings_close_button_width"
@@ -57,7 +57,7 @@
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="What if this title is like obnoxiously long" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/edit_options_button"
         android:layout_width="@dimen/edit_options_button_width"
         android:layout_height="@dimen/edit_options_button_height"
@@ -94,7 +94,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <com.willowtree.vocable.customviews.NoSayTextButton
+    <com.switch2go.aac.customviews.NoSayTextButton
         android:id="@+id/empty_add_phrase_button"
         android:layout_width="0dp"
         android:layout_height="64dp"
@@ -107,7 +107,7 @@
         app:layout_constraintEnd_toEndOf="@id/empty_phrases_text"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/edit_category_pager_back_button"
         android:layout_width="@dimen/phrases_paging_button_width"
         android:layout_height="@dimen/phrases_paging_button_height"
@@ -139,7 +139,7 @@
         app:layout_constraintTop_toTopOf="@+id/edit_category_pager_back_button"
         tools:text="Page 1 of 2" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/edit_category_pager_forward_button"
         android:layout_width="@dimen/phrases_paging_button_width"
         android:layout_height="@dimen/phrases_paging_button_height"

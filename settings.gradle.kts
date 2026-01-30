@@ -16,7 +16,7 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "vocable-android"
+rootProject.name = "switch2go-aac"
 
 include(":app")
 include(":basetest")

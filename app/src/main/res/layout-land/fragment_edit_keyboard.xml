@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     tools:background="@color/colorPrimaryDark">
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/back_button"
         android:layout_width="@dimen/edit_keyboard_button_width"
         android:layout_height="@dimen/edit_keyboard_button_height"
@@ -44,7 +44,7 @@
         app:layout_constraintStart_toEndOf="@id/back_button"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/save_button"
         android:layout_width="@dimen/edit_keyboard_button_width"
         android:layout_height="@dimen/edit_keyboard_button_height"
@@ -93,7 +93,7 @@
             android:orientation="vertical"
             app:layout_constraintGuide_percent="0.8" />
 
-        <com.willowtree.vocable.customviews.VocableImageButton
+        <com.switch2go.aac.customviews.Switch2GOImageButton
             android:id="@+id/keyboard_clear_button"
             style="@style/EditKeyboardBottomBarButtons"
             android:layout_width="0dp"
@@ -103,7 +103,7 @@
             app:layout_constraintStart_toStartOf="@id/left_guideline"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.willowtree.vocable.customviews.VocableImageButton
+        <com.switch2go.aac.customviews.Switch2GOImageButton
             android:id="@+id/keyboard_space_button"
             style="@style/EditKeyboardBottomBarButtons"
             android:layout_width="0dp"
@@ -113,7 +113,7 @@
             app:layout_constraintStart_toEndOf="@+id/keyboard_clear_button"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.willowtree.vocable.customviews.VocableImageButton
+        <com.switch2go.aac.customviews.Switch2GOImageButton
             android:id="@+id/keyboard_backspace_button"
             style="@style/EditKeyboardBottomBarButtons"
             android:layout_width="0dp"

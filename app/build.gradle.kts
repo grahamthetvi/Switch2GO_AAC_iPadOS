@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.willowtree.vocable"
+    namespace = "com.switch2go.aac"
 
     defaultConfig {
         targetSdk = 35
@@ -18,7 +18,7 @@ android {
 
         versionName = System.getenv("VERSION_NAME") ?: "pre-release($versionCode)"
 
-        testInstrumentationRunner = "com.willowtree.vocable.utility.VocableTestRunner"
+        testInstrumentationRunner = "com.switch2go.aac.utility.Switch2GOTestRunner"
 
         javaCompileOptions {
             annotationProcessorOptions {

@@ -24,21 +24,21 @@ kotlin {
         iosSimulatorArm64()
     ).forEach {
         it.binaries.framework {
-            baseName = "VocableShared"
+            baseName = "Switch2GOShared"
             isStatic = true
         }
     }
 
     // CocoaPods configuration for iOS dependencies
     cocoapods {
-        summary = "Vocable Shared KMP Module with Eye Gaze Tracking"
-        homepage = "https://github.com/willowtreeapps/vocable-ios"
+        summary = "Switch2GO AAC Shared KMP Module with Eye Gaze Tracking"
+        homepage = "https://github.com/grahamthetvi/Switch2GO_AAC_iPadOS"
         version = "1.0"
         ios.deploymentTarget = "15.0"
         podfile = project.file("../iosApp/Podfile")
 
         framework {
-            baseName = "VocableShared"
+            baseName = "Switch2GOShared"
             isStatic = true
         }
 
@@ -93,7 +93,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.vocable.shared"
+    namespace = "com.switch2go.aac.shared"
     compileSdk = 35
 
     defaultConfig {

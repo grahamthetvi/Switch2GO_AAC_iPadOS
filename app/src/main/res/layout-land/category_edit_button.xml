@@ -10,7 +10,7 @@
     app:layout_constraintHorizontal_bias="0.0"
     app:layout_constraintStart_toStartOf="parent">
 
-    <com.willowtree.vocable.customviews.NoSayTextButton
+    <com.switch2go.aac.customviews.NoSayTextButton
         android:id="@+id/individual_edit_category_button"
         style="@style/IndividualCategoryEditButton"
         android:layout_width="0dp"
@@ -26,7 +26,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
-    <com.willowtree.vocable.customviews.ActionButton
+    <com.switch2go.aac.customviews.ActionButton
         android:id="@+id/move_category_up_button"
         style="@style/SettingsButton"
         android:layout_width="@dimen/settings_edit_individual_category_arrow_width"
@@ -39,7 +39,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
-    <com.willowtree.vocable.customviews.ActionButton
+    <com.switch2go.aac.customviews.ActionButton
         android:id="@+id/move_category_down_button"
         style="@style/SettingsButton"
         android:layout_width="@dimen/settings_edit_individual_category_arrow_width"

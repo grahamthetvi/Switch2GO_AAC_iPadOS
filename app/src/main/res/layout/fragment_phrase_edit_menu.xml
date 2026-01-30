@@ -8,7 +8,7 @@
 
     <include layout="@layout/guidelines_settings" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/back_button"
         style="@style/CloseButton"
         android:layout_width="@dimen/settings_close_button_width"
@@ -35,7 +35,7 @@
         app:layout_constraintTop_toTopOf="@+id/back_button" />
 
     <!-- Phrase Preview -->
-    <com.willowtree.vocable.customviews.VocablePhraseButton
+    <com.switch2go.aac.customviews.Switch2GOPhraseButton
         android:id="@+id/phrase_text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -78,7 +78,7 @@
         app:layout_constraintTop_toBottomOf="@id/position_indicator">
 
         <!-- Edit Text Button -->
-        <com.willowtree.vocable.customviews.ActionButton
+        <com.switch2go.aac.customviews.ActionButton
             android:id="@+id/edit_text_button"
             style="@style/SettingsButton"
             android:layout_width="match_parent"
@@ -88,7 +88,7 @@
             android:text="@string/edit_text" />
 
         <!-- Edit Appearance Button -->
-        <com.willowtree.vocable.customviews.ActionButton
+        <com.switch2go.aac.customviews.ActionButton
             android:id="@+id/edit_style_button"
             style="@style/SettingsButton"
             android:layout_width="match_parent"
@@ -105,7 +105,7 @@
             android:layout_weight="1"
             android:orientation="horizontal">
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/move_up_button"
                 style="@style/SettingsButton"
                 android:layout_width="0dp"
@@ -114,7 +114,7 @@
                 android:layout_weight="1"
                 android:text="@string/move_up" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/move_down_button"
                 style="@style/SettingsButton"
                 android:layout_width="0dp"
@@ -126,7 +126,7 @@
         </LinearLayout>
 
         <!-- Move to specific position -->
-        <com.willowtree.vocable.customviews.ActionButton
+        <com.switch2go.aac.customviews.ActionButton
             android:id="@+id/move_to_position_button"
             style="@style/SettingsButton"
             android:layout_width="match_parent"
@@ -136,7 +136,7 @@
             android:text="@string/move_to_position" />
 
         <!-- Delete Button -->
-        <com.willowtree.vocable.customviews.ActionButton
+        <com.switch2go.aac.customviews.ActionButton
             android:id="@+id/delete_button"
             style="@style/SettingsButton"
             android:layout_width="match_parent"

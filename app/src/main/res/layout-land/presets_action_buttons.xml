@@ -4,14 +4,14 @@
     android:layout_height="match_parent"
     android:orientation="horizontal">
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/keyboard_button"
         style="@style/TopBarButton"
         android:layout_marginEnd="@dimen/top_bar_button_margin"
         android:scaleType="center"
         android:src="@drawable/keyboard_action_button_icon" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/settings_button"
         style="@style/TopBarButton"
         android:scaleType="center"

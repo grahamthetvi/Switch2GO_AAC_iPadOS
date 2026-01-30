@@ -1,0 +1,125 @@
+package com.switch2go.aac
+
+import com.switch2go.aac.presets.Category
+import com.switch2go.aac.room.CategorySortOrder
+import com.switch2go.aac.utils.locale.LocalesWithText
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
+
+@Deprecated("This fake is too complex, tests using it should migrate to integration tests with" +
+        "the actual data sources.")
+class FakeCategoriesUseCase : ICategoriesUseCase {
+
+    val _categories = MutableStateFlow<List<Category>>(
+        listOf(
+            Category.StoredCategory(
+                "categoryId",
+                LocalesWithText(mapOf("en_US" to "storedCategory")),
+                false,
+                0
+            )
+        )
+    )
+
+    override fun categories(): Flow<List<Category>> {
+        return _categories.map {
+            it.sortedBy { category ->
+                if (category.hidden) {
+                    Int.MAX_VALUE
+                } else {
+                    category.sortOrder
+                }
+            }
+        }
+    }
+
+    override suspend fun updateCategoryName(
+        categoryId: String,
+        localizedName: LocalesWithText
+    ) {
+        _categories.update { categories ->
+            categories.map {
+                if (it.categoryId == categoryId) {
+                    when (it) {
+                        is Category.StoredCategory -> it.copy(localizedName = localizedName)
+                        is Category.PresetCategory -> Category.StoredCategory(
+                            it.categoryId,
+                            localizedName,
+                            it.hidden,
+                            it.sortOrder
+                        )
+
+                        is Category.Recents -> it
+                    }
+                } else {
+                    it
+                }
+            }
+        }
+    }
+
+    override suspend fun addCategory(categoryName: String) {
+        _categories.update {
+            it + Category.StoredCategory(
+                "",
+                LocalesWithText(mapOf("en_US" to categoryName)),
+                false,
+                0
+            )
+        }
+    }
+
+    override suspend fun updateCategorySortOrders(categorySortOrders: List<CategorySortOrder>) {
+        _categories.update { allCategories ->
+            allCategories.map { categoryDto ->
+                val sortOrderUpdate =
+                    categorySortOrders.firstOrNull { it.categoryId == categoryDto.categoryId }
+                if (sortOrderUpdate != null) {
+                    when(categoryDto) {
+                        is Category.StoredCategory -> categoryDto.copy(sortOrder = sortOrderUpdate.sortOrder)
+                        is Category.PresetCategory -> categoryDto.copy(sortOrder = sortOrderUpdate.sortOrder)
+                        is Category.Recents -> categoryDto.copy(sortOrder = sortOrderUpdate.sortOrder)
+                    }
+                } else {
+                    categoryDto
+                }
+            }
+        }
+    }
+
+    override suspend fun getCategoryById(categoryId: String): Category {
+        return _categories.value.first { it.categoryId == categoryId }
+    }
+
+    override suspend fun updateCategoryHidden(categoryId: String, hidden: Boolean) {
+        _categories.update { categories ->
+            categories.map {
+                if (it.categoryId == categoryId) {
+                    when(it) {
+                        is Category.StoredCategory -> it.copy(hidden = hidden)
+                        is Category.PresetCategory -> it.copy(hidden = hidden)
+                        is Category.Recents -> it.copy(hidden = hidden)
+                    }
+                } else {
+                    it
+                }
+            }
+        }
+    }
+
+    override suspend fun deleteCategory(categoryId: String) {
+        _categories.update { categories ->
+            categories.filter { it.categoryId != categoryId }
+        }
+    }
+
+    override suspend fun moveCategoryUp(categoryId: String) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun moveCategoryDown(categoryId: String) {
+        TODO("Not yet implemented")
+    }
+}

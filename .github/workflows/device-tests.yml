@@ -39,4 +39,4 @@ jobs:
             --app apk/debug/app-debug.apk \
             --test apk/androidTest/debug/app-debug-androidTest.apk \
             --device version=34,orientation=portrait,model=MediumPhone.arm,locale=en_US \
-            --test-runner-class com.willowtree.vocable.utility.VocableTestRunner
+            --test-runner-class com.switch2go.aac.utility.Switch2GOTestRunner

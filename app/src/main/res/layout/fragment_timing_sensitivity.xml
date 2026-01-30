@@ -8,7 +8,7 @@
 
     <include layout="@layout/guidelines_settings" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/timing_sensitivity_back_button"
         style="@style/CloseButton"
         android:layout_width="@dimen/settings_close_button_width"
@@ -58,7 +58,7 @@
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintTop_toBottomOf="@id/decrease_hover_time" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/increase_hover_time"
         style="@style/HoverTimeEditButtons"
         android:layout_width="@dimen/hover_time_button_width"
@@ -81,7 +81,7 @@
         app:layout_constraintStart_toEndOf="@id/decrease_hover_time"
         app:layout_constraintTop_toTopOf="@id/decrease_hover_time" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/decrease_hover_time"
         style="@style/HoverTimeEditButtons"
         android:layout_width="@dimen/hover_time_button_width"
@@ -92,7 +92,7 @@
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintTop_toBottomOf="@id/hover_time_title" />
 
-    <com.willowtree.vocable.customviews.CategoryButton
+    <com.switch2go.aac.customviews.CategoryButton
         android:id="@+id/low_sensitivity_button"
         style="@style/CursorSensitivityButton"
         android:layout_width="0dp"
@@ -103,7 +103,7 @@
         app:layout_constraintStart_toStartOf="@id/guideline_start"
         app:layout_constraintTop_toBottomOf="@id/cursor_sensitivity_title" />
 
-    <com.willowtree.vocable.customviews.CategoryButton
+    <com.switch2go.aac.customviews.CategoryButton
         android:id="@+id/medium_sensitivity_button"
         style="@style/CursorSensitivityButton"
         android:layout_width="0dp"
@@ -116,7 +116,7 @@
         app:layout_constraintTop_toBottomOf="@id/cursor_sensitivity_title"
         app:layout_constraintTop_toTopOf="@id/low_sensitivity_button" />
 
-    <com.willowtree.vocable.customviews.CategoryButton
+    <com.switch2go.aac.customviews.CategoryButton
         android:id="@+id/high_sensitivity_button"
         style="@style/CursorSensitivityButton"
         android:layout_width="0dp"

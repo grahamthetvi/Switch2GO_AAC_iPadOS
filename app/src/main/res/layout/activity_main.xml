@@ -38,7 +38,7 @@
         app:defaultNavHost="true"
         app:navGraph="@navigation/main_nav_graph" />
 
-    <com.willowtree.vocable.customviews.PointerView
+    <com.switch2go.aac.customviews.PointerView
         android:id="@+id/pointer_view"
         android:layout_width="32dp"
         android:layout_height="32dp"

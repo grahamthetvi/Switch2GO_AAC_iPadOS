@@ -55,7 +55,7 @@ pod install
 
 This will install:
 - `MediaPipeTasksVision` (0.10.14) - Face landmark detection
-- `VocableShared` - KMP shared module framework
+- `Switch2GOShared` - KMP shared module framework
 
 ### 3. Add the MediaPipe Model File
 
@@ -135,7 +135,7 @@ Screen Coordinates
 
 ## Troubleshooting
 
-### "Module 'VocableShared' not found"
+### "Module 'Switch2GOShared' not found"
 
 Run:
 ```bash

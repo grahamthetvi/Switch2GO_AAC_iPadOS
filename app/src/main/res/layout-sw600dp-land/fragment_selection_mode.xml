@@ -7,7 +7,7 @@
     android:orientation="vertical"
     android:theme="@style/SettingsTheme">
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/selection_mode_back_button"
         style="@style/CloseButton"
         android:layout_width="@dimen/settings_close_button_width"

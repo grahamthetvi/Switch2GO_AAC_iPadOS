@@ -1,5 +1,5 @@
 import SwiftUI
-import VocableShared
+import Switch2GOShared
 
 @main
 struct iOSApp: App {

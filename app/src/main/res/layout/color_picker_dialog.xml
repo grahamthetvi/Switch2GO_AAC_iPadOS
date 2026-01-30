@@ -262,7 +262,7 @@
             </GridLayout>
 
             <!-- Cancel button -->
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/color_picker_cancel"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"

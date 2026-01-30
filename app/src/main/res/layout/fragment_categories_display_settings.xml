@@ -15,7 +15,7 @@
 
         <include layout="@layout/guidelines_settings" />
 
-        <com.willowtree.vocable.customviews.VocableImageButton
+        <com.switch2go.aac.customviews.Switch2GOImageButton
             android:id="@+id/back_button"
             style="@style/CloseButton"
             android:layout_width="@dimen/settings_close_button_width"
@@ -82,7 +82,7 @@
                 android:textSize="14sp"
                 android:lineSpacingExtra="4dp" />
 
-            <com.willowtree.vocable.customviews.NoSayTextButton
+            <com.switch2go.aac.customviews.NoSayTextButton
                 android:id="@+id/categories_phrases_button"
                 style="@style/SettingsOptionButtons"
                 android:layout_width="match_parent"
@@ -117,7 +117,7 @@
                 android:textSize="14sp"
                 android:lineSpacingExtra="4dp" />
 
-            <com.willowtree.vocable.customviews.NoSayTextButton
+            <com.switch2go.aac.customviews.NoSayTextButton
                 android:id="@+id/display_settings_button"
                 style="@style/SettingsOptionButtons"
                 android:layout_width="match_parent"

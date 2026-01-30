@@ -71,7 +71,7 @@
         </HorizontalScrollView>
 
         <!-- Tiny action buttons -->
-        <com.willowtree.vocable.customviews.VocableImageButton
+        <com.switch2go.aac.customviews.Switch2GOImageButton
             android:id="@+id/keyboard_button"
             android:layout_width="26dp"
             android:layout_height="26dp"
@@ -81,7 +81,7 @@
             android:scaleType="fitCenter"
             android:src="@drawable/keyboard_action_button_icon" />
 
-        <com.willowtree.vocable.customviews.VocableImageButton
+        <com.switch2go.aac.customviews.Switch2GOImageButton
             android:id="@+id/recenter_button"
             android:layout_width="26dp"
             android:layout_height="26dp"
@@ -92,7 +92,7 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_recenter" />
 
-        <com.willowtree.vocable.customviews.VocableImageButton
+        <com.switch2go.aac.customviews.Switch2GOImageButton
             android:id="@+id/settings_button"
             android:layout_width="26dp"
             android:layout_height="26dp"
@@ -113,7 +113,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Hidden category navigation buttons -->
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/category_back_button"
         android:layout_width="1dp"
         android:layout_height="1dp"
@@ -121,7 +121,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/category_forward_button"
         android:layout_width="1dp"
         android:layout_height="1dp"
@@ -141,7 +141,7 @@
         app:layout_constraintTop_toBottomOf="@id/top_bar">
 
         <!-- Symbol 1 - Top Left -->
-        <com.willowtree.vocable.customviews.VocablePhraseButton
+        <com.switch2go.aac.customviews.Switch2GOPhraseButton
             android:id="@+id/symbol_1"
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -162,7 +162,7 @@
             tools:text="Yes" />
 
         <!-- Symbol 2 - Top Right -->
-        <com.willowtree.vocable.customviews.VocablePhraseButton
+        <com.switch2go.aac.customviews.Switch2GOPhraseButton
             android:id="@+id/symbol_2"
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -183,7 +183,7 @@
             tools:text="No" />
 
         <!-- Symbol Center -->
-        <com.willowtree.vocable.customviews.VocablePhraseButton
+        <com.switch2go.aac.customviews.Switch2GOPhraseButton
             android:id="@+id/symbol_center"
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -205,7 +205,7 @@
             tools:text="Maybe" />
 
         <!-- Symbol 3 - Bottom Left -->
-        <com.willowtree.vocable.customviews.VocablePhraseButton
+        <com.switch2go.aac.customviews.Switch2GOPhraseButton
             android:id="@+id/symbol_3"
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -226,7 +226,7 @@
             tools:text="Help" />
 
         <!-- Symbol 4 - Bottom Right -->
-        <com.willowtree.vocable.customviews.VocablePhraseButton
+        <com.switch2go.aac.customviews.Switch2GOPhraseButton
             android:id="@+id/symbol_4"
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -302,7 +302,7 @@
         tools:text="Swipe" />
 
     <!-- Hidden pagination buttons -->
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/phrases_back_button"
         android:layout_width="1dp"
         android:layout_height="1dp"
@@ -318,7 +318,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/phrases_forward_button"
         android:layout_width="1dp"
         android:layout_height="1dp"
@@ -355,7 +355,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/symbol_grid" />
 
-    <com.willowtree.vocable.customviews.NoSayTextButton
+    <com.switch2go.aac.customviews.NoSayTextButton
         android:id="@+id/empty_add_phrase_button"
         android:layout_width="0dp"
         android:layout_height="64dp"

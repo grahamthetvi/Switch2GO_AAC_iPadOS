@@ -9,7 +9,7 @@
 
     <include layout="@layout/guidelines_settings" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/back_button"
         style="@style/CloseButton"
         android:layout_width="@dimen/settings_close_button_width"
@@ -54,14 +54,14 @@
             android:paddingBottom="16dp">
 
             <!-- GPU Toggle -->
-            <com.willowtree.vocable.customviews.VocableSwitch
+            <com.switch2go.aac.customviews.Switch2GOSwitch
                 android:id="@+id/gpu_switch"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/selection_mode_button_height"
                 android:layout_marginBottom="@dimen/selection_mode_buttom_bottom_margin" />
 
             <!-- Tracking Mode (2D/3D) -->
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/tracking_mode_button"
                 style="@style/SettingsOptionButtons"
                 android:layout_width="match_parent"
@@ -70,7 +70,7 @@
                 android:text="@string/tracking_mode_2d" />
 
             <!-- Smoothing Mode -->
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/smoothing_mode_button"
                 style="@style/SettingsOptionButtons"
                 android:layout_width="match_parent"
@@ -79,7 +79,7 @@
                 android:text="@string/smoothing_mode_adaptive" />
 
             <!-- Eye Selection -->
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/eye_selection_button"
                 style="@style/SettingsOptionButtons"
                 android:layout_width="match_parent"
@@ -88,7 +88,7 @@
                 android:text="@string/eye_selection_both" />
 
             <!-- Gaze Amplification -->
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/gaze_amplification_button"
                 style="@style/SettingsOptionButtons"
                 android:layout_width="match_parent"
@@ -97,7 +97,7 @@
                 android:text="@string/gaze_amplification_off" />
 
             <!-- Auto-Recenter Toggle -->
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/auto_recenter_button"
                 style="@style/SettingsOptionButtons"
                 android:layout_width="match_parent"
@@ -106,7 +106,7 @@
                 android:text="@string/recenter_auto" />
 
             <!-- Recenter Cursor Button -->
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/recenter_cursor_button"
                 style="@style/SettingsOptionButtons"
                 android:layout_width="match_parent"
@@ -115,7 +115,7 @@
                 android:text="@string/recenter_cursor" />
 
             <!-- Reset to Defaults -->
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/reset_button"
                 style="@style/SettingsOptionButtons"
                 android:layout_width="match_parent"

@@ -39,7 +39,7 @@
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/size_option_small"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -48,7 +48,7 @@
                 android:text="@string/size_small"
                 android:textSize="12sp" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/size_option_medium_small"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -57,7 +57,7 @@
                 android:text="@string/size_medium_small"
                 android:textSize="16sp" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/size_option_medium"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -66,7 +66,7 @@
                 android:text="@string/size_medium"
                 android:textSize="18sp" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/size_option_medium_large"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -75,7 +75,7 @@
                 android:text="@string/size_medium_large"
                 android:textSize="22sp" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/size_option_large"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -84,7 +84,7 @@
                 android:text="@string/size_large"
                 android:textSize="26sp" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/size_option_extra_large"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -93,7 +93,7 @@
                 android:text="@string/size_extra_large"
                 android:textSize="32sp" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/size_option_huge"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -102,7 +102,7 @@
                 android:text="@string/size_huge"
                 android:textSize="40sp" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/size_picker_cancel"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"

@@ -39,7 +39,7 @@
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/border_width_option_none"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -47,7 +47,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="@string/border_thickness_none" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/border_width_option_thin"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -55,7 +55,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="@string/border_thickness_thin" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/border_width_option_medium"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -63,7 +63,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="@string/border_thickness_medium" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/border_width_option_thick"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -71,7 +71,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="@string/border_thickness_thick" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/border_width_option_xl"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -79,7 +79,7 @@
                 android:layout_marginBottom="8dp"
                 android:text="@string/border_thickness_xl" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/border_width_option_xxl"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -87,7 +87,7 @@
                 android:layout_marginBottom="16dp"
                 android:text="@string/border_thickness_xxl" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/border_width_picker_cancel"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"

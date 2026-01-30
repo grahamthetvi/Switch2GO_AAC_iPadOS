@@ -7,14 +7,14 @@
     android:columnCount="@integer/selection_modes_columns"
     android:rowCount="2">
 
-    <com.willowtree.vocable.customviews.VocableSwitch
+    <com.switch2go.aac.customviews.Switch2GOSwitch
         android:id="@+id/selection_mode_switch"
         android:layout_rowWeight="1"
         android:layout_columnWeight="1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.willowtree.vocable.customviews.VocableSwitch
+    <com.switch2go.aac.customviews.Switch2GOSwitch
         android:id="@+id/eye_gaze_switch"
         android:layout_rowWeight="1"
         android:layout_columnWeight="1"

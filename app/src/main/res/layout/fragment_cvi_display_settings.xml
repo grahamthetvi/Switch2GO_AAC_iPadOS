@@ -15,7 +15,7 @@
 
         <include layout="@layout/guidelines_settings" />
 
-        <com.willowtree.vocable.customviews.VocableImageButton
+        <com.switch2go.aac.customviews.Switch2GOImageButton
             android:id="@+id/back_button"
             style="@style/CloseButton"
             android:layout_width="@dimen/settings_close_button_width"
@@ -78,7 +78,7 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <com.willowtree.vocable.customviews.VocableImageButton
+                <com.switch2go.aac.customviews.Switch2GOImageButton
                     android:id="@+id/decrease_button"
                     android:layout_width="56dp"
                     android:layout_height="56dp"
@@ -100,7 +100,7 @@
                     android:textSize="36sp"
                     android:textStyle="bold" />
 
-                <com.willowtree.vocable.customviews.VocableImageButton
+                <com.switch2go.aac.customviews.Switch2GOImageButton
                     android:id="@+id/increase_button"
                     android:layout_width="56dp"
                     android:layout_height="56dp"

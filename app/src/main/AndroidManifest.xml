@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.willowtree.vocable">
+    package="com.switch2go.aac">
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -13,7 +13,7 @@
         tools:node="remove" />
 
     <application
-        android:name=".VocableApp"
+        android:name=".Switch2GOApp"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -36,7 +36,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.willowtree.vocable.MainActivity"
+            android:name="com.switch2go.aac.MainActivity"
             android:exported="false" />
     </application>
 

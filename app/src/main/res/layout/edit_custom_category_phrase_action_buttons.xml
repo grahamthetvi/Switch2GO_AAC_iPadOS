@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/edit_phrase_button"
         android:layout_width="@dimen/edit_action_delete_width"
         android:layout_height="@dimen/edit_action_delete_height"
@@ -16,7 +16,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.willowtree.vocable.customviews.VocableImageButton
+    <com.switch2go.aac.customviews.Switch2GOImageButton
         android:id="@+id/delete_phrase_button"
         android:layout_width="@dimen/edit_action_delete_width"
         android:layout_height="@dimen/edit_action_delete_height"

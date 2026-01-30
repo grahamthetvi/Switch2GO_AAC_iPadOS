@@ -38,7 +38,7 @@
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/image_option_add_image"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -46,7 +46,7 @@
                 android:layout_marginBottom="16dp"
                 android:text="@string/add_image" />
 
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/image_option_emoji_keyboard"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"
@@ -63,7 +63,7 @@
                 android:rowCount="3">
 
                 <!-- Row 1: None, Happy, Sad, Yes, No -->
-                <com.willowtree.vocable.customviews.ActionButton
+                <com.switch2go.aac.customviews.ActionButton
                     android:id="@+id/image_option_none"
                     style="@style/SettingsButton"
                     android:layout_width="0dp"
@@ -274,7 +274,7 @@
             </GridLayout>
 
             <!-- Cancel button -->
-            <com.willowtree.vocable.customviews.ActionButton
+            <com.switch2go.aac.customviews.ActionButton
                 android:id="@+id/image_picker_cancel"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"

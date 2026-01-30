@@ -310,9 +310,9 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
-					VocableShared,
+					Switch2GOShared,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.willowtree.vocable;
+				PRODUCT_BUNDLE_IDENTIFIER = com.switch2go.aac;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -342,9 +342,9 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
-					VocableShared,
+					Switch2GOShared,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.willowtree.vocable;
+				PRODUCT_BUNDLE_IDENTIFIER = com.switch2go.aac;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;

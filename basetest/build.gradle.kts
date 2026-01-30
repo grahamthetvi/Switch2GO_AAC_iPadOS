@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.willowtree.vocable.basetest"
+    namespace = "com.switch2go.aac.basetest"
 }
 
 dependencies {

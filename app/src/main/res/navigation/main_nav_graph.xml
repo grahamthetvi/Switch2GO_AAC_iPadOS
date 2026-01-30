@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/editCategoriesFragment"
-        android:name="com.willowtree.vocable.settings.EditCategoriesFragment"
+        android:name="com.switch2go.aac.settings.EditCategoriesFragment"
         android:label="EditCategoriesFragment"
         tools:layout="@layout/fragment_edit_categories">
         <action
@@ -20,12 +20,12 @@
     </fragment>
     <fragment
         android:id="@+id/editCategoriesKeyboardFragment"
-        android:name="com.willowtree.vocable.settings.EditCategoriesKeyboardFragment"
+        android:name="com.switch2go.aac.settings.EditCategoriesKeyboardFragment"
         android:label="EditCategoriesKeyboardFragment"
         tools:layout="@layout/fragment_edit_keyboard">
         <argument
             android:name="category"
-            app:argType="com.willowtree.vocable.presets.Category"
+            app:argType="com.switch2go.aac.presets.Category"
             app:nullable="true"
             android:defaultValue="@null" />
         <action
@@ -34,11 +34,11 @@
     </fragment>
     <fragment
         android:id="@+id/editCategoryPhrasesFragment"
-        android:name="com.willowtree.vocable.settings.EditCategoryPhrasesFragment"
+        android:name="com.switch2go.aac.settings.EditCategoryPhrasesFragment"
         android:label="EditCategoryPhrasesFragment">
         <argument
             android:name="category"
-            app:argType="com.willowtree.vocable.presets.Category" />
+            app:argType="com.switch2go.aac.presets.Category" />
         <action
             android:id="@+id/action_editCategoryPhrasesFragment_to_editCategoriesKeyboardFragment"
             app:destination="@id/editCategoriesKeyboardFragment" />
@@ -54,15 +54,15 @@
     </fragment>
     <fragment
         android:id="@+id/phraseEditMenuFragment"
-        android:name="com.willowtree.vocable.settings.PhraseEditMenuFragment"
+        android:name="com.switch2go.aac.settings.PhraseEditMenuFragment"
         android:label="PhraseEditMenuFragment"
         tools:layout="@layout/fragment_phrase_edit_menu">
         <argument
             android:name="phrase"
-            app:argType="com.willowtree.vocable.presets.Phrase" />
+            app:argType="com.switch2go.aac.presets.Phrase" />
         <argument
             android:name="category"
-            app:argType="com.willowtree.vocable.presets.Category" />
+            app:argType="com.switch2go.aac.presets.Category" />
         <action
             android:id="@+id/action_phraseEditMenuFragment_to_editPhrasesKeyboardFragment"
             app:destination="@id/editPhrasesKeyboardFragment" />
@@ -72,43 +72,43 @@
     </fragment>
     <fragment
         android:id="@+id/phraseStyleEditorFragment"
-        android:name="com.willowtree.vocable.settings.PhraseStyleEditorFragment"
+        android:name="com.switch2go.aac.settings.PhraseStyleEditorFragment"
         android:label="PhraseStyleEditorFragment"
         tools:layout="@layout/fragment_phrase_style_editor">
         <argument
             android:name="phrase"
-            app:argType="com.willowtree.vocable.presets.Phrase" />
+            app:argType="com.switch2go.aac.presets.Phrase" />
     </fragment>
     <fragment
         android:id="@+id/sensitivityFragment"
-        android:name="com.willowtree.vocable.settings.SensitivityFragment"
+        android:name="com.switch2go.aac.settings.SensitivityFragment"
         android:label="SensitivityFragment"
         tools:layout="@layout/fragment_timing_sensitivity" />
     <fragment
         android:id="@+id/selectionModeFragment"
-        android:name="com.willowtree.vocable.settings.selectionmode.SelectionModeFragment"
+        android:name="com.switch2go.aac.settings.selectionmode.SelectionModeFragment"
         android:label="SelectionModeFragment"
         tools:layout="@layout/fragment_selection_mode" />
     <fragment
         android:id="@+id/editPhrasesKeyboardFragment"
-        android:name="com.willowtree.vocable.settings.EditPhrasesKeyboardFragment"
+        android:name="com.switch2go.aac.settings.EditPhrasesKeyboardFragment"
         android:label="EditPhrasesKeyboardFragment"
         tools:layout="@layout/fragment_edit_keyboard">
         <argument
             android:name="phrase"
-            app:argType="com.willowtree.vocable.presets.Phrase" />
+            app:argType="com.switch2go.aac.presets.Phrase" />
     </fragment>
     <fragment
         android:id="@+id/addPhraseKeyboardFragment"
-        android:name="com.willowtree.vocable.settings.AddPhraseKeyboardFragment"
+        android:name="com.switch2go.aac.settings.AddPhraseKeyboardFragment"
         android:label="AddPhraseKeyboardFragment">
         <argument
             android:name="category"
-            app:argType="com.willowtree.vocable.presets.Category" />
+            app:argType="com.switch2go.aac.presets.Category" />
     </fragment>
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="com.willowtree.vocable.settings.SettingsFragment"
+        android:name="com.switch2go.aac.settings.SettingsFragment"
         android:label="SettingsFragment"
         tools:layout="@layout/fragment_settings">
         <action
@@ -129,12 +129,12 @@
     </fragment>
     <fragment
         android:id="@+id/privacyPolicyFragment"
-        android:name="com.willowtree.vocable.settings.PrivacyPolicyFragment"
+        android:name="com.switch2go.aac.settings.PrivacyPolicyFragment"
         android:label="PrivacyPolicyFragment"
         tools:layout="@layout/fragment_privacy_policy" />
     <fragment
         android:id="@+id/categoriesDisplaySettingsFragment"
-        android:name="com.willowtree.vocable.settings.CategoriesDisplaySettingsFragment"
+        android:name="com.switch2go.aac.settings.CategoriesDisplaySettingsFragment"
         android:label="CategoriesDisplaySettingsFragment"
         tools:layout="@layout/fragment_categories_display_settings">
         <action
@@ -146,17 +146,17 @@
     </fragment>
     <fragment
         android:id="@+id/advancedEyeTrackingFragment"
-        android:name="com.willowtree.vocable.settings.AdvancedEyeTrackingFragment"
+        android:name="com.switch2go.aac.settings.AdvancedEyeTrackingFragment"
         android:label="AdvancedEyeTrackingFragment"
         tools:layout="@layout/fragment_advanced_eye_tracking" />
     <fragment
         android:id="@+id/cviDisplaySettingsFragment"
-        android:name="com.willowtree.vocable.settings.CVIDisplaySettingsFragment"
+        android:name="com.switch2go.aac.settings.CVIDisplaySettingsFragment"
         android:label="CVIDisplaySettingsFragment"
         tools:layout="@layout/fragment_cvi_display_settings" />
     <fragment
         android:id="@+id/presetsFragment"
-        android:name="com.willowtree.vocable.presets.PresetsFragment"
+        android:name="com.switch2go.aac.presets.PresetsFragment"
         android:label="PresetsFragment"
         tools:layout="@layout/fragment_presets">
         <action
@@ -171,7 +171,7 @@
     </fragment>
     <fragment
         android:id="@+id/keyboardFragment"
-        android:name="com.willowtree.vocable.keyboard.KeyboardFragment"
+        android:name="com.switch2go.aac.keyboard.KeyboardFragment"
         android:label="KeyboardFragment"
         tools:layout="@layout/fragment_keyboard">
         <action
@@ -185,7 +185,7 @@
     </fragment>
     <fragment
         android:id="@+id/addToCategoryPickerFragment"
-        android:name="com.willowtree.vocable.presets.AddToCategoryPickerFragment"
+        android:name="com.switch2go.aac.presets.AddToCategoryPickerFragment"
         android:label="AddToCategoryPickerFragment" >
         <argument
             android:name="phraseText"
@@ -196,12 +196,12 @@
     </fragment>
     <fragment
         android:id="@+id/editCategoryMenuFragment"
-        android:name="com.willowtree.vocable.settings.EditCategoryMenuFragment"
+        android:name="com.switch2go.aac.settings.EditCategoryMenuFragment"
         android:label="fragment_edit_category_menu"
         tools:layout="@layout/fragment_edit_category_menu" >
         <argument
             android:name="category"
-            app:argType="com.willowtree.vocable.presets.Category" />
+            app:argType="com.switch2go.aac.presets.Category" />
         <action
             android:id="@+id/action_editCategoryMenuFragment_to_editCategoryPhrasesFragment"
             app:destination="@id/editCategoryPhrasesFragment" />

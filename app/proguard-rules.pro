@@ -22,7 +22,7 @@
 # JSR 305 annotations are for embedding nullability information.
 
 # Keep room model class members
--keepclassmembers class com.willowtree.vocable.room.models** {
+-keepclassmembers class com.switch2go.aac.room.models** {
   <init>(...);
   <fields>;
 }

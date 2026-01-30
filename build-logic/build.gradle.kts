@@ -2,7 +2,7 @@ plugins {
     `kotlin-dsl`
 }
 
-group = "com.willowtree.vocable.buildlogic"
+group = "com.switch2go.aac.buildlogic"
 
 dependencies {
     implementation(libs.android.gradlePlugin)
