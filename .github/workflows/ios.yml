@@ -1,4 +1,4 @@
-name: iOS Framework Build
+name: iOS Build
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
     branches: [ "**" ]
 
 jobs:
+  # Job 1: Build the KMP shared framework for iOS
   build-ios-framework:
     name: Build iOS Framework (KMP Shared Module)
     runs-on: macos-latest
@@ -38,3 +39,118 @@ jobs:
           path: |
             shared/build/bin/iosSimulatorArm64/debugFramework/
             shared/build/bin/iosArm64/releaseFramework/
+
+  # Job 2: Build the iOS app (only runs if iosApp.xcworkspace exists)
+  build-ios-app:
+    name: Build iOS App
+    runs-on: macos-latest
+    needs: build-ios-framework
+    # Only run if the Xcode workspace exists
+    if: ${{ hashFiles('iosApp/iosApp.xcworkspace') != '' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set Up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Select Xcode Version
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
+      - name: Build Shared Framework for Simulator
+        run: ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: iosApp/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('iosApp/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Install CocoaPods
+        run: |
+          cd iosApp
+          pod install --repo-update
+
+      - name: Download MediaPipe Model
+        run: |
+          mkdir -p iosApp/iosApp/Resources
+          curl -L "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task" \
+            -o iosApp/iosApp/Resources/face_landmarker.task
+
+      - name: Build iOS App (Simulator)
+        run: |
+          cd iosApp
+          xcodebuild build \
+            -workspace iosApp.xcworkspace \
+            -scheme iosApp \
+            -destination 'platform=iOS Simulator,name=iPhone 15 Pro,OS=17.5' \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty
+
+      - name: Run Unit Tests
+        run: |
+          cd iosApp
+          xcodebuild test \
+            -workspace iosApp.xcworkspace \
+            -scheme iosApp \
+            -destination 'platform=iOS Simulator,name=iPhone 15 Pro,OS=17.5' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty
+        continue-on-error: true
+
+  # Job 3: Build for App Store (manual trigger only)
+  build-ios-release:
+    name: Build iOS Release (App Store)
+    runs-on: macos-latest
+    needs: build-ios-framework
+    # Only run on manual trigger with release intent
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set Up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Build Shared Framework for Device
+        run: ./gradlew :shared:linkReleaseFrameworkIosArm64
+
+      - name: Install CocoaPods
+        run: |
+          cd iosApp
+          pod install --repo-update
+
+      # Note: For actual App Store builds, you would need to:
+      # 1. Import signing certificates from secrets
+      # 2. Install provisioning profiles
+      # 3. Build with proper code signing
+      # 4. Upload to App Store Connect
+
+      - name: Build iOS App (Device)
+        run: |
+          cd iosApp
+          xcodebuild build \
+            -workspace iosApp.xcworkspace \
+            -scheme iosApp \
+            -destination 'generic/platform=iOS' \
+            -configuration Release \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
