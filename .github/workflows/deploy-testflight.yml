@@ -11,14 +11,17 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: macos-14  # Use macOS 14 (Sonoma) with Xcode 15
+    runs-on: macos-latest  # Standard GitHub-hosted macOS runner
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+        run: |
+          # List available Xcode versions and select the latest
+          ls /Applications | grep Xcode
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
