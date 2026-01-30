@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         targetSdk = 35
-        applicationId = "com.switch2connect.aac"
+        applicationId = "com.switch2go.aac"
 
         val versionCodeEnv = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionCode = versionCodeEnv + 30
