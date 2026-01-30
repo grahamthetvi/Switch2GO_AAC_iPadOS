@@ -11,28 +11,34 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: macos-latest
+    runs-on: macos-14  # Use macOS 14 (Sonoma) with Xcode 15
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
 
       - name: Build KMP Framework
         run: ./gradlew :shared:linkReleaseFrameworkIosArm64
 
-      - name: Install CocoaPods
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
         run: |
           cd iosApp
-          pod install || pod install --repo-update
+          xcodegen generate
 
       - name: Import Code Signing Certificates
         env:
@@ -60,14 +66,15 @@ jobs:
 
       - name: Build and Archive
         run: |
-          xcodebuild -workspace iosApp/iosApp.xcworkspace \
+          xcodebuild -project iosApp/iosApp.xcodeproj \
             -scheme iosApp \
             -configuration Release \
             -archivePath iosApp.xcarchive \
             -destination 'generic/platform=iOS' \
             archive \
             CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }}
+            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
+            PROVISIONING_PROFILE_SPECIFIER="Addison Graham Ad Hoc"
 
       - name: Export IPA
         run: |
@@ -82,10 +89,11 @@ jobs:
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
-          # Create API key file
-          echo "$API_KEY" | base64 --decode > AuthKey.p8
+          # Create API key directory and file
+          mkdir -p ~/.private_keys
+          echo "$API_KEY" | base64 --decode > ~/.private_keys/AuthKey_$API_KEY_ID.p8
 
-          # Upload to TestFlight
+          # Upload to TestFlight using notarytool/altool
           xcrun altool --upload-app \
             --type ios \
             --file ./export/iosApp.ipa \
