@@ -3,6 +3,8 @@ package com.vocable.eyetracking.calibration
 import com.vocable.eyetracking.models.CalibrationData
 import com.vocable.eyetracking.models.CalibrationPoint
 import kotlin.math.abs
+import kotlin.math.pow
+import kotlin.math.round
 import kotlin.math.sqrt
 
 /**
@@ -175,7 +177,11 @@ class GazeCalibration(
             gazePoints.add(floatArrayOf(avgGazeX, avgGazeY))
             screenPoints.add(floatArrayOf(point.screenX.toFloat(), point.screenY.toFloat()))
 
-            logger?.invoke("Calibration point (${point.screenX}, ${point.screenY}) -> avg gaze [%.3f, %.3f] from ${point.gazeSamples.size} samples".format(avgGazeX, avgGazeY))
+            logger?.invoke(
+                "Calibration point (${point.screenX}, ${point.screenY}) -> avg gaze " +
+                    "[${formatFloat(avgGazeX, 3)}, ${formatFloat(avgGazeY, 3)}] " +
+                    "from ${point.gazeSamples.size} samples"
+            )
         }
 
         if (gazePoints.size < minPoints) {
@@ -232,7 +238,10 @@ class GazeCalibration(
         isCalibrated = true
         currentMode = calibrationMode
 
-        logger?.invoke("Calibration complete (${calibrationMode.name})! Average error: %.1f pixels".format(calibrationError))
+        logger?.invoke(
+            "Calibration complete (${calibrationMode.name})! Average error: " +
+                "${formatFloat(calibrationError, 1)} pixels"
+        )
         logTransformCoefficients()
 
         return true
@@ -244,18 +253,38 @@ class GazeCalibration(
     private fun logTransformCoefficients() {
         when (currentMode) {
             CalibrationMode.AFFINE -> {
-                logger?.invoke("Transform X (affine): [%.3f + %.3f·gx + %.3f·gy]".format(
-                    transformX!![0], transformX!![1], transformX!![2]))
-                logger?.invoke("Transform Y (affine): [%.3f + %.3f·gx + %.3f·gy]".format(
-                    transformY!![0], transformY!![1], transformY!![2]))
+                logger?.invoke(
+                    "Transform X (affine): [" +
+                        "${formatFloat(transformX!![0], 3)} + " +
+                        "${formatFloat(transformX!![1], 3)}·gx + " +
+                        "${formatFloat(transformX!![2], 3)}·gy]"
+                )
+                logger?.invoke(
+                    "Transform Y (affine): [" +
+                        "${formatFloat(transformY!![0], 3)} + " +
+                        "${formatFloat(transformY!![1], 3)}·gx + " +
+                        "${formatFloat(transformY!![2], 3)}·gy]"
+                )
             }
             CalibrationMode.POLYNOMIAL -> {
-                logger?.invoke("Transform X (poly): [%.3f + %.3f·gx + %.3f·gy + %.3f·gx² + %.3f·gy² + %.3f·gx·gy]".format(
-                    transformX!![0], transformX!![1], transformX!![2],
-                    transformX!![3], transformX!![4], transformX!![5]))
-                logger?.invoke("Transform Y (poly): [%.3f + %.3f·gx + %.3f·gy + %.3f·gx² + %.3f·gy² + %.3f·gx·gy]".format(
-                    transformY!![0], transformY!![1], transformY!![2],
-                    transformY!![3], transformY!![4], transformY!![5]))
+                logger?.invoke(
+                    "Transform X (poly): [" +
+                        "${formatFloat(transformX!![0], 3)} + " +
+                        "${formatFloat(transformX!![1], 3)}·gx + " +
+                        "${formatFloat(transformX!![2], 3)}·gy + " +
+                        "${formatFloat(transformX!![3], 3)}·gx² + " +
+                        "${formatFloat(transformX!![4], 3)}·gy² + " +
+                        "${formatFloat(transformX!![5], 3)}·gx·gy]"
+                )
+                logger?.invoke(
+                    "Transform Y (poly): [" +
+                        "${formatFloat(transformY!![0], 3)} + " +
+                        "${formatFloat(transformY!![1], 3)}·gx + " +
+                        "${formatFloat(transformY!![2], 3)}·gy + " +
+                        "${formatFloat(transformY!![3], 3)}·gx² + " +
+                        "${formatFloat(transformY!![4], 3)}·gy² + " +
+                        "${formatFloat(transformY!![5], 3)}·gx·gy]"
+                )
             }
         }
     }
@@ -490,8 +519,33 @@ class GazeCalibration(
         currentMode = data.mode
         isCalibrated = true
 
-        logger?.invoke("Calibration (${currentMode.name}) loaded! Error: %.1f pixels".format(calibrationError))
+        logger?.invoke(
+            "Calibration (${currentMode.name}) loaded! Error: " +
+                "${formatFloat(calibrationError, 1)} pixels"
+        )
         return true
+    }
+
+    private fun formatFloat(value: Float, decimals: Int): String {
+        if (decimals <= 0) {
+            return round(value).toInt().toString()
+        }
+
+        val factor = 10.0.pow(decimals.toDouble()).toFloat()
+        val rounded = round(value * factor) / factor
+        var text = rounded.toString()
+        val dotIndex = text.indexOf('.')
+
+        if (dotIndex == -1) {
+            text += "." + "0".repeat(decimals)
+        } else {
+            val fractionLength = text.length - dotIndex - 1
+            if (fractionLength < decimals) {
+                text += "0".repeat(decimals - fractionLength)
+            }
+        }
+
+        return text
     }
 
     /**
