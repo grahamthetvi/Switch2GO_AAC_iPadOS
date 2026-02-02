@@ -6,7 +6,7 @@ import MediaPipeTasksVision
 
 /// Service for detecting face landmarks using MediaPipe.
 /// This class wraps the MediaPipe FaceLandmarker for use with the gaze tracking system.
-class FaceLandmarkService: ObservableObject {
+class FaceLandmarkService: NSObject, ObservableObject {
     // MediaPipe face landmarker instance
     private var faceLandmarker: FaceLandmarker?
     private var isInitialized = false
@@ -19,6 +19,10 @@ class FaceLandmarkService: ObservableObject {
 
     /// Last detection timestamp
     @Published var lastTimestamp: Int = 0
+
+    override init() {
+        super.init()
+    }
 
     /// Initialize the MediaPipe FaceLandmarker.
     /// - Parameter useGpu: Whether to use GPU acceleration
