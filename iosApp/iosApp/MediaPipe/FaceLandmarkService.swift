@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 import UIKit
+import Combine
 // Note: Import MediaPipeTasksVision after installing via CocoaPods
 // import MediaPipeTasksVision
 
