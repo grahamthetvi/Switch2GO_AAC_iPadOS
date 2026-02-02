@@ -1,11 +1,12 @@
 import SwiftUI
+import Combine
 import VocableShared
 
 /// Manages the calibration process, collecting gaze samples and computing the calibration transform.
 class CalibrationManager: ObservableObject {
     @Published var calibrationPoints: [CGPoint] = []
     @Published var collectionProgress: Double = 0
-    @Published var accuracy: Double = 0
+    @Published var calibrationError: Double = 0
 
     private var gazeCalibration: GazeCalibration?
     private let storage: Storage
@@ -14,6 +15,7 @@ class CalibrationManager: ObservableObject {
     // Collection parameters
     private let samplesPerPoint = 30
     private let sampleInterval: TimeInterval = 0.05 // 20 samples per second
+    private var currentPointIndex = 0
 
     init() {
         storage = StorageKt.createStorage()
@@ -22,41 +24,48 @@ class CalibrationManager: ObservableObject {
 
     /// Generate the 9-point calibration grid.
     func generateCalibrationPoints(screenWidth: CGFloat, screenHeight: CGFloat) {
-        let margin: CGFloat = 60
-        let width = screenWidth - (margin * 2)
-        let height = screenHeight - (margin * 2)
-
-        // 9-point grid: 3x3
-        calibrationPoints = [
-            CGPoint(x: margin, y: margin),                           // Top-left
-            CGPoint(x: margin + width / 2, y: margin),              // Top-center
-            CGPoint(x: margin + width, y: margin),                  // Top-right
-            CGPoint(x: margin, y: margin + height / 2),             // Middle-left
-            CGPoint(x: margin + width / 2, y: margin + height / 2), // Center
-            CGPoint(x: margin + width, y: margin + height / 2),     // Middle-right
-            CGPoint(x: margin, y: margin + height),                 // Bottom-left
-            CGPoint(x: margin + width / 2, y: margin + height),     // Bottom-center
-            CGPoint(x: margin + width, y: margin + height)          // Bottom-right
-        ]
-
         // Initialize the GazeCalibration from shared module
         gazeCalibration = GazeCalibration(
             screenWidth: Int32(screenWidth),
             screenHeight: Int32(screenHeight),
-            logger: { message in
-                self.logger.debug(message: message)
+            calibrationMode: .polynomial,
+            logger: { [weak self] message in
+                self?.logger.debug(message: message)
             }
         )
 
         // Generate calibration points in shared module
-        gazeCalibration?.generateCalibrationPoints()
+        if let points = gazeCalibration?.generateCalibrationPoints(marginPercent: 0.1) {
+            calibrationPoints = points.map { point in
+                CGPoint(
+                    x: CGFloat(point.first?.intValue ?? 0),
+                    y: CGFloat(point.second?.intValue ?? 0)
+                )
+            }
+        }
 
+        currentPointIndex = 0
         logger.info(message: "Generated \(calibrationPoints.count) calibration points")
     }
 
+    /// Get the current calibration point index.
+    func getCurrentPointIndex() -> Int {
+        return currentPointIndex
+    }
+
+    /// Add a gaze sample for the current calibration point.
+    func addSample(gazeX: Float, gazeY: Float) -> Int {
+        guard let calibration = gazeCalibration else { return 0 }
+        return Int(calibration.addCalibrationSample(
+            pointIndex: Int32(currentPointIndex),
+            gazeX: gazeX,
+            gazeY: gazeY
+        ))
+    }
+
     /// Collect gaze samples for the current calibration point.
-    func collectSamples(from gazeManager: GazeTrackingManager, completion: @escaping (Bool) -> Void) {
-        guard let calibration = gazeCalibration else {
+    func collectSamples(gazeX: Float, gazeY: Float, completion: @escaping (Bool) -> Void) {
+        guard gazeCalibration != nil else {
             completion(false)
             return
         }
@@ -71,27 +80,30 @@ class CalibrationManager: ObservableObject {
                 return
             }
 
-            // Get current gaze position from the tracker
-            if gazeManager.isTracking {
-                let gazeX = Float(gazeManager.rawGazeX)
-                let gazeY = Float(gazeManager.rawGazeY)
+            // Add sample to calibration
+            _ = self.addSample(gazeX: gazeX, gazeY: gazeY)
+            samplesCollected += 1
 
-                // Add sample to calibration
-                calibration.addSample(gazeX: gazeX, gazeY: gazeY)
-                samplesCollected += 1
+            DispatchQueue.main.async {
+                self.collectionProgress = Double(samplesCollected) / Double(self.samplesPerPoint)
+            }
 
-                DispatchQueue.main.async {
-                    self.collectionProgress = Double(samplesCollected) / Double(self.samplesPerPoint)
-                }
-
-                if samplesCollected >= self.samplesPerPoint {
-                    timer.invalidate()
-                    calibration.advanceToNextPoint()
-                    self.logger.info(message: "Collected \(samplesCollected) samples for point")
-                    completion(true)
-                }
+            if samplesCollected >= self.samplesPerPoint {
+                timer.invalidate()
+                self.logger.info(message: "Collected \(samplesCollected) samples for point \(self.currentPointIndex)")
+                completion(true)
             }
         }
+    }
+
+    /// Advance to the next calibration point.
+    func advanceToNextPoint() -> Bool {
+        if currentPointIndex < calibrationPoints.count - 1 {
+            currentPointIndex += 1
+            collectionProgress = 0
+            return true
+        }
+        return false
     }
 
     /// Compute the calibration transform after all points are collected.
@@ -109,12 +121,12 @@ class CalibrationManager: ObservableObject {
                 if success {
                     // Get calibration error (lower is better)
                     let error = calibration.getCalibrationError()
-                    self?.accuracy = max(0, 1.0 - Double(error))
+                    self?.calibrationError = Double(error)
 
                     // Save calibration data
                     if let data = calibration.getCalibrationData() {
-                        self?.storage.saveCalibrationData(data: data, mode: "polynomial")
-                        self?.logger.info(message: "Calibration saved with accuracy: \(self?.accuracy ?? 0)")
+                        _ = self?.storage.saveCalibrationData(data: data, mode: "polynomial")
+                        self?.logger.info(message: "Calibration saved with error: \(error) pixels")
                     }
                 }
 
@@ -129,19 +141,38 @@ class CalibrationManager: ObservableObject {
             return false
         }
 
+        let screenSize = UIScreen.main.bounds.size
+
         // Create new calibration and load data
         gazeCalibration = GazeCalibration(
-            screenWidth: data.screenWidth,
-            screenHeight: data.screenHeight,
+            screenWidth: Int32(screenSize.width),
+            screenHeight: Int32(screenSize.height),
+            calibrationMode: .polynomial,
             logger: { [weak self] message in
                 self?.logger.debug(message: message)
             }
         )
 
-        gazeCalibration?.loadCalibrationData(data: data)
-        accuracy = max(0, 1.0 - Double(data.calibrationError))
+        let loaded = gazeCalibration?.loadCalibrationData(data: data) ?? false
+        if loaded {
+            calibrationError = Double(data.calibrationError)
+            logger.info(message: "Loaded existing calibration with error: \(calibrationError) pixels")
+        }
 
-        logger.info(message: "Loaded existing calibration with accuracy: \(accuracy)")
-        return true
+        return loaded
+    }
+
+    /// Check if calibration has enough samples.
+    func hasEnoughSamples() -> Bool {
+        return gazeCalibration?.hasEnoughSamples() ?? false
+    }
+
+    /// Reset calibration state.
+    func reset() {
+        gazeCalibration?.resetCalibration()
+        currentPointIndex = 0
+        collectionProgress = 0
+        calibrationError = 0
+        calibrationPoints = []
     }
 }

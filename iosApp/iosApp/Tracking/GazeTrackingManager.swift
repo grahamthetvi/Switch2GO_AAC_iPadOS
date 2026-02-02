@@ -8,9 +8,6 @@ class GazeTrackingManager: ObservableObject {
     private let cameraManager = CameraManager()
     private let faceLandmarkService = FaceLandmarkService()
 
-    // Shared module gaze tracker
-    private var gazeTracker: GazeTracker?
-
     // Published state
     @Published var isTracking = false
     @Published var gazePosition: CGPoint = .zero
@@ -19,37 +16,38 @@ class GazeTrackingManager: ObservableObject {
     @Published var isBlinking = false
     @Published var error: String?
 
+    // Calibration
+    private var calibration: GazeCalibration?
+    private let storage: Storage
+    private let logger: Logger
+
     // Subscriptions
     private var cancellables = Set<AnyCancellable>()
 
     init() {
-        setupGazeTracker()
+        storage = StorageKt.createStorage()
+        logger = LoggerKt.createLogger(tag: "GazeTracker")
+
+        setupCalibration()
         setupBindings()
     }
 
-    /// Initialize the shared module gaze tracker.
-    private func setupGazeTracker() {
+    /// Initialize calibration with screen size.
+    private func setupCalibration() {
         let screenSize = UIScreen.main.bounds.size
 
-        // Create platform implementations from shared module
-        let storage = StorageKt.createStorage()
-        let logger = LoggerKt.createLogger(tag: "GazeTracker")
-
-        // Create the gaze tracker
-        gazeTracker = GazeTracker(
+        calibration = GazeCalibration(
             screenWidth: Int32(screenSize.width),
             screenHeight: Int32(screenSize.height),
-            storage: storage,
-            logger: logger
+            calibrationMode: .polynomial,
+            logger: { [weak self] message in
+                self?.logger.debug(message: message)
+            }
         )
-
-        // Configure tracker settings
-        gazeTracker?.smoothingMode = SmoothingMode.adaptiveKalman
-        gazeTracker?.eyeSelection = EyeSelection.bothEyes
 
         // Try to load existing calibration
         if let data = storage.loadCalibrationData(mode: "polynomial") {
-            gazeTracker?.loadCalibration(data: data)
+            _ = calibration?.loadCalibrationData(data: data)
             logger.info(message: "Loaded existing calibration")
         }
     }
@@ -65,14 +63,10 @@ class GazeTrackingManager: ObservableObject {
         }
 
         // Handle face detection results -> process gaze
-        faceLandmarkService.$currentLandmarks
+        faceLandmarkService.$isTracking
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] landmarks in
-                if let landmarks = landmarks {
-                    self?.processLandmarks(landmarks)
-                } else {
-                    self?.isTracking = false
-                }
+            .sink { [weak self] tracking in
+                self?.isTracking = tracking
             }
             .store(in: &cancellables)
 
@@ -86,53 +80,6 @@ class GazeTrackingManager: ObservableObject {
             .store(in: &cancellables)
     }
 
-    /// Process detected face landmarks to calculate gaze.
-    private func processLandmarks(_ mpLandmarks: [Any]) {
-        guard let tracker = gazeTracker else { return }
-
-        // Convert MediaPipe landmarks to shared module format
-        // MediaPipe returns NormalizedLandmark objects
-        var landmarkPoints: [LandmarkPoint] = []
-
-        for landmark in mpLandmarks {
-            // Access landmark properties via reflection or casting
-            // This depends on how MediaPipe Swift SDK exposes landmarks
-            if let normalizedLandmark = landmark as? NormalizedLandmark {
-                let point = LandmarkPoint(
-                    x: normalizedLandmark.x,
-                    y: normalizedLandmark.y,
-                    z: normalizedLandmark.z ?? 0
-                )
-                landmarkPoints.append(point)
-            }
-        }
-
-        guard !landmarkPoints.isEmpty else {
-            isTracking = false
-            return
-        }
-
-        // Process through shared gaze tracker
-        if let result = tracker.processLandmarks(landmarks: landmarkPoints) {
-            // Store raw gaze values (for calibration)
-            rawGazeX = result.gazeX
-            rawGazeY = result.gazeY
-
-            // Get calibrated screen position
-            if let screenPoint = tracker.gazeToScreen(gazeResult: result) {
-                gazePosition = CGPoint(
-                    x: CGFloat(screenPoint.first),
-                    y: CGFloat(screenPoint.second)
-                )
-            }
-
-            // Update blink state
-            isBlinking = result.leftBlink && result.rightBlink
-
-            isTracking = true
-        }
-    }
-
     /// Start gaze tracking.
     func startTracking() {
         // Initialize face landmark detection
@@ -143,6 +90,7 @@ class GazeTrackingManager: ObservableObject {
 
         // Start camera
         cameraManager.start()
+        logger.info(message: "Gaze tracking started")
     }
 
     /// Stop gaze tracking.
@@ -150,20 +98,33 @@ class GazeTrackingManager: ObservableObject {
         cameraManager.stop()
         faceLandmarkService.close()
         isTracking = false
+        logger.info(message: "Gaze tracking stopped")
+    }
+
+    /// Get the calibration instance for calibration operations.
+    func getCalibration() -> GazeCalibration? {
+        return calibration
     }
 
     /// Reset calibration.
     func resetCalibration() {
-        gazeTracker?.resetCalibration()
+        calibration?.resetCalibration()
+        logger.info(message: "Calibration reset")
     }
-}
 
-// MARK: - NormalizedLandmark Protocol
-// This protocol matches MediaPipe's NormalizedLandmark structure
-protocol NormalizedLandmark {
-    var x: Float { get }
-    var y: Float { get }
-    var z: Float? { get }
-    var visibility: Float? { get }
-    var presence: Float? { get }
+    /// Convert raw gaze to screen coordinates.
+    func gazeToScreen(gazeX: Float, gazeY: Float) -> CGPoint {
+        if let screenPoint = calibration?.gazeToScreen(gazeX: gazeX, gazeY: gazeY) {
+            return CGPoint(
+                x: CGFloat(screenPoint.first?.intValue ?? 0),
+                y: CGFloat(screenPoint.second?.intValue ?? 0)
+            )
+        }
+        // Fallback: simple linear mapping
+        let screenSize = UIScreen.main.bounds.size
+        return CGPoint(
+            x: CGFloat((gazeX + 1) / 2) * screenSize.width,
+            y: CGFloat((gazeY + 1) / 2) * screenSize.height
+        )
+    }
 }
