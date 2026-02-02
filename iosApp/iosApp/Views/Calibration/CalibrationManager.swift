@@ -8,8 +8,8 @@ class CalibrationManager: ObservableObject {
     @Published var accuracy: Double = 0
 
     private var gazeCalibration: GazeCalibration?
-    private let storage: Storage_
-    private let logger: Logger_
+    private let storage: Storage
+    private let logger: Logger
 
     // Collection parameters
     private let samplesPerPoint = 30

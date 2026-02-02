@@ -22,8 +22,8 @@ class AppState: ObservableObject {
     @Published var selectedCategory: String?
 
     // Shared module instances
-    let storage: Storage_
-    let logger: Logger_
+    let storage: Storage
+    let logger: Logger
 
     init() {
         // Create platform implementations from shared module
