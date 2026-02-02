@@ -8,6 +8,13 @@ class CalibrationManager: ObservableObject {
     @Published var collectionProgress: Double = 0
     @Published var calibrationError: Double = 0
 
+    /// Accuracy as a percentage (0-1), computed from calibration error
+    var accuracy: Double {
+        // Convert pixel error to accuracy percentage (lower error = higher accuracy)
+        // Assume 50 pixels error = 0% accuracy, 0 pixels = 100%
+        return max(0, min(1, 1.0 - (calibrationError / 50.0)))
+    }
+
     private var gazeCalibration: GazeCalibration?
     private let storage: Storage
     private let logger: Logger
@@ -63,8 +70,8 @@ class CalibrationManager: ObservableObject {
         ))
     }
 
-    /// Collect gaze samples for the current calibration point.
-    func collectSamples(gazeX: Float, gazeY: Float, completion: @escaping (Bool) -> Void) {
+    /// Collect gaze samples for the current calibration point from the gaze manager.
+    func collectSamples(from gazeManager: GazeTrackingManager, completion: @escaping (Bool) -> Void) {
         guard gazeCalibration != nil else {
             completion(false)
             return
@@ -79,6 +86,10 @@ class CalibrationManager: ObservableObject {
                 timer.invalidate()
                 return
             }
+
+            // Get current gaze from the manager
+            let gazeX = gazeManager.rawGazeX
+            let gazeY = gazeManager.rawGazeY
 
             // Add sample to calibration
             _ = self.addSample(gazeX: gazeX, gazeY: gazeY)
