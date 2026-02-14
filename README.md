@@ -13,7 +13,7 @@ The app has been customized with CVI-friendly features including:
 - Simplified, high-contrast symbol layouts
 - Customizable symbol colors and sizes
 - Reduced visual complexity
-- Configurable symbol count per page (2-9 symbols)
+- Configurable symbol count per page (2-4 symbols)
 - Eye gaze and head tracking support for hands-free operation
 
 ## Contents
@@ -42,12 +42,9 @@ For users with more mobility, the app can be operated by touch.
 ### Saved Phrases
 Use a list of common phrases, or create and save your own custom phrases with customizable appearance settings.
 
-### Full QWERTY Keyboard
-Type with your head, eyes, or hands.
-
 ## Device Requirements
 - [Android devices with Android OS 8 or higher.]
-- [iOS some version or higher but honestly I didnt want to make so that only devices with IR sensors could use the app so I made it so more devices could use the app, HEY REVISE THIS LATER]
+- [iOS 12 or higher]
 
 ## Credits
 
