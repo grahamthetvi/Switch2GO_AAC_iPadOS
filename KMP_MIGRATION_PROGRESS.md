@@ -498,13 +498,17 @@ AVCaptureSession + AVCaptureVideoDataOutput
 - [ ] (Optional) Remove duplicate files from app module
 
 ### Phase 4: iOS Implementation
-- [ ] Set up iOS project (Xcode)
-- [ ] Configure CocoaPods for MediaPipe
-- [ ] Implement Logger.kt actual (os_log)
-- [ ] Implement Storage.kt actual (UserDefaults)
-- [ ] Implement FaceLandmarkDetector.kt actual (MediaPipe iOS)
-- [ ] Create camera capture (AVFoundation)
-- [ ] Build iOS UI (SwiftUI)
+- [x] Implement Logger.kt actual (os_log) ✅
+- [x] Implement Storage.kt actual (UserDefaults) ✅
+- [x] Implement FaceLandmarkDetector.kt actual (MediaPipe iOS bridge) ✅
+- [x] Create camera capture template (AVFoundation) ✅
+- [x] Build iOS UI templates (SwiftUI) ✅
+- [x] Configure CocoaPods for MediaPipe ✅
+- [x] Create iOS Development Guide ✅
+- [x] Update GitHub Actions workflow ✅
+- [ ] Set up virtual Mac environment
+- [ ] Create Xcode project
+- [ ] Link shared framework to Xcode project
 - [ ] Test gaze tracking on iOS device
 
 ### Phase 5: Testing & Polish
@@ -574,9 +578,24 @@ app/src/main/java/com/willowtree/vocable/eyegazetracking/
 └── SharedGazeTrackerAdapter.kt ✅ 131 lines (Integration helper)
 
 shared/src/iosMain/kotlin/com/vocable/platform/
-├── FaceLandmarkDetector.kt (actual) ⏭️ To be implemented
-├── Logger.kt (actual) ⏭️ To be implemented
-└── Storage.kt (actual) ⏭️ To be implemented
+├── FaceLandmarkDetector.kt (actual) ✅ 95 lines (Bridge pattern for Swift MediaPipe)
+├── Logger.kt (actual) ✅ 31 lines (NSLog wrapper)
+└── Storage.kt (actual) ✅ 110 lines (NSUserDefaults wrapper)
+
+iosApp/ (Swift UI templates - requires Xcode project setup)
+├── iosApp/
+│   ├── Switch2GoApp.swift ✅ App entry point
+│   ├── ContentView.swift ✅ Main view with gaze overlay
+│   ├── Info.plist ✅ App configuration
+│   ├── Views/
+│   │   ├── AAC/AACGridView.swift ✅ Phrase grid
+│   │   ├── Calibration/CalibrationView.swift ✅ Calibration UI
+│   │   ├── Calibration/CalibrationManager.swift ✅ Calibration logic
+│   │   └── Settings/SettingsView.swift ✅ Settings screens
+│   ├── Camera/CameraManager.swift ✅ AVFoundation capture
+│   ├── Tracking/GazeTrackingManager.swift ✅ Gaze orchestration
+│   └── MediaPipe/FaceLandmarkService.swift ✅ MediaPipe wrapper
+└── Podfile ✅ CocoaPods configuration
 ```
 
 ---
@@ -604,7 +623,7 @@ shared/src/iosMain/kotlin/com/vocable/platform/
 
 ## Current Status
 
-**Phase 1, 2, & 3 Complete!** Android integration ready:
+**Phase 1, 2, 3, & 4 (Partial) Complete!** iOS foundation ready:
 - ✅ All core gaze tracking algorithms are platform-agnostic (~1,500 lines in commonMain)
 - ✅ Clear separation between shared logic and platform code
 - ✅ Expect/actual interfaces defined and implemented for Android
@@ -614,14 +633,22 @@ shared/src/iosMain/kotlin/com/vocable/platform/
 - ✅ Comprehensive documentation (PHASE3_ANDROID_INTEGRATION.md)
 - ✅ Zero breaking changes to existing code
 - ✅ Backward compatible with existing calibration data
+- ✅ **iOS actual implementations created** (Logger, Storage, FaceLandmarkDetector)
+- ✅ **iOS app template structure created** (SwiftUI views, managers)
+- ✅ **iOS Development Guide created** (Documentation/IOS_DEVELOPMENT_GUIDE.md)
+- ✅ **GitHub Actions iOS workflow updated**
 
-**Next:** Phase 4 - iOS platform implementations
+**Next Steps:**
+1. Set up virtual Mac environment (MacStadium/MacinCloud)
+2. Create Xcode project and add Swift template files
+3. Install CocoaPods and MediaPipe dependencies
+4. Build and test on device
 
 **Remaining Timeline:**
 - ✅ Phase 1 (Setup): COMPLETE
 - ✅ Phase 2 (Shared Logic): COMPLETE
 - ✅ Phase 3 (Android): COMPLETE
-- ⏭️ Phase 4 (iOS): 5-7 days
+- 🔄 Phase 4 (iOS): IN PROGRESS - Kotlin implementations done, Xcode project pending
 - ⏭️ Phase 5 (Testing): 2-3 days
 
-**Estimated time to iOS launch: ~1-2 weeks**
+**Estimated time to iOS launch:** Once virtual Mac is set up, ~3-5 days to complete Xcode project setup and testing

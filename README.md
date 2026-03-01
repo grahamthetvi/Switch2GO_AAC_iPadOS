@@ -13,7 +13,7 @@ The app has been customized with CVI-friendly features including:
 - Simplified, high-contrast symbol layouts
 - Customizable symbol colors and sizes
 - Reduced visual complexity
-- Configurable symbol count per page (2-9 symbols)
+- Configurable symbol count per page (2-4 symbols)
 - Eye gaze and head tracking support for hands-free operation
 
 ## Contents
@@ -42,11 +42,9 @@ For users with more mobility, the app can be operated by touch.
 ### Saved Phrases
 Use a list of common phrases, or create and save your own custom phrases with customizable appearance settings.
 
-### Full QWERTY Keyboard
-Type with your head, eyes, or hands.
-
 ## Device Requirements
-- [Android devices with ARCore](https://developers.google.com/ar/discover/supported-devices)
+- [Android devices with Android OS 8 or higher.]
+- [iOS 12 or higher]
 
 ## Credits
 
@@ -57,7 +55,7 @@ Type with your head, eyes, or hands.
 
 ### Original Vocable AAC Development
 Switch2Go is based on Vocable AAC, originally developed by:
-- Matt Kubota, Kyle Ohanian, Duncan Lewis, Ameir Al-Zoubi, and many more from [WillowTree](https://willowtreeapps.com/) 💙
+- Matt Kubota, Kyle Ohanian, Duncan Lewis, Ameir Al-Zoubi, and many more from [WillowTree](https://www.vocable.app/) 💙
 
 We are grateful to the original Vocable team for creating this excellent foundation for accessible communication.
 
@@ -65,4 +63,4 @@ We are grateful to the original Vocable team for creating this excellent foundat
 Switch2Go is released under the MIT license. See [LICENSE](LICENSE) for details.
 
 ## Original Project
-This project is a fork of [Vocable AAC for Android](https://github.com/willowtreeapps/vocable-android), originally developed by WillowTree, LLC. 
+This project is a fork of [Vocable AAC for Android](https://github.com/willowtreeapps/vocable-android), originally developed by WillowTree, LLC.

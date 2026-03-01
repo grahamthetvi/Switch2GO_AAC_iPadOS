@@ -1,32 +1,35 @@
 package com.vocable.platform
 
-import com.vocable.eyetracking.models.CalibrationData
 import com.vocable.eyetracking.calibration.CalibrationMode
+import com.vocable.eyetracking.models.CalibrationData
 import platform.Foundation.NSUserDefaults
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.Serializable
 
 /**
  * iOS implementation of Storage using NSUserDefaults.
  */
+actual fun createStorage(): Storage = UserDefaultsStorage()
+
 class UserDefaultsStorage : Storage {
     private val defaults = NSUserDefaults.standardUserDefaults
-    private val json = Json { ignoreUnknownKeys = true }
 
     override fun saveCalibrationData(data: CalibrationData, mode: String): Boolean {
         return try {
-            val serializable = SerializableCalibrationData(
-                transformX = data.transformX.toList(),
-                transformY = data.transformY.toList(),
-                screenWidth = data.screenWidth,
-                screenHeight = data.screenHeight,
-                calibrationError = data.calibrationError,
-                mode = data.mode.name
-            )
-            val jsonString = json.encodeToString(serializable)
-            defaults.setObject(jsonString, forKey = "calibration_$mode")
+            val prefix = "calibration_${mode}_"
+
+            // Save transform X coefficients as comma-separated string
+            val transformXStr = data.transformX.joinToString(",") { it.toString() }
+            defaults.setObject(transformXStr, "${prefix}transformX")
+
+            // Save transform Y coefficients as comma-separated string
+            val transformYStr = data.transformY.joinToString(",") { it.toString() }
+            defaults.setObject(transformYStr, "${prefix}transformY")
+
+            // Save metadata
+            defaults.setInteger(data.screenWidth.toLong(), "${prefix}screenWidth")
+            defaults.setInteger(data.screenHeight.toLong(), "${prefix}screenHeight")
+            defaults.setFloat(data.calibrationError, "${prefix}error")
+            defaults.setObject(data.mode.name, "${prefix}mode")
+
             defaults.synchronize()
             true
         } catch (e: Exception) {
@@ -36,15 +39,28 @@ class UserDefaultsStorage : Storage {
 
     override fun loadCalibrationData(mode: String): CalibrationData? {
         return try {
-            val jsonString = defaults.stringForKey("calibration_$mode") ?: return null
-            val serializable = json.decodeFromString<SerializableCalibrationData>(jsonString)
+            val prefix = "calibration_${mode}_"
+
+            val transformXStr = defaults.stringForKey("${prefix}transformX") ?: return null
+            val transformYStr = defaults.stringForKey("${prefix}transformY") ?: return null
+
+            val transformX = transformXStr.split(",").map { it.toFloat() }.toFloatArray()
+            val transformY = transformYStr.split(",").map { it.toFloat() }.toFloatArray()
+
+            val modeStr = defaults.stringForKey("${prefix}mode") ?: CalibrationMode.AFFINE.name
+            val calibrationMode = try {
+                CalibrationMode.valueOf(modeStr)
+            } catch (e: Exception) {
+                CalibrationMode.AFFINE
+            }
+
             CalibrationData(
-                transformX = serializable.transformX.toFloatArray(),
-                transformY = serializable.transformY.toFloatArray(),
-                screenWidth = serializable.screenWidth,
-                screenHeight = serializable.screenHeight,
-                calibrationError = serializable.calibrationError,
-                mode = CalibrationMode.valueOf(serializable.mode)
+                transformX = transformX,
+                transformY = transformY,
+                screenWidth = defaults.integerForKey("${prefix}screenWidth").toInt(),
+                screenHeight = defaults.integerForKey("${prefix}screenHeight").toInt(),
+                calibrationError = defaults.floatForKey("${prefix}error"),
+                mode = calibrationMode
             )
         } catch (e: Exception) {
             null
@@ -52,12 +68,20 @@ class UserDefaultsStorage : Storage {
     }
 
     override fun deleteCalibrationData(mode: String): Boolean {
-        defaults.removeObjectForKey("calibration_$mode")
-        return defaults.synchronize()
+        return try {
+            val prefix = "calibration_${mode}_"
+            listOf("transformX", "transformY", "screenWidth", "screenHeight", "error", "mode").forEach {
+                defaults.removeObjectForKey("$prefix$it")
+            }
+            defaults.synchronize()
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 
     override fun saveString(key: String, value: String) {
-        defaults.setObject(value, forKey = key)
+        defaults.setObject(value, key)
         defaults.synchronize()
     }
 
@@ -66,7 +90,7 @@ class UserDefaultsStorage : Storage {
     }
 
     override fun saveFloat(key: String, value: Float) {
-        defaults.setFloat(value, forKey = key)
+        defaults.setFloat(value, key)
         defaults.synchronize()
     }
 
@@ -79,7 +103,7 @@ class UserDefaultsStorage : Storage {
     }
 
     override fun saveBoolean(key: String, value: Boolean) {
-        defaults.setBool(value, forKey = key)
+        defaults.setBool(value, key)
         defaults.synchronize()
     }
 
@@ -92,7 +116,7 @@ class UserDefaultsStorage : Storage {
     }
 
     override fun saveInt(key: String, value: Int) {
-        defaults.setInteger(value.toLong(), forKey = key)
+        defaults.setInteger(value.toLong(), key)
         defaults.synchronize()
     }
 
@@ -104,21 +128,3 @@ class UserDefaultsStorage : Storage {
         }
     }
 }
-
-/**
- * Serializable version of CalibrationData for JSON persistence.
- */
-@Serializable
-private data class SerializableCalibrationData(
-    val transformX: List<Float>,
-    val transformY: List<Float>,
-    val screenWidth: Int,
-    val screenHeight: Int,
-    val calibrationError: Float,
-    val mode: String
-)
-
-/**
- * Actual implementation for iOS platform storage.
- */
-actual fun createStorage(): Storage = UserDefaultsStorage()
