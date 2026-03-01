@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/category_container"
+    android:layout_width="0dp"
+    android:layout_height="0dp"
+    android:layout_rowWeight="1"
+    android:layout_columnWeight="1"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.0"
+    app:layout_constraintStart_toStartOf="parent">
+
+    <com.switch2connect.aac.customviews.NoSayTextButton
+        android:id="@+id/individual_edit_category_button"
+        style="@style/IndividualCategoryEditButton"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/settings_edit_individual_category_arrow_height"
+        android:paddingStart="@dimen/edit_individual_category_padding_start"
+        android:paddingEnd="@dimen/edit_individual_category_padding_end"
+        android:padding="@dimen/edit_individual_category_padding"
+        android:layout_marginStart="@dimen/settings_option_button_margin"
+        android:layout_marginTop="@dimen/settings_edit_individual_category_arrow_top"
+        android:text="@string/settings"
+        android:textStyle="bold"
+        app:layout_constraintStart_toEndOf="@+id/move_category_down_button"
+        app:layout_constraintEnd_toEndOf="@id/category_container"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <com.switch2connect.aac.customviews.ActionButton
+        android:id="@+id/move_category_up_button"
+        style="@style/SettingsButton"
+        android:layout_width="@dimen/settings_edit_individual_category_arrow_width"
+        android:layout_height="@dimen/settings_edit_individual_category_arrow_height"
+        android:layout_marginTop="@dimen/settings_edit_individual_category_arrow_top"
+        android:text="@string/move_up"
+        android:textSize="10sp"
+        android:contentDescription="@string/move_up"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <com.switch2connect.aac.customviews.ActionButton
+        android:id="@+id/move_category_down_button"
+        style="@style/SettingsButton"
+        android:layout_width="@dimen/settings_edit_individual_category_arrow_width"
+        android:layout_height="@dimen/settings_edit_individual_category_arrow_height"
+        android:layout_marginTop="@dimen/settings_edit_individual_category_arrow_top"
+        android:layout_marginStart="@dimen/settings_edit_individual_category_arrow_top"
+        android:text="@string/move_down"
+        android:textSize="10sp"
+        android:contentDescription="@string/move_down"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/move_category_up_button" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

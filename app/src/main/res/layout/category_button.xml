@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.switch2connect.aac.customviews.CategoryButton xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/CategoryThemeCompact"
+    android:layout_marginStart="2dp"
+    android:layout_marginEnd="2dp" />

@@ -1,0 +1,59 @@
+-- Phrase table for storing user phrases
+CREATE TABLE Phrase (
+  phrase_id TEXT NOT NULL PRIMARY KEY,
+  parent_category_id TEXT,
+  creation_date INTEGER NOT NULL,
+  last_spoken_date INTEGER,
+  localized_utterance TEXT,
+  sort_order INTEGER NOT NULL,
+  style TEXT DEFAULT NULL
+);
+
+-- Queries
+getAllPhrases:
+SELECT * FROM Phrase ORDER BY sort_order ASC;
+
+getPhraseById:
+SELECT * FROM Phrase WHERE phrase_id = ?;
+
+getPhrasesForCategory:
+SELECT * FROM Phrase 
+WHERE parent_category_id = ? 
+ORDER BY sort_order ASC;
+
+getRecentPhrases:
+SELECT * FROM Phrase 
+WHERE last_spoken_date IS NOT NULL 
+ORDER BY last_spoken_date DESC 
+LIMIT ?;
+
+insertPhrase:
+INSERT OR REPLACE INTO Phrase (phrase_id, parent_category_id, creation_date, last_spoken_date, localized_utterance, sort_order, style)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+updatePhraseText:
+UPDATE Phrase SET localized_utterance = ? WHERE phrase_id = ?;
+
+updatePhraseStyle:
+UPDATE Phrase SET style = ? WHERE phrase_id = ?;
+
+updatePhraseLastSpoken:
+UPDATE Phrase SET last_spoken_date = ? WHERE phrase_id = ?;
+
+updatePhraseSortOrder:
+UPDATE Phrase SET sort_order = ? WHERE phrase_id = ?;
+
+updatePhraseCategory:
+UPDATE Phrase SET parent_category_id = ? WHERE phrase_id = ?;
+
+deletePhrase:
+DELETE FROM Phrase WHERE phrase_id = ?;
+
+deletePhrasesForCategory:
+DELETE FROM Phrase WHERE parent_category_id = ?;
+
+getPhraseCount:
+SELECT COUNT(*) FROM Phrase;
+
+getPhrasesCountForCategory:
+SELECT COUNT(*) FROM Phrase WHERE parent_category_id = ?;

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string-array name="keyboard_keys" tools:ignore="InconsistentArrays">
+        <item>A</item>
+        <item>B</item>
+        <item>C</item>
+        <item>D</item>
+        <item>E</item>
+        <item>F</item>
+        <item>G</item>
+        <item>H</item>
+        <item>I</item>
+        <item>J</item>
+        <item>K</item>
+        <item>L</item>
+        <item>M</item>
+        <item>N</item>
+        <item>O</item>
+        <item>P</item>
+        <item>Q</item>
+        <item>R</item>
+        <item>S</item>
+        <item>T</item>
+        <item>U</item>
+        <item>V</item>
+        <item>W</item>
+        <item>X</item>
+        <item>Y</item>
+        <item>Z</item>
+        <item>\'</item>
+        <item>,</item>
+        <item>.</item>
+        <item>\?</item>
+    </string-array>
+
+    <string-array name="settings_option_menu_strings">
+        <item>@string/settings_edit_saying</item>
+        <item>@string/edit_categories_title</item>
+        <item>@string/timing_sensitivity_title</item>
+        <item>@string/settings_selection_mode</item>
+        <item>@string/settings_reset_app</item>
+    </string-array>
+
+    <string-array name="category_123">
+        <item>@string/category_123_0</item>
+        <item>@string/category_123_1</item>
+        <item>@string/category_123_2</item>
+        <item>@string/category_123_3</item>
+        <item>@string/category_123_4</item>
+        <item>@string/category_123_5</item>
+        <item>@string/category_123_6</item>
+        <item>@string/category_123_7</item>
+        <item>@string/category_123_8</item>
+        <item>@string/category_123_9</item>
+        <item>@string/category_123_yes</item>
+        <item>@string/category_123_no</item>
+    </string-array>
+
+    <array name="category_basic_needs">
+        <item>@string/preset_need_restroom</item>
+        <item>@string/preset_im_thirsty</item>
+        <item>@string/preset_im_hungry</item>
+        <item>@string/preset_im_cold</item>
+        <item>@string/preset_im_hot</item>
+        <item>@string/preset_im_tired</item>
+        <item>@string/preset_im_fine</item>
+        <item>@string/preset_im_good</item>
+        <item>@string/preset_im_uncomfortable</item>
+        <item>@string/preset_im_in_pain</item>
+        <item>@string/preset_im_finished</item>
+        <item>@string/preset_want_lie_down</item>
+        <item>@string/preset_want_sit_up</item>
+    </array>
+
+    <array name="category_conversation">
+        <item>@string/preset_hello</item>
+        <item>@string/preset_good_morning</item>
+        <item>@string/preset_good_evening</item>
+        <item>@string/preset_pleased_to_meet_you</item>
+        <item>@string/preset_how_is_day</item>
+        <item>@string/preset_how_are_you</item>
+        <item>@string/preset_how_is_it_going</item>
+        <item>@string/preset_how_was_your_weekend</item>
+        <item>@string/preset_goodbye</item>
+        <item>@string/preset_okay</item>
+        <item>@string/preset_bad</item>
+        <item>@string/preset_good</item>
+        <item>@string/preset_that_makes_sense</item>
+        <item>@string/preset_i_like_it</item>
+        <item>@string/preset_please_stop</item>
+        <item>@string/preset_i_do_not_agree</item>
+        <item>@string/preset_please_repeat</item>
+    </array>
+
+    <array name="category_general">
+        <item>@string/preset_please</item>
+        <item>@string/preset_thank_you</item>
+        <item>@string/preset_yes</item>
+        <item>@string/preset_no</item>
+        <item>@string/preset_maybe</item>
+        <item>@string/preset_please_wait</item>
+        <item>@string/preset_i_dont_know</item>
+        <item>@string/preset_i_didnt_mean_say_that</item>
+        <item>@string/preset_be_patient</item>
+    </array>
+
+    <array name="category_environment">
+        <item>@string/preset_turn_on_lights</item>
+        <item>@string/preset_turn_off_lights</item>
+        <item>@string/preset_no_visitors</item>
+        <item>@string/preset_like_visitors</item>
+        <item>@string/preset_be_quiet</item>
+        <item>@string/preset_like_to_talk</item>
+        <item>@string/preset_tv_on</item>
+        <item>@string/preset_tv_off</item>
+        <item>@string/preset_volume_up</item>
+        <item>@string/preset_volume_down</item>
+        <item>@string/preset_open_blinds</item>
+        <item>@string/preset_close_blinds</item>
+        <item>@string/preset_open_window</item>
+        <item>@string/preset_close_window</item>
+    </array>
+
+    <array name="category_personal_care">
+        <item>@string/preset_need_medication</item>
+        <item>@string/preset_need_bath</item>
+        <item>@string/preset_need_shower</item>
+        <item>@string/preset_need_wash_face</item>
+        <item>@string/preset_want_brush_hair</item>
+        <item>@string/preset_fix_pillow</item>
+        <item>@string/preset_need_spit</item>
+        <item>@string/preset_trouble_breathing</item>
+        <item>@string/preset_need_jacket</item>
+    </array>
+
+</resources>

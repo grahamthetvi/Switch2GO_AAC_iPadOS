@@ -1,0 +1,37 @@
+-- Category table for storing user categories
+CREATE TABLE Category (
+  category_id TEXT NOT NULL PRIMARY KEY,
+  creation_date INTEGER NOT NULL,
+  localized_name TEXT NOT NULL,
+  hidden INTEGER NOT NULL DEFAULT 0,
+  sort_order INTEGER NOT NULL
+);
+
+-- Queries
+getAllCategories:
+SELECT * FROM Category ORDER BY sort_order ASC;
+
+getCategoryById:
+SELECT * FROM Category WHERE category_id = ?;
+
+getVisibleCategories:
+SELECT * FROM Category WHERE hidden = 0 ORDER BY sort_order ASC;
+
+insertCategory:
+INSERT OR REPLACE INTO Category (category_id, creation_date, localized_name, hidden, sort_order)
+VALUES (?, ?, ?, ?, ?);
+
+updateCategoryName:
+UPDATE Category SET localized_name = ? WHERE category_id = ?;
+
+updateCategoryHidden:
+UPDATE Category SET hidden = ? WHERE category_id = ?;
+
+updateCategorySortOrder:
+UPDATE Category SET sort_order = ? WHERE category_id = ?;
+
+deleteCategory:
+DELETE FROM Category WHERE category_id = ?;
+
+getCategoryCount:
+SELECT COUNT(*) FROM Category;

@@ -1,0 +1,28 @@
+/* 
+  Localizable.strings
+  Switch2Go iOS - French
+*/
+
+// Categories
+"preset_general" = "Général";
+"preset_basic_needs" = "Besoins de Base";
+"preset_personal_care" = "Soins Personnels";
+"preset_conversation" = "Conversation";
+"preset_environment" = "Environnement";
+"preset_user_keypad" = "123";
+"preset_recents" = "Récents";
+
+// General Phrases
+"preset_please" = "S'il vous plaît";
+"preset_thank_you" = "Merci";
+"preset_yes" = "Oui";
+"preset_no" = "Non";
+"preset_maybe" = "Peut-être";
+
+// UI
+"select_something" = "Sélectionnez quelque chose";
+"loading" = "Chargement...";
+"settings" = "Paramètres";
+"back" = "Retour";
+"done" = "Terminé";
+"cancel" = "Annuler";

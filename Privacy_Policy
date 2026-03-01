@@ -1,0 +1,135 @@
+PRIVACY POLICY
+Last Updated: January 26, 2026
+Our Commitment to Privacy
+This app is designed with privacy as a core principle. We do not collect, store, or transmit any personal information from your device. All features operate entirely on your device, with no data sent to external servers.
+
+1. INFORMATION WE COLLECT
+We collect ZERO information. This app does not:
+
+Collect personal information
+Track usage analytics
+Send crash reports
+Connect to external servers
+Use cookies or tracking technologies
+Collect advertising identifiers
+Access your location
+Store or transmit camera or microphone data
+
+
+2. HOW THE APP WORKS
+Camera Access (Eye Tracking)
+
+Purpose: The app uses your device's front camera for eye tracking to control an on-screen pointer, allowing users with limited mobility to interact with the app
+Processing: All eye tracking processing happens locally on your device using computer vision technology
+Storage: No camera images, video, or eye tracking data is stored or transmitted
+Your Control: You can revoke camera permission at any time in your device settings
+
+Microphone Access (Speech Features)
+
+Purpose: The app may request microphone access for speech-based features
+Processing: All voice processing happens locally on your device
+Storage: No audio recordings are stored or transmitted
+Your Control: You can revoke microphone permission at any time in your device settings
+
+Local Data Storage
+
+The app stores user preferences, custom phrases, and calibration settings locally on your device
+This data never leaves your device
+You can delete this data by uninstalling the app or clearing app data in your device settings
+
+
+3. DATA SHARING
+We share NO data with anyone. Because we don't collect any data, there is nothing to share with:
+
+Third-party services
+Advertisers
+Analytics companies
+Other users
+Anyone else
+
+
+4. CHILDREN'S PRIVACY (COPPA & FERPA COMPLIANCE)
+This app is safe for children and students of all ages:
+
+No data collection: We don't collect personal information from anyone, including children under 13
+Educational use: This app is designed for use in educational settings and complies with FERPA (Family Educational Rights and Privacy Act)
+Parental control: Parents and educators have full control over the app through device-level permissions
+No third parties: Children's data is never shared because no data is collected
+
+
+5. INTERNATIONAL USERS (GDPR COMPLIANCE)
+For users in the European Economic Area (EEA), UK, and Switzerland:
+
+Data protection by design: This app is built with privacy as the foundation
+Your rights: Because we don't collect data, there is no data to access, correct, delete, or transfer
+No consent needed: We don't need your consent to collect data because we don't collect any
+Legal basis: Not applicable - no processing of personal data occurs
+
+
+6. U.S. STATE PRIVACY RIGHTS
+For residents of California, Virginia, Colorado, Connecticut, and other states with privacy laws:
+
+Right to know: We collect no personal information
+Right to delete: Not applicable - no data is collected
+Right to opt-out of sale: Not applicable - we don't sell data
+Non-discrimination: Not applicable - no data practices to opt out of
+
+
+7. ACCESSIBILITY & ASSISTIVE TECHNOLOGY
+This app is designed as an assistive communication tool:
+
+All features work offline
+No account or login required
+Privacy-preserving by design for users with disabilities
+Safe for use in schools, therapy settings, and homes
+
+
+8. DATA SECURITY
+Since no data is collected or transmitted:
+
+There is no risk of data breaches
+No passwords or accounts to protect
+All processing stays on your device
+Your privacy is protected by design
+
+
+9. PERMISSIONS EXPLAINED
+The app requests only essential permissions:
+PermissionPurposeData StorageCameraEye tracking for pointer controlNone - processed in real-time onlyMicrophoneOptional speech featuresNone - processed in real-time only
+You can review and change permissions in your device's Settings > Apps > [App Name] > Permissions.
+
+10. THIRD-PARTY SERVICES
+This app uses no third-party services, including:
+
+No analytics platforms
+No crash reporting
+No advertising networks
+No cloud services
+No AI/ML services requiring data transmission
+
+
+11. CHANGES TO THIS POLICY
+If we ever change our privacy practices (such as adding optional cloud features), we will:
+
+Update this policy with a new "Last Updated" date
+Notify users within the app
+Obtain consent before collecting any data
+Maintain opt-in requirements for any data collection features
+
+
+12. OPEN SOURCE & TRANSPARENCY
+This app is based on open-source code, modified for enhanced privacy. You can review how the app works by examining the source code or consulting with technical experts.
+
+13. CONTACT INFORMATION
+If you have questions about this privacy policy or the app's privacy practices:
+Name: Addison Graham
+Email: grahamthetvi@icloud.com
+Location: Illinois
+
+14. YOUR CONSENT
+By using this app, you acknowledge that:
+
+You have read this privacy policy
+You understand that no personal data is collected
+You grant permission for camera/microphone access only for local, on-device processing
+You can revoke these permissions at any time

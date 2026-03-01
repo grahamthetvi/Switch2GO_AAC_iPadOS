@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:columnCount="@integer/settings_options_columns"
+    android:rowCount="@integer/settings_options_rows">
+
+    <com.switch2connect.aac.customviews.NoSayTextButton
+        android:id="@+id/categories_display_button"
+        style="@style/SettingsOptionButtons"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:text="@string/settings_categories_display" />
+
+    <com.switch2connect.aac.customviews.NoSayTextButton
+        android:id="@+id/timing_sensitivity_button"
+        style="@style/SettingsOptionButtons"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:text="@string/timing_sensitivity_title" />
+
+    <com.switch2connect.aac.customviews.NoSayTextButton
+        android:id="@+id/reset_app_button"
+        style="@style/SettingsOptionButtons"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        android:text="@string/settings_reset_app" />
+
+    <com.switch2connect.aac.customviews.NoSayTextButton
+        android:id="@+id/selection_mode_button"
+        style="@style/SettingsOptionButtons"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:text="@string/settings_selection_mode" />
+
+    <com.switch2connect.aac.customviews.NoSayTextButton
+        android:id="@+id/advanced_eye_tracking_button"
+        style="@style/SettingsOptionButtons"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:text="@string/advanced_eye_tracking_title" />
+
+</GridLayout>
