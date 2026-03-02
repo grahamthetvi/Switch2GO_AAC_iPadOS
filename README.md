@@ -17,7 +17,7 @@ The app has been customized with CVI-friendly features including:
 - Simplified, high-contrast symbol layouts
 - Customizable symbol colors and sizes
 - Reduced visual complexity
-- Configurable symbol count per page (2-9 symbols)
+- Configurable symbol count per page (2-4 symbols)
 - Eye gaze and head tracking support for hands-free operation
 
 ## Contents
@@ -46,11 +46,8 @@ For users with more mobility, the app can be operated by touch.
 ### Saved Phrases
 Use a list of common phrases, or create and save your own custom phrases with customizable appearance settings.
 
-### Full QWERTY Keyboard
-Type with your head, eyes, or hands.
-
-### USB Switch Control (Arduino Micro)
-Use an Arduino Micro (or Leonardo) as a USB HID keyboard. Wire physical switches to the Arduino; when pressed, they send key presses (1, 2, 3, 4) that map directly to phrase tiles. No Bluetooth pairing—just plug in the USB cable.
+### USB Switch Control (Arduino Micro/Tapio)
+Use an Arduino Micro (or Leonardo) as a USB HID keyboard. Wire physical switches to the Arduino; when pressed, they send key presses (1, 2, 3, 4) that map directly to phrase tiles. No Bluetooth pairing—just plug in the USB cable. This feature will be further explained in future updates.
 
 **Setup:** Settings → Switch Control → Enable USB Switch Control → Mode: "Direct Switch-to-Phrase". See `ArduinoMicro/Switch2GO_USB_Switch/` for the sketch.
 
