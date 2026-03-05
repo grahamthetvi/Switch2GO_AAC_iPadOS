@@ -69,11 +69,8 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
 
         binding.contactDevsButton.action = {
             showLeavingAppDialog {
-                val sendEmail = Intent(Intent.ACTION_SENDTO).apply {
-                    data =
-                        Uri.parse("$MAIL_TO${BuildConfig.VERSION_NAME}-${BuildConfig.VERSION_CODE}")
-                }
-                startActivity(sendEmail)
+                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://grahamthetvi.github.io/Switch2GO_AAC_iPadOS_Explanation_and_Support/index.html"))
+                startActivity(browserIntent)
             }
         }
 

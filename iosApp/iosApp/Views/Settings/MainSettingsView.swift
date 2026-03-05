@@ -113,11 +113,15 @@ struct MainSettingsView: View {
                             )
                         }
                         
-                        Button(action: contactDeveloper) {
+                        Button(action: {
+                            if let url = URL(string: "https://grahamthetvi.github.io/Switch2GO_AAC_iPadOS_Explanation_and_Support/index.html") {
+                                openURL(url)
+                            }
+                        }) {
                             settingsRow(
-                                title: "Contact Developer",
-                                icon: "envelope.fill",
-                                color: .teal
+                                title: "Get Support",
+                                icon: "questionmark.circle.fill",
+                                color: .blue
                             )
                         }
 
