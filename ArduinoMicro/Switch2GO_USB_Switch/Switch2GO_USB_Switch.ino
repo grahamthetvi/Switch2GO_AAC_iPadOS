@@ -56,7 +56,8 @@ bool          switchState[NUM_SWITCHES]      = {};
 bool          lastRawState[NUM_SWITCHES]     = {};
 unsigned long lastDebounceTime[NUM_SWITCHES] = {};
 
-unsigned long ledOffTime = 0;  // When to turn LED off (0 = already off)
+unsigned long lastLedOnTime = 0;  // When the LED was turned on
+bool          isLedOn       = false; // Is the LED currently flashing?
 
 // ============================================================================
 // Setup
@@ -80,6 +81,7 @@ void setup() {
   digitalWrite(LED_PIN, LOW);
 
   Keyboard.begin();
+  Keyboard.releaseAll(); // Ensure no keys are stuck on startup
   Serial.println(F("USB Keyboard ready. Connect to iPad."));
 }
 
@@ -107,10 +109,10 @@ void loop() {
     }
   }
 
-  // --- Non-blocking LED off ---
-  if (ledOffTime != 0 && now >= ledOffTime) {
+  // --- Non-blocking LED off (Rollover-safe) ---
+  if (isLedOn && (now - lastLedOnTime >= LED_FLASH_MS)) {
     digitalWrite(LED_PIN, LOW);
-    ledOffTime = 0;
+    isLedOn = false;
   }
 
   delay(1);
@@ -129,7 +131,8 @@ void onSwitchChanged(int switchIndex, bool pressed) {
 
     // Non-blocking LED flash
     digitalWrite(LED_PIN, HIGH);
-    ledOffTime = millis() + LED_FLASH_MS;
+    lastLedOnTime = millis();
+    isLedOn = true;
   } else {
     Keyboard.release(SWITCH_KEYS[switchIndex]);
   }

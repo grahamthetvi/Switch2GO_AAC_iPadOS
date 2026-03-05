@@ -118,25 +118,25 @@ class WikimediaSearchService {
         
         // Validate response
         if let httpResponse = response as? HTTPURLResponse {
-            print("WikimediaSearchService: HTTP Status: \(httpResponse.statusCode)")
+            DebugLog.debug("HTTP Status: \(httpResponse.statusCode)", tag: "WikimediaSearchService")
             guard (200...299).contains(httpResponse.statusCode) else {
                 throw WikimediaError.searchFailed("HTTP \(httpResponse.statusCode)")
             }
         }
         
         // Validate data size
-        print("WikimediaSearchService: Downloaded \(data.count) bytes")
+        DebugLog.debug("Downloaded \(data.count) bytes", tag: "WikimediaSearchService")
         guard data.count > 0 else {
             throw WikimediaError.invalidImageData
         }
         
         // Try to create UIImage
         guard let image = UIImage(data: data) else {
-            print("WikimediaSearchService: Failed to create UIImage from \(data.count) bytes")
+            DebugLog.error("Failed to create UIImage from \(data.count) bytes", tag: "WikimediaSearchService")
             throw WikimediaError.invalidImageData
         }
         
-        print("WikimediaSearchService: Successfully created UIImage with size \(image.size)")
+        DebugLog.info("Successfully created UIImage with size \(image.size)", tag: "WikimediaSearchService")
         return image
     }
 }

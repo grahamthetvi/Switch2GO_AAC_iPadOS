@@ -58,10 +58,19 @@ struct SelectionModeView: View {
                             .foregroundColor(.gray)
                             .frame(width: 36)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("USB Switch Control")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            Text("Connect Tapio or compatible USB switch via USB")
+                            HStack {
+                                Text("USB Switch Control")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                Text("Coming Soon")
+                                    .font(.caption2.bold())
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.orange.opacity(0.2))
+                                    .foregroundColor(.orange)
+                                    .cornerRadius(4)
+                            }
+                            Text("Support for Tapio and compatible USB switches is in development")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -73,6 +82,8 @@ struct SelectionModeView: View {
                     .background(Color(UIColor.secondarySystemBackground))
                     .cornerRadius(12)
                 }
+                .disabled(true)
+                .opacity(0.6)
                 
                 // Current Status
                 VStack(spacing: 8) {

@@ -28,10 +28,10 @@ class DatabaseManager: ObservableObject {
         let presetCount = database.presetCategoryQueries.getPresetCategoryCount().executeAsOne()
         
         if presetCount == 0 {
-            print("DatabaseManager: First launch detected, initializing preset data...")
+            DebugLog.info("First launch detected, initializing preset data...", tag: "DatabaseManager")
             initializePresetData()
         } else {
-            print("DatabaseManager: Preset data already exists (\(presetCount) categories)")
+            DebugLog.info("Preset data already exists (\(presetCount) categories)", tag: "DatabaseManager")
         }
     }
     
@@ -47,7 +47,7 @@ class DatabaseManager: ObservableObject {
                 sort_order: Int64(category.initialSortOrder),
                 deleted: 0
             )
-            print("DatabaseManager: Inserted preset category: \(category.id)")
+            DebugLog.debug("Inserted preset category: \(category.id)", tag: "DatabaseManager")
         }
         
         // Insert preset phrases
@@ -70,7 +70,7 @@ class DatabaseManager: ObservableObject {
             )
         }
         
-        print("DatabaseManager: Initialized \(presetData.categories.count) categories and \(allPhrases.count) phrases")
+        DebugLog.info("Initialized \(presetData.categories.count) categories and \(allPhrases.count) phrases", tag: "DatabaseManager")
     }
     
     /// Reset database to defaults (clear custom data, keep presets)
@@ -109,6 +109,6 @@ class DatabaseManager: ObservableObject {
             )
         }
         
-        print("DatabaseManager: Database reset to defaults")
+        DebugLog.info("Database reset to defaults", tag: "DatabaseManager")
     }
 }

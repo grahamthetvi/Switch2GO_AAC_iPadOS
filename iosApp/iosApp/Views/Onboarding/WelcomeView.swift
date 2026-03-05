@@ -85,11 +85,11 @@ struct WelcomeView: View {
     private var switchModePage: some View {
         OnboardingPageView(
             icon: "keyboard.fill",
-            iconColor: .purple,
-            title: "Switch Control with Tapio",
+            iconColor: .orange,
+            title: "Switch Control (Coming Soon)",
             paragraphs: [
-                "You can use switch mode with Tapio, a USB switch interface by Adaptive Tech Solutions. Simply connect Tapio to your iPad via USB and plug in your adaptive switches -- no Bluetooth pairing required.",
-                "We have yet to implement an open-source alternative, but it is coming soon. Stay tuned for an Arduino-based option that will provide the same functionality."
+                "Switch control via USB interfaces like Tapio is currently in development and will be available in a future update.",
+                "Once available, you'll be able to connect adaptive switches to your iPad via USB to control the app, with no Bluetooth pairing required."
             ]
         )
     }

@@ -123,7 +123,7 @@ struct ImagePickerView: View {
     private func saveImageToDocuments(data: Data) -> URL? {
         // Validate the data can be converted to UIImage first
         guard let image = UIImage(data: data) else {
-            print("ImagePickerView: Invalid image data, cannot create UIImage")
+            DebugLog.error("Invalid image data, cannot create UIImage", tag: "ImagePickerView")
             return nil
         }
         
@@ -134,8 +134,8 @@ struct ImagePickerView: View {
         let fileName = "custom_image_\(UUID().uuidString).\(isTransparent ? "png" : "jpg")"
         let fileURL = documentsDirectory.appendingPathComponent(fileName)
         
-        print("ImagePickerView: Saving image to: \(fileURL.path)")
-        print("ImagePickerView: Image size: \(image.size), has alpha: \(isTransparent)")
+        DebugLog.debug("Saving image to: \(fileURL.path)", tag: "ImagePickerView")
+        DebugLog.debug("Image size: \(image.size), has alpha: \(isTransparent)", tag: "ImagePickerView")
         
         // Convert to appropriate format
         let imageData: Data?
@@ -146,7 +146,7 @@ struct ImagePickerView: View {
         }
         
         guard let finalData = imageData else {
-            print("ImagePickerView: Failed to convert image to final format")
+            DebugLog.error("Failed to convert image to final format", tag: "ImagePickerView")
             return nil
         }
         
@@ -157,12 +157,12 @@ struct ImagePickerView: View {
             if FileManager.default.fileExists(atPath: fileURL.path) {
                 let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
                 let fileSize = attributes[.size] as? Int64 ?? 0
-                print("ImagePickerView: File saved successfully, size: \(fileSize) bytes")
+                DebugLog.info("File saved successfully, size: \(fileSize) bytes", tag: "ImagePickerView")
             }
             
             return fileURL
         } catch {
-            print("ImagePickerView: Error saving image: \(error.localizedDescription)")
+            DebugLog.error("Error saving image: \(error.localizedDescription)", tag: "ImagePickerView")
             return nil
         }
     }

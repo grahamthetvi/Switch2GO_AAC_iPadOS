@@ -404,7 +404,7 @@ struct AdvancedEyeTrackingView: View {
         _ = storage.deleteCalibrationData(mode: "affine")
         storage.saveBoolean(key: "hasCalibration", value: false)
         
-        print("Calibration data cleared")
+        DebugLog.info("Calibration data cleared", tag: "AdvancedEyeTrackingView")
     }
 }
 

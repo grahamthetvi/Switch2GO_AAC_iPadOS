@@ -360,8 +360,10 @@ class AppSettings: ObservableObject {
         let borderHex = defaults.object(forKey: Keys.appBorderColor) as? UInt32 ?? 0xFFFFFFFF
         self.appBorderColor = Color(hex: borderHex)
 
-        // Switch Control
-        self.switchControlEnabled = defaults.object(forKey: Keys.switchControlEnabled) as? Bool ?? false
+        // Switch Control (Currently disabled - Coming Soon feature)
+        self.switchControlEnabled = false
+        defaults.set(false, forKey: Keys.switchControlEnabled)
+        
         self.switchControlMode = defaults.string(forKey: Keys.switchControlMode) ?? "direct"
         self.switchScanInterval = defaults.object(forKey: Keys.switchScanInterval) as? Double ?? 1.5
         self.switchAction1 = defaults.string(forKey: Keys.switchAction1) ?? "select"

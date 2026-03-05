@@ -55,12 +55,12 @@ class ImageCache {
         
         // Validate the URL is a file URL and the file exists
         guard url.isFileURL else {
-            print("ImageCache: URL is not a file URL: \(url)")
+            DebugLog.error("URL is not a file URL: \(url)", tag: "ImageCache")
             return nil
         }
         
         guard FileManager.default.fileExists(atPath: url.path) else {
-            print("ImageCache: File does not exist at path: \(url.path)")
+            DebugLog.warn("File does not exist at path: \(url.path)", tag: "ImageCache")
             return nil
         }
         
@@ -68,16 +68,16 @@ class ImageCache {
         do {
             let data = try Data(contentsOf: url)
             guard let image = UIImage(data: data) else {
-                print("ImageCache: Failed to create UIImage from data at: \(url.path)")
+                DebugLog.error("Failed to create UIImage from data at: \(url.path)", tag: "ImageCache")
                 // Check file size and format
                 let fileSize = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64) ?? 0
-                print("ImageCache: File size: \(fileSize) bytes")
+                DebugLog.debug("File size: \(fileSize) bytes", tag: "ImageCache")
                 return nil
             }
             set(key: key, image: image)
             return image
         } catch {
-            print("ImageCache: Error loading image from \(url.path): \(error.localizedDescription)")
+            DebugLog.error("Error loading image from \(url.path): \(error.localizedDescription)", tag: "ImageCache")
             return nil
         }
     }
@@ -113,7 +113,7 @@ struct CachedAsyncImage: View {
     
     private func loadImage() {
         guard let ref = imageRef, !ref.isEmpty else {
-            print("CachedAsyncImage: No image reference provided")
+            DebugLog.debug("No image reference provided", tag: "CachedAsyncImage")
             return
         }
         
@@ -128,13 +128,13 @@ struct CachedAsyncImage: View {
         if ref.hasPrefix("file://") {
             // Try to create URL from string
             if let url = URL(string: ref) {
-                print("CachedAsyncImage: Loading file URL: \(url.path)")
+                DebugLog.debug("Loading file URL: \(url.path)", tag: "CachedAsyncImage")
                 loadedImage = ImageCache.shared.loadImage(from: url)
                 if loadedImage == nil {
-                    print("CachedAsyncImage: Failed to load image from file URL")
+                    DebugLog.error("Failed to load image from file URL", tag: "CachedAsyncImage")
                 }
             } else {
-                print("CachedAsyncImage: Invalid file URL string: \(ref)")
+                DebugLog.error("Invalid file URL string: \(ref)", tag: "CachedAsyncImage")
             }
             return
         }
@@ -142,19 +142,19 @@ struct CachedAsyncImage: View {
         // Check for absolute path without file:// prefix
         if ref.hasPrefix("/") {
             let url = URL(fileURLWithPath: ref)
-            print("CachedAsyncImage: Loading absolute path: \(ref)")
+            DebugLog.debug("Loading absolute path: \(ref)", tag: "CachedAsyncImage")
             loadedImage = ImageCache.shared.loadImage(from: url)
             if loadedImage == nil {
-                print("CachedAsyncImage: Failed to load image from absolute path")
+                DebugLog.error("Failed to load image from absolute path", tag: "CachedAsyncImage")
             }
             return
         }
         
         // Load as named resource
-        print("CachedAsyncImage: Loading named resource: \(ref)")
+        DebugLog.debug("Loading named resource: \(ref)", tag: "CachedAsyncImage")
         loadedImage = ImageCache.shared.loadImage(named: ref)
         if loadedImage == nil {
-            print("CachedAsyncImage: Failed to load named resource")
+            DebugLog.error("Failed to load named resource", tag: "CachedAsyncImage")
         }
     }
     
