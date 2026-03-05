@@ -7,6 +7,7 @@ This app is designed with privacy as a core principle. We do not collect, store,
 We collect ZERO information. This app does not:
 
 Collect personal information
+Collect face data, facial geometry, or images
 Track usage analytics
 Send crash reports
 Connect to external servers
@@ -17,11 +18,11 @@ Store or transmit camera or microphone data
 
 
 2. HOW THE APP WORKS
-Camera Access (Eye Tracking)
+Camera Access (Eye Tracking & Facial Landmarks)
 
-Purpose: The app uses your device's front camera for eye tracking to control an on-screen pointer, allowing users with limited mobility to interact with the app
-Processing: All eye tracking processing happens locally on your device using computer vision technology
-Storage: No camera images, video, or eye tracking data is stored or transmitted
+Purpose: The app uses your device's front camera and MediaPipe technology to detect facial landmarks and track eye movements. This allows users with limited mobility to control an on-screen pointer and interact with the app hands-free.
+Processing: All face, facial landmark, and eye tracking processing happens strictly locally on your device in real-time using computer vision technology.
+Storage: No camera images, video, face data, facial geometry, or eye tracking data is ever stored, saved, or transmitted.
 Your Control: You can revoke camera permission at any time in your device settings
 
 Microphone Access (Speech Features)

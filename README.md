@@ -33,7 +33,7 @@ Switch2Go is an Augmentative and Alternative Communication (AAC) application des
 ## Features
 
 ### CVI-Optimized Interface
-- **Configurable Symbol Layouts**: Choose from 2-9 symbols per page to reduce visual complexity
+- **Configurable Symbol Layouts**: Choose from 2-4 symbols per page to reduce visual complexity
 - **Customizable Colors**: Set high-contrast colors for each symbol position to improve visibility
 - **Adjustable Text Sizes**: Multiple text size options to accommodate different visual needs
 - **Simplified Design**: Clean, uncluttered interface designed for CVI users
