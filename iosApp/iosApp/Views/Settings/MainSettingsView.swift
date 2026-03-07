@@ -121,7 +121,8 @@ struct MainSettingsView: View {
                             settingsRow(
                                 title: "Get Support",
                                 icon: "questionmark.circle.fill",
-                                color: .blue
+                                color: .blue,
+                                subtitle: "Privacy policy, app features, support, and create phrase images (Wikimedia or upload with outline)."
                             )
                         }
 
@@ -167,19 +168,30 @@ struct MainSettingsView: View {
         }
     }
     
-    private func settingsRow(title: String, icon: String, color: Color) -> some View {
+    private func settingsRow(title: String, icon: String, color: Color, subtitle: String? = nil) -> some View {
         HStack {
             Image(systemName: icon)
                 .font(.title2)
                 .foregroundColor(color)
                 .frame(width: 40)
-            
-            Text(title)
-                .font(.headline)
-                .foregroundColor(.primary)
-            
+
+            if let subtitle = subtitle {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } else {
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+            }
+
             Spacer()
-            
+
             Image(systemName: "chevron.right")
                 .foregroundColor(.secondary)
         }
