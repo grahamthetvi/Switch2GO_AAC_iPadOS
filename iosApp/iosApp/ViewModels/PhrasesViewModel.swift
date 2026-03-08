@@ -143,9 +143,10 @@ class PhrasesViewModel: ObservableObject {
             guard let self = self else { return }
             
             if isPreset {
-                // Update preset phrase
-                // Note: PresetPhrase sort_order updates aren't in our queries yet
-                // This is acceptable as presets maintain their original order
+                self.database.presetPhraseQueries.updatePresetPhraseSortOrder(
+                    sort_order: Int64(sortOrder),
+                    phrase_id: phraseId
+                )
             } else {
                 self.database.phraseQueries.updatePhraseSortOrder(
                     sort_order: Int64(sortOrder),

@@ -31,6 +31,9 @@ UPDATE PresetPhrase SET last_spoken_date = ? WHERE phrase_id = ?;
 updatePresetPhraseStyle:
 UPDATE PresetPhrase SET style = ? WHERE phrase_id = ?;
 
+updatePresetPhraseSortOrder:
+UPDATE PresetPhrase SET sort_order = ? WHERE phrase_id = ?;
+
 updatePresetPhraseDeleted:
 UPDATE PresetPhrase SET deleted = ? WHERE phrase_id = ?;
 

@@ -20,7 +20,7 @@ struct PrivacyPolicyView: View {
                 }
             } else {
                 WebView(
-                    url: URL(string: "https://github.com/grahamthetvi/Switch2GO_AAC_iPadOS_OLD/blob/main/Privacy_Policy")!,
+                    url: URL(string: "https://www.switch2goaac.org/privacy-policy")!,
                     onFail: {
                         showLocalPolicy = true
                     }

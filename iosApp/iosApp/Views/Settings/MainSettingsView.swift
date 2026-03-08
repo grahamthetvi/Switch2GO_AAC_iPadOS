@@ -6,6 +6,10 @@ struct MainSettingsView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.settingsHomeAction) private var settingsHomeAction
     @StateObject private var settings = AppSettings.shared
+
+    @State private var debugTapCount = 0
+    @State private var showDebugLog = false
+    @State private var lastDebugTap = Date.distantPast
     
     var body: some View {
         NavigationStack {
@@ -121,12 +125,14 @@ struct MainSettingsView: View {
                             )
                         }
 
-                        NavigationLink(destination: DebugLogView()) {
-                            settingsRow(
-                                title: "Debug Log",
-                                icon: "ladybug.fill",
-                                color: .red
-                            )
+                        if showDebugLog {
+                            NavigationLink(destination: DebugLogView()) {
+                                settingsRow(
+                                    title: "Debug Log",
+                                    icon: "ladybug.fill",
+                                    color: .red
+                                )
+                            }
                         }
                     }
                     .padding(.horizontal)
@@ -148,6 +154,18 @@ struct MainSettingsView: View {
                     Text("Settings")
                         .font(.system(size: 28, weight: .bold))
                         .foregroundColor(navigationColorScheme == .dark ? .white : .black)
+                        .onTapGesture {
+                            let now = Date()
+                            if now.timeIntervalSince(lastDebugTap) > 3 {
+                                debugTapCount = 0
+                            }
+                            lastDebugTap = now
+                            debugTapCount += 1
+                            if debugTapCount >= 10 {
+                                showDebugLog = true
+                                debugTapCount = 0
+                            }
+                        }
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
