@@ -384,6 +384,7 @@ class AppSettings: ObservableObject {
     /// Reset all settings to defaults
     func resetToDefaults() {
         symbolCount = 2
+        hasSeenOnboarding = false
         dwellTime = 1.0
         sensitivity = 1
         useGPU = false
@@ -432,12 +433,22 @@ extension Color {
     }
     
     func toHex() -> UInt32 {
-        let components = UIColor(self).cgColor.components ?? [0, 0, 0, 1]
-        let r = UInt32(components[0] * 255.0)
-        let g = UInt32(components[1] * 255.0)
-        let b = UInt32(components[2] * 255.0)
-        let a = UInt32((components.count > 3 ? components[3] : 1.0) * 255.0)
-        
-        return (a << 24) | (r << 16) | (g << 8) | b
+        let cgColor = UIColor(self).cgColor
+        let components = cgColor.components ?? [0, 0, 0, 1]
+
+        let r, g, b, a: Double
+        if cgColor.colorSpace?.model == .monochrome {
+            // Grayscale: components are [white, alpha]
+            let white = Double(components[0])
+            r = white; g = white; b = white
+            a = components.count > 1 ? Double(components[1]) : 1.0
+        } else {
+            r = Double(components[0])
+            g = components.count > 1 ? Double(components[1]) : 0
+            b = components.count > 2 ? Double(components[2]) : 0
+            a = components.count > 3 ? Double(components[3]) : 1.0
+        }
+
+        return (UInt32(a * 255) << 24) | (UInt32(r * 255) << 16) | (UInt32(g * 255) << 8) | UInt32(b * 255)
     }
 }

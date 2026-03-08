@@ -21,9 +21,38 @@ class TTSManager: NSObject, ObservableObject, @unchecked Sendable, AVSpeechSynth
     private override init() {
         super.init()
         synthesizer.delegate = self
-        
-        // Use default system voice
         selectedVoice = AVSpeechSynthesisVoice(language: "en-US")
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioInterruption(_:)),
+            name: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance()
+        )
+    }
+
+    @objc private func handleAudioInterruption(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
+
+        switch type {
+        case .began:
+            if synthesizer.isSpeaking {
+                synthesizer.pauseSpeaking(at: .word)
+            }
+        case .ended:
+            guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            if options.contains(.shouldResume) {
+                configureAudioSession()
+                if synthesizer.isPaused {
+                    synthesizer.continueSpeaking()
+                }
+            }
+        @unknown default:
+            break
+        }
     }
     
     // MARK: - Public Methods

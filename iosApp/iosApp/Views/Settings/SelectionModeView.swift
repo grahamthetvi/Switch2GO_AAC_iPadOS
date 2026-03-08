@@ -38,8 +38,8 @@ struct SelectionModeView: View {
 
                 // No Tracking Option
                 SelectionModeButton(
-                    title: "No Tracking (Touch & Switch)",
-                    description: "Use touch or switch control only, no head or eye tracking",
+                    title: "Touch Only",
+                    description: "Use touch only, no head or eye tracking",
                     icon: "hand.tap",
                     isSelected: settings.selectionMode == "none"
                 ) {
@@ -122,7 +122,7 @@ struct SelectionModeView: View {
     private var currentModeLabel: String {
         switch settings.selectionMode {
         case "face": return "Head Tracking"
-        case "none": return "No Tracking"
+        case "none": return "Touch Only"
         default: return "Eye Gaze Tracking"
         }
     }

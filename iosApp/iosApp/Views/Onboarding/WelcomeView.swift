@@ -76,20 +76,21 @@ struct WelcomeView: View {
             iconColor: .blue,
             title: "Welcome to Switch2GO",
             paragraphs: [
-                "Switch2GO is an Augmentative and Alternative Communication (AAC) app designed for people who need accessible communication tools.",
-                "It supports multiple input methods including eye gaze tracking, head tracking, touch, and switch control -- so everyone can communicate in the way that works best for them."
+                "Switch2GO is an Augmentative and Alternative Communication (AAC) app designed for people with Cerebral Visual Impairment (CVI) and others who need accessible communication.",
+                "Choose phrases from categories, then tap or select them to speak out loud. The app works with touch, eye gaze, and head tracking so you can use whatever works best for you.",
+                "The interface uses high-contrast, customizable layouts with fewer symbols per page to reduce visual complexity."
             ]
         )
     }
 
     private var switchModePage: some View {
         OnboardingPageView(
-            icon: "keyboard.fill",
+            icon: "cable.connector",
             iconColor: .orange,
             title: "Switch Control (Coming Soon)",
             paragraphs: [
-                "Switch control via USB interfaces like Tapio is currently in development and will be available in a future update.",
-                "Once available, you'll be able to connect adaptive switches to your iPad via USB to control the app, with no Bluetooth pairing required."
+                "Switch control via USB (e.g. Tapio) is in development. In a future update you’ll be able to connect adaptive switches to your iPad and control the app without Bluetooth.",
+                "For now, you can use touch, eye gaze, or head tracking. Open Settings → Selection Mode to choose your input method."
             ]
         )
     }
@@ -97,12 +98,12 @@ struct WelcomeView: View {
     private var gettingStartedPage: some View {
         OnboardingPageView(
             icon: "hand.tap.fill",
-            iconColor: .orange,
+            iconColor: .green,
             title: "Getting Started",
             paragraphs: [
-                "The app starts in touch mode by default. Tap phrase tiles to speak, and use the category tabs to navigate between different sets of phrases.",
-                "To enable eye gaze or head tracking, open Settings (the gear icon in the top-right corner) and go to Selection Mode. You can switch between tracking modes at any time.",
-                "For eye and head tracking, hold your iPad in landscape orientation with the front camera facing you."
+                "On the main screen you’ll see category tiles (e.g. General, Basic Needs). Tap a category to open its phrases, then tap a phrase to speak it. Use the back arrow to return to categories.",
+                "To use eye gaze or head tracking: open Settings (gear icon, top right) → Selection Mode, and choose Face Tracking or Eye Gaze. Hold the iPad in landscape with the front camera facing you.",
+                "To reduce clutter: go to Settings → Edit Categories & Phrases and set how many phrases show per page."
             ]
         )
     }
@@ -119,7 +120,7 @@ struct WelcomeView: View {
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
 
-            Text("You can revisit this guide anytime from Settings. If you run into trouble, check out the Troubleshooting section in Settings for tips on getting tracking working.")
+            Text("You can revisit this guide anytime from Settings → Show Welcome Guide. Use Settings → Troubleshooting if eye or head tracking isn’t working. Enjoy communicating with Switch2GO!")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
