@@ -126,6 +126,12 @@ struct WelcomeView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
 
+            Text("Our support website (under Settings) also lets you create custom phrase images: pick from Wikimedia or upload your own, then download a version with the background removed and a colored outline—great for making CVI-friendly symbols.")
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+
             Spacer()
         }
         .padding()
