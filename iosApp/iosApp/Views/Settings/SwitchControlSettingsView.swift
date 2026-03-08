@@ -18,6 +18,24 @@ struct SwitchControlSettingsView: View {
         ScrollView {
             VStack(spacing: 20) {
 
+                // MARK: - Coming Soon Banner
+                VStack(spacing: 12) {
+                    Image(systemName: "hammer.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(.orange)
+                    Text("Coming Soon")
+                        .font(.title2.bold())
+                    Text("USB Switch Control is currently in development and will be available in a future update.")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(12)
+                .padding(.horizontal)
+
                 // MARK: - Enable Toggle
                 enableSection
 
@@ -56,6 +74,8 @@ struct SwitchControlSettingsView: View {
                 }
             }
             .padding(.vertical)
+            .disabled(true)
+            .opacity(0.7)
         }
         .navigationTitle("Switch Control")
         .navigationBarTitleDisplayMode(.large)

@@ -435,24 +435,24 @@ struct WikimediaImageDetailView: View {
         let fileName = "wikimedia_\(UUID().uuidString).\(transparent ? "png" : "jpg")"
         let fileURL = documentsDirectory.appendingPathComponent(fileName)
 
-        print("WikimediaSearchView: Saving image to: \(fileURL.path)")
-        print("WikimediaSearchView: Image size: \(image.size)")
+        DebugLog.debug("Saving image to: \(fileURL.path)", tag: "WikimediaSearchView")
+        DebugLog.debug("Image size: \(image.size)", tag: "WikimediaSearchView")
         
         let data: Data?
         if transparent {
             data = image.pngData()
-            print("WikimediaSearchView: Created PNG data")
+            DebugLog.debug("Created PNG data", tag: "WikimediaSearchView")
         } else {
             data = image.jpegData(compressionQuality: 0.85)
-            print("WikimediaSearchView: Created JPEG data")
+            DebugLog.debug("Created JPEG data", tag: "WikimediaSearchView")
         }
 
         guard let imageData = data else {
-            print("WikimediaSearchView: Failed to convert image to data")
+            DebugLog.error("Failed to convert image to data", tag: "WikimediaSearchView")
             return nil
         }
         
-        print("WikimediaSearchView: Image data size: \(imageData.count) bytes")
+        DebugLog.debug("Image data size: \(imageData.count) bytes", tag: "WikimediaSearchView")
 
         do {
             try imageData.write(to: fileURL)
@@ -461,22 +461,22 @@ struct WikimediaImageDetailView: View {
             if FileManager.default.fileExists(atPath: fileURL.path) {
                 let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
                 let fileSize = attributes[.size] as? Int64 ?? 0
-                print("WikimediaSearchView: File saved successfully, size: \(fileSize) bytes")
+                DebugLog.info("File saved successfully, size: \(fileSize) bytes", tag: "WikimediaSearchView")
                 
                 // Verify we can read it back
                 if let testData = try? Data(contentsOf: fileURL),
                    let _ = UIImage(data: testData) {
-                    print("WikimediaSearchView: Verified image can be read back")
+                    DebugLog.debug("Verified image can be read back", tag: "WikimediaSearchView")
                 } else {
-                    print("WikimediaSearchView: Warning - saved file cannot be read back as image")
+                    DebugLog.warn("Warning - saved file cannot be read back as image", tag: "WikimediaSearchView")
                 }
             } else {
-                print("WikimediaSearchView: Warning - file does not exist after write")
+                DebugLog.warn("Warning - file does not exist after write", tag: "WikimediaSearchView")
             }
             
             return fileURL
         } catch {
-            print("WikimediaSearchView: Error saving image: \(error.localizedDescription)")
+            DebugLog.error("Error saving image: \(error.localizedDescription)", tag: "WikimediaSearchView")
             return nil
         }
     }

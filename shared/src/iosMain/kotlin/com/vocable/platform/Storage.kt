@@ -33,6 +33,7 @@ class UserDefaultsStorage : Storage {
             defaults.synchronize()
             true
         } catch (e: Exception) {
+            e.printStackTrace()
             false
         }
     }
@@ -63,6 +64,7 @@ class UserDefaultsStorage : Storage {
                 mode = calibrationMode
             )
         } catch (e: Exception) {
+            e.printStackTrace()
             null
         }
     }
@@ -76,6 +78,7 @@ class UserDefaultsStorage : Storage {
             defaults.synchronize()
             true
         } catch (e: Exception) {
+            e.printStackTrace()
             false
         }
     }

@@ -110,7 +110,7 @@ class TTSManager: NSObject, ObservableObject, @unchecked Sendable, AVSpeechSynth
             try session.setCategory(.playback, mode: .spokenAudio, options: [.duckOthers, .defaultToSpeaker])
             try session.setActive(true, options: [])
         } catch {
-            print("TTSManager: Failed to configure audio session: \(error)")
+            DebugLog.error("Failed to configure audio session: \(error)", tag: "TTSManager")
         }
     }
     

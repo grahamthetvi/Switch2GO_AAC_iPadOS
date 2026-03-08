@@ -445,7 +445,7 @@ struct PhraseStyleEditorView: View {
                 )
             }
             
-            print("PhraseStyleEditor: Saved style for phrase \(phrase.id)")
+            DebugLog.debug("Saved style for phrase \(phrase.id)", tag: "PhraseStyleEditor")
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: Notification.Name("PhrasesUpdated"), object: nil)
             }

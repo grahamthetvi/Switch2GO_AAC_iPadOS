@@ -57,19 +57,15 @@ struct TroubleshootingView: View {
                     ]
                 )
 
-                // MARK: - Switch Control Not Responding
+                // MARK: - Switch Control (Coming Soon)
                 troubleshootingSection(
-                    title: "Switch Control Not Responding",
-                    icon: "keyboard.badge.exclamationmark",
-                    color: .red,
+                    title: "Switch Control (Coming Soon)",
+                    icon: "hammer.fill",
+                    color: .orange,
                     steps: [
-                        "Make sure your Tapio (or compatible USB switch device) is plugged into your iPad via a USB cable.",
-                        "Check the connection status badge in the top-right corner of the main screen -- it should show green when connected.",
-                        "Go to Settings > Selection Mode > USB Switch Control and verify the connection status shows \"Connected\".",
-                        "Ensure Switch Control is toggled ON in the switch control settings.",
-                        "Check that the key mappings in Settings match your Tapio configuration. The default is keys 1, 2, 3, 4.",
-                        "Try unplugging and re-plugging the USB cable.",
-                        "If using an adapter (e.g., USB-A to USB-C), make sure it supports data transfer, not just charging."
+                        "USB Switch Control functionality (including Tapio support) is currently in development.",
+                        "This feature has been temporarily disabled and will be fully available in a future app update.",
+                        "If you previously enabled it, it has been safely turned off to prevent interference with other tracking modes."
                     ]
                 )
             }
