@@ -6,6 +6,7 @@ struct EditCategoryPhrasesView: View {
     let categoryId: String
     
     @StateObject private var viewModel: PhrasesViewModel
+    @StateObject private var settings = AppSettings.shared
     @State private var showingAddPhrase = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
@@ -46,6 +47,9 @@ struct EditCategoryPhrasesView: View {
                 NotificationCenter.default.post(name: Notification.Name("PhrasesUpdated"), object: nil)
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Edit Phrases")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -70,6 +74,8 @@ struct EditCategoryPhrasesView: View {
                 viewModel.loadPhrases()
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
 }
 

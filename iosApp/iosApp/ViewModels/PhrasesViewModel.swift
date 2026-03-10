@@ -143,9 +143,18 @@ class PhrasesViewModel: ObservableObject {
             guard let self = self else { return }
             
             if isPreset {
-                self.database.presetPhraseQueries.updatePresetPhraseSortOrder(
+                guard let presetPhrase = self.database.presetPhraseQueries
+                    .getPresetPhraseById(phrase_id: phraseId)
+                    .executeAsOneOrNull() else { return }
+
+                self.database.presetPhraseQueries.insertPresetPhrase(
+                    phrase_id: presetPhrase.phrase_id,
+                    parent_category_id: presetPhrase.parent_category_id,
+                    creation_date: presetPhrase.creation_date,
+                    last_spoken_date: presetPhrase.last_spoken_date,
                     sort_order: Int64(sortOrder),
-                    phrase_id: phraseId
+                    deleted: presetPhrase.deleted,
+                    style: presetPhrase.style
                 )
             } else {
                 self.database.phraseQueries.updatePhraseSortOrder(

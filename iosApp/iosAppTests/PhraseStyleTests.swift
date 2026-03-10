@@ -25,6 +25,7 @@ class PhraseStyleTests: XCTestCase {
         XCTAssertEqual(style.effectiveTextColor(), PhraseStyle.companion.DEFAULT_TEXT_COLOR)
         XCTAssertEqual(style.effectiveTextSize(), PhraseStyle.companion.DEFAULT_TEXT_SIZE_SP)
         XCTAssertEqual(style.effectiveBorderWidth(), PhraseStyle.companion.DEFAULT_BORDER_WIDTH_DP)
+        XCTAssertEqual(style.effectiveBorderColor(), PhraseStyle.companion.DEFAULT_BORDER_COLOR)
     }
     
     func testCustomStyle() {

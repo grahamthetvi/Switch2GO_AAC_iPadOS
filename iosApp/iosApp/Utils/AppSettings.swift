@@ -357,7 +357,7 @@ class AppSettings: ObservableObject {
         self.headSensitivityX = defaults.object(forKey: Keys.headSensitivityX) as? Double ?? 2.0
         self.headSensitivityY = defaults.object(forKey: Keys.headSensitivityY) as? Double ?? 2.5
         self.selectionMode = defaults.string(forKey: Keys.selectionMode) ?? "none"
-        let borderHex = defaults.object(forKey: Keys.appBorderColor) as? UInt32 ?? 0xFFFFFFFF
+        let borderHex = defaults.object(forKey: Keys.appBorderColor) as? UInt32 ?? 0xFF000000
         self.appBorderColor = Color(hex: borderHex)
 
         // Switch Control (Currently disabled - Coming Soon feature)
@@ -402,7 +402,7 @@ class AppSettings: ObservableObject {
         headSensitivityX = 2.0
         headSensitivityY = 2.5
         selectionMode = "none"
-        appBorderColor = Color(hex: 0xFFFFFFFF)
+        appBorderColor = Color(hex: 0xFF000000)
         switchControlEnabled = false
         switchControlMode = "direct"
         switchScanInterval = 1.5
@@ -417,6 +417,17 @@ class AppSettings: ObservableObject {
         switchKey3 = 32  // Key "3"
         switchKey4 = 33  // Key "4"
         resetColorsToDefaults()
+    }
+    /// Returns .dark when appBorderColor is dark (low luminance), .light otherwise.
+    /// Use this to keep system text colors readable on top of the border background.
+    var preferredColorScheme: ColorScheme {
+        let cgColor = UIColor(appBorderColor).cgColor
+        let components = cgColor.components ?? [0, 0, 0, 1]
+        let r = cgColor.colorSpace?.model == .monochrome ? Double(components[0]) : Double(components[0])
+        let g = cgColor.colorSpace?.model == .monochrome ? Double(components[0]) : (components.count > 1 ? Double(components[1]) : 0)
+        let b = cgColor.colorSpace?.model == .monochrome ? Double(components[0]) : (components.count > 2 ? Double(components[2]) : 0)
+        let luminance = (0.2126 * r) + (0.7152 * g) + (0.0722 * b)
+        return luminance > 0.6 ? .light : .dark
     }
 }
 

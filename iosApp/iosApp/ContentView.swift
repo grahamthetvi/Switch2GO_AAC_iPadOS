@@ -100,14 +100,13 @@ struct ContentView: View {
                 })
         }
         .onChange(of: showSettings) { _, isOpen in
-            gazeManager.isSettingsOpen = isOpen
+            gazeManager.isModalOpen = isOpen || showOnboarding
             if isOpen {
-                // Pause tracking while the settings menu is open
                 gazeManager.stopTracking()
             } else {
-                // Resume tracking when settings is dismissed
-                updateTrackingForSelectionMode()
-                // Check if user requested to re-show onboarding
+                if !showOnboarding {
+                    updateTrackingForSelectionMode()
+                }
                 if !settings.hasSeenOnboarding {
                     showOnboarding = true
                 }
@@ -115,6 +114,19 @@ struct ContentView: View {
         }
         .fullScreenCover(isPresented: $showOnboarding) {
             WelcomeView()
+        }
+        .onChange(of: showOnboarding) { _, isOpen in
+            gazeManager.isModalOpen = isOpen || showSettings
+            if isOpen {
+                gazeManager.stopTracking()
+            } else {
+                if !showSettings {
+                    updateTrackingForSelectionMode()
+                }
+                // Show orientation banner after onboarding if not in the right orientation
+                let inTrackingOrientation = CameraManager.isTrackingSupportedOrientation
+                showOrientationBanner(trackingSupported: inTrackingOrientation)
+            }
         }
         .onAppear {
             if !settings.hasSeenOnboarding {

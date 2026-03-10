@@ -116,6 +116,14 @@ struct MainSettingsView: View {
                                 color: .gray
                             )
                         }
+
+                        Button(action: openImageTool) {
+                            settingsRow(
+                                title: "Image Tool",
+                                icon: "wand.and.stars",
+                                color: .green
+                            )
+                        }
                         
                         Button(action: contactDeveloper) {
                             settingsRow(
@@ -147,6 +155,7 @@ struct MainSettingsView: View {
             }
             .scrollContentBackground(.hidden)
             .background(settings.appBorderColor)
+            .environment(\.colorScheme, settings.preferredColorScheme)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -210,18 +219,18 @@ struct MainSettingsView: View {
             openURL(url)
         }
     }
+
+    private func openImageTool() {
+        guard let url = URL(string: "https://switch2goaac.org/index.html#image-tool") else { return }
+        openURL(url)
+    }
     
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
     }
 
     private var navigationColorScheme: ColorScheme {
-        let components = UIColor(settings.appBorderColor).cgColor.components ?? [0, 0, 0, 1]
-        let r = components[0]
-        let g = components.count > 1 ? components[1] : components[0]
-        let b = components.count > 2 ? components[2] : components[0]
-        let luminance = (0.2126 * r) + (0.7152 * g) + (0.0722 * b)
-        return luminance > 0.6 ? .light : .dark
+        settings.preferredColorScheme
     }
 }
 

@@ -54,6 +54,9 @@ struct TimingSensitivityView: View {
             }
             .padding()
         }
+        .scrollContentBackground(.hidden)
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Timing & Sensitivity")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -70,6 +73,8 @@ struct TimingSensitivityView: View {
                 }
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
     
     private func sensitivityButton(level: Int, label: String) -> some View {

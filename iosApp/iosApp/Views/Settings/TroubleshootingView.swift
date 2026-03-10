@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Troubleshooting guide accessible from Settings.
 struct TroubleshootingView: View {
+    @StateObject private var settings = AppSettings.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
 
@@ -71,6 +72,9 @@ struct TroubleshootingView: View {
             }
             .padding(.vertical)
         }
+        .scrollContentBackground(.hidden)
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Troubleshooting")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -85,6 +89,8 @@ struct TroubleshootingView: View {
                 Button("Done") { dismiss() }
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
 
     private func troubleshootingSection(

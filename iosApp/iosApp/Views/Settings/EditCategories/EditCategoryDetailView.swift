@@ -5,6 +5,7 @@ import VocableShared
 struct EditCategoryDetailView: View {
     let category: CategoryDisplayModel
     
+    @StateObject private var settings = AppSettings.shared
     @State private var categoryName: String
     @State private var showingDeleteConfirmation = false
     @StateObject private var phrasesViewModel: PhrasesViewModel
@@ -93,6 +94,9 @@ struct EditCategoryDetailView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Edit Category")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -123,6 +127,8 @@ struct EditCategoryDetailView: View {
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PhrasesUpdated"))) { _ in
             phrasesViewModel.loadPhrases()
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
     
     private func updateCategoryName(_ newName: String) {

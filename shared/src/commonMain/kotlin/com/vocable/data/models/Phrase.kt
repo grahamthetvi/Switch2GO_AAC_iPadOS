@@ -55,9 +55,10 @@ data class PhraseStyle(
         
         // Default values
         const val DEFAULT_TEXT_SIZE_SP = 18f
-        const val DEFAULT_BACKGROUND_COLOR: UInt = 0xFF3D3D3Du
-        const val DEFAULT_TEXT_COLOR: UInt = 0xFFFFFFFFu
-        const val DEFAULT_BORDER_WIDTH_DP = 0f
+        const val DEFAULT_BACKGROUND_COLOR: UInt = 0xFF000000u
+        const val DEFAULT_TEXT_COLOR: UInt = 0xFF000000u
+        const val DEFAULT_BORDER_COLOR: UInt = 0xFFE53935u
+        const val DEFAULT_BORDER_WIDTH_DP = 6f
         
         val DEFAULT = PhraseStyle()
         
@@ -140,6 +141,9 @@ data class PhraseStyle(
     
     /** Returns effective border width (with fallback to default) */
     fun effectiveBorderWidth(): Float = borderWidthDp ?: DEFAULT_BORDER_WIDTH_DP
+    
+    /** Returns effective border color (with fallback to default) */
+    fun effectiveBorderColor(): UInt = borderColor ?: DEFAULT_BORDER_COLOR
     
     /** Returns true if this style has an image set */
     fun hasImage(): Boolean = !imageRef.isNullOrBlank()

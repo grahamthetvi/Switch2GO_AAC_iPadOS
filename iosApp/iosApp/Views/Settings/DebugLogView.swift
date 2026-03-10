@@ -3,6 +3,7 @@ import SwiftUI
 /// In-app debug log viewer. Shows recent log messages with live updates,
 /// color-coded by level, with filtering and share/copy support.
 struct DebugLogView: View {
+    @StateObject private var settings = AppSettings.shared
     @ObservedObject private var logManager = DebugLogManager.shared
     @State private var filterTag: String = "All"
     @State private var autoScroll = true
@@ -89,6 +90,8 @@ struct DebugLogView: View {
                 }
             }
         }
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .searchable(text: $searchText, prompt: "Filter logs...")
         .navigationTitle("Debug Log")
         .navigationBarTitleDisplayMode(.inline)
@@ -129,6 +132,8 @@ struct DebugLogView: View {
                 }
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .sheet(isPresented: $showShareSheet) {
             let text = logManager.exportText()
             ShareSheet(items: [text])

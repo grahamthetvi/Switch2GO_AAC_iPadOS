@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Reset App with two-step confirmation
 struct ResetAppView: View {
+    @StateObject private var settings = AppSettings.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
     @State private var showingFirstConfirmation = false
@@ -57,6 +58,8 @@ struct ResetAppView: View {
             .padding(.horizontal)
         }
         .padding()
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Reset App")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -68,6 +71,8 @@ struct ResetAppView: View {
                 }
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .alert("Are you sure?", isPresented: $showingFirstConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Continue", role: .destructive) {

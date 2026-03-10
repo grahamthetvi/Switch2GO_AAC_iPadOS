@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Categories Display Settings - Gateway to Edit Categories
 struct CategoriesDisplaySettingsView: View {
+    @StateObject private var settings = AppSettings.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
     
@@ -36,6 +37,8 @@ struct CategoriesDisplaySettingsView: View {
             Spacer()
         }
         .padding()
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Categories Display")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -50,6 +53,8 @@ struct CategoriesDisplaySettingsView: View {
                 }
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
     
     private func settingOption(title: String, description: String, icon: String, color: Color) -> some View {

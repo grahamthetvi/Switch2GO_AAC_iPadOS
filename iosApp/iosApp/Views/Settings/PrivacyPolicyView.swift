@@ -3,6 +3,7 @@ import WebKit
 
 /// Privacy Policy web view
 struct PrivacyPolicyView: View {
+    @StateObject private var settings = AppSettings.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
     @State private var showLocalPolicy = false
@@ -20,7 +21,7 @@ struct PrivacyPolicyView: View {
                 }
             } else {
                 WebView(
-                    url: URL(string: "https://www.switch2goaac.org/privacy-policy")!,
+                    url: URL(string: "https://switch2goaac.org/privacy.html")!,
                     onFail: {
                         showLocalPolicy = true
                     }
@@ -30,6 +31,8 @@ struct PrivacyPolicyView: View {
         .onAppear {
             loadLocalPolicy()
         }
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Privacy Policy")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -46,6 +49,8 @@ struct PrivacyPolicyView: View {
                 }
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
 
     private func loadLocalPolicy() {

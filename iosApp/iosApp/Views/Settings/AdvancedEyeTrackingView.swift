@@ -8,9 +8,6 @@ struct AdvancedEyeTrackingView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
     @State private var showingResetConfirmation = false
-    @State private var showHeadCalibration = false
-    @State private var isCalibrating = false
-    @State private var calibrationResult: Bool?
     
     var body: some View {
         ScrollView {
@@ -62,7 +59,6 @@ struct AdvancedEyeTrackingView: View {
                         .fontWeight(.bold)
                     
                     VStack(spacing: 8) {
-                        smoothingButton(mode: "none", label: "None")
                         smoothingButton(mode: "simple", label: "Simple")
                         smoothingButton(mode: "kalman", label: "Kalman Filter")
                         smoothingButton(mode: "adaptive", label: "Adaptive Kalman (Recommended)")
@@ -103,7 +99,7 @@ struct AdvancedEyeTrackingView: View {
                         amplificationButton(value: 2.0, label: "2.0x (High)")
                     }
 
-                    Text("Amplify gaze movement for users with limited range")
+                    Text("Amplify gaze movement for users with limited range. Eye gaze mode only.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.horizontal)
@@ -161,7 +157,7 @@ struct AdvancedEyeTrackingView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Auto‑Recenter When Centered")
                                 .font(.headline)
-                            Text("Recenter after looking straight ahead")
+                            Text("Recenter after looking straight ahead. Eye gaze mode only.")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -200,23 +196,6 @@ struct AdvancedEyeTrackingView: View {
                     .padding()
                     .background(Color(UIColor.tertiarySystemBackground))
                     .cornerRadius(10)
-
-                    // Calibrate head position
-                    Button(action: {
-                        showHeadCalibration = true
-                    }) {
-                        HStack {
-                            Image(systemName: "scope")
-                            Text(isCalibrating ? "Calibrating..." : "Calibrate Head Position")
-                                .font(.headline)
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(isCalibrating ? Color.gray : Color.blue)
-                        .cornerRadius(10)
-                    }
-                    .disabled(isCalibrating)
 
                     // Sensitivity sliders
                     VStack(alignment: .leading, spacing: 8) {
@@ -280,10 +259,9 @@ struct AdvancedEyeTrackingView: View {
         }
         .scrollIndicators(.visible)
         .scrollBounceBehavior(.basedOnSize)
-        .sheet(isPresented: $showHeadCalibration) {
-            HeadCalibrationSheet()
-                .environmentObject(gazeManager)
-        }
+        .scrollContentBackground(.hidden)
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Advanced Eye Tracking")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -300,6 +278,8 @@ struct AdvancedEyeTrackingView: View {
                 }
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
     
     private func trackingModeButton(mode: String, label: String) -> some View {
@@ -398,93 +378,14 @@ struct AdvancedEyeTrackingView: View {
     }
 
     private func resetCalibration() {
-        // Clear calibration data from Storage
         let storage = StorageKt.createStorage()
         _ = storage.deleteCalibrationData(mode: "polynomial")
         _ = storage.deleteCalibrationData(mode: "affine")
         storage.saveBoolean(key: "hasCalibration", value: false)
         
+        gazeManager.resetGazeCalibration()
+        
         DebugLog.info("Calibration data cleared", tag: "AdvancedEyeTrackingView")
-    }
-}
-
-// MARK: - Head Calibration Sheet
-
-struct HeadCalibrationSheet: View {
-    @EnvironmentObject var gazeManager: GazeTrackingManager
-    @Environment(\.dismiss) private var dismiss
-    @State private var isCalibrating = false
-    @State private var result: Bool?
-
-    var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
-
-            if let result {
-                Image(systemName: result ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    .font(.system(size: 80))
-                    .foregroundColor(result ? .green : .red)
-
-                Text(result ? "Calibration Successful" : "Calibration Failed")
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                Text(result ? "Your head position has been saved." : "Not enough samples. Try again.")
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-
-                Button("Done") {
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-            } else if isCalibrating {
-                ProgressView()
-                    .scaleEffect(2)
-                    .padding()
-
-                Text("Calibrating...")
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                Text("Hold still, looking at the center of the screen")
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            } else {
-                Image(systemName: "scope")
-                    .font(.system(size: 80))
-                    .foregroundColor(.blue)
-
-                Text("Head Position Calibration")
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                Text("Look directly at the center of the screen, hold still, then tap Begin.")
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-
-                Button("Begin") {
-                    isCalibrating = true
-                    gazeManager.calibrateHeadPosition { success in
-                        isCalibrating = false
-                        result = success
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-            }
-
-            Spacer()
-
-            if result == nil {
-                Button("Cancel") {
-                    dismiss()
-                }
-                .foregroundColor(.secondary)
-            }
-        }
-        .padding()
     }
 }
 

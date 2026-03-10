@@ -13,6 +13,8 @@
     <string>6.0</string>
     <key>CFBundleName</key>
     <string>Switch2Go</string>
+    <key>CFBundleDisplayName</key>
+    <string>Switch2GO AAC</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

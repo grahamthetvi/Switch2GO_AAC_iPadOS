@@ -52,9 +52,6 @@ class GazeTrackingManager: ObservableObject {
 
     // Head pose tracker for face/head tracking mode
     private let headPoseTracker = HeadPoseTracker()
-    @Published var isHeadCalibrating = false
-    private var headCalibrationTimer: Timer?
-
     // Head tracking blink detection (separate from eye gaze blink state)
     private var headWasBlinking = false
     private var headBlinkStartTime: TimeInterval = 0
@@ -80,9 +77,9 @@ class GazeTrackingManager: ObservableObject {
     // Out-of-bounds tracking
     private var gazeOutOfBoundsStartTime: TimeInterval = 0
 
-    /// When true, tracking must stay stopped (e.g. settings sheet is open).
-    /// Prevents orientation change from re-enabling tracking while in settings.
-    var isSettingsOpen: Bool = false
+    /// When true, tracking must stay stopped (e.g. settings or onboarding sheet is open).
+    /// Prevents orientation change from re-enabling tracking while a modal is presented.
+    var isModalOpen: Bool = false
 
     // Constants (mirrors Android)
     private let doubleBlinkWindow: TimeInterval = 0.6
@@ -222,11 +219,6 @@ class GazeTrackingManager: ObservableObject {
         let settings = AppSettings.shared
         guard settings.selectionMode == "face" else { return }
 
-        // Feed calibration samples if calibrating head position
-        if isHeadCalibrating, let landmarks = landmarks {
-            headPoseTracker.addCalibrationSample(landmarks: landmarks)
-        }
-
         guard let landmarks, !landmarks.isEmpty else {
             let now = CACurrentMediaTime()
             if let last = lastValidPosition, (now - lastLandmarkTime) < 0.5 {
@@ -293,27 +285,6 @@ class GazeTrackingManager: ObservableObject {
         let landmark = landmarks[index]
         let mirroredX = 1.0 - CGFloat(landmark.x)
         return CGPoint(x: mirroredX * bounds.width, y: CGFloat(landmark.y) * bounds.height)
-    }
-
-    private func applySmoothing(current: CGPoint, target: CGPoint, mode: String) -> CGPoint {
-        let alpha: CGFloat
-        switch mode {
-        case "none": alpha = 1.0
-        case "simple": alpha = 0.35
-        case "kalman": alpha = 0.2
-        case "adaptive": alpha = 0.25
-        case "combined": alpha = 0.25
-        default: alpha = 0.25
-        }
-        let dx = target.x - current.x
-        let dy = target.y - current.y
-        let distance = sqrt((dx * dx) + (dy * dy))
-        let adaptiveAlpha = min(max(distance / 300, 0.15), 0.5)
-        let finalAlpha = min(alpha, adaptiveAlpha)
-        return CGPoint(
-            x: current.x + dx * finalAlpha,
-            y: current.y + dy * finalAlpha
-        )
     }
 
     private func clampPoint(_ point: CGPoint, bounds: CGRect) -> CGPoint {
@@ -546,9 +517,9 @@ class GazeTrackingManager: ObservableObject {
         let supported = CameraManager.isTrackingSupportedOrientation
         let settings = AppSettings.shared
 
-        if supported && settings.selectionMode != "none" && !isTracking && !isSettingsOpen {
+        if supported && settings.selectionMode != "none" && !isTracking && !isModalOpen {
             // Returned to landscape right (home button right) — restart tracking
-            // Skip if settings is open; tracking will resume when sheet closes.
+            // Skip if a modal is open; tracking will resume when it closes.
             DebugLog.info("Landscape right detected — starting tracking", tag: "Orientation")
             headPoseTracker.reset()
             lastValidPosition = nil
@@ -640,7 +611,6 @@ class GazeTrackingManager: ObservableObject {
     
     private func mapSmoothingMode(_ mode: String) -> SmoothingMode {
         switch mode {
-        case "none": return .simpleLerp
         case "simple": return .simpleLerp
         case "kalman": return .kalmanFilter
         case "adaptive": return .adaptiveKalman
@@ -654,6 +624,11 @@ class GazeTrackingManager: ObservableObject {
         case "3D": return .eyeball3d
         default: return .iris2d
         }
+    }
+
+    func resetGazeCalibration() {
+        gazeTracker?.getCalibration().resetCalibration()
+        gazeTracker?.reset()
     }
 
     private func applyCurrentSettings(_ settings: AppSettings) {
@@ -728,37 +703,6 @@ class GazeTrackingManager: ObservableObject {
 
         if headLastBlinkEndTime > 0 && now - headLastBlinkEndTime > doubleBlinkWindow {
             headLastBlinkEndTime = 0
-        }
-    }
-
-    // MARK: - Head Tracking Calibration
-
-    /// Start a 2-second neutral-pose calibration for head tracking.
-    /// User should look at the center of the screen.
-    func calibrateHeadPosition(completion: @escaping (Bool) -> Void) {
-        guard !isHeadCalibrating else {
-            completion(false)
-            return
-        }
-
-        headPoseTracker.beginNeutralPoseCalibration()
-        isHeadCalibrating = true
-
-        // Collect samples for 2 seconds, then finish
-        headCalibrationTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
-            guard let self else { return }
-            let success = self.headPoseTracker.finishNeutralPoseCalibration()
-            self.isHeadCalibrating = false
-            self.headCalibrationTimer = nil
-
-            if success {
-                self.saveHeadCalibration()
-                self.headPoseTracker.reset()
-            }
-
-            DispatchQueue.main.async {
-                completion(success)
-            }
         }
     }
 

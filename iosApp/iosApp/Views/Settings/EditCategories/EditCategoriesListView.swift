@@ -93,6 +93,9 @@ struct EditCategoriesListView: View {
                 viewModel.reorderCategories(from: from, to: to)
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Edit Categories")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -118,6 +121,8 @@ struct EditCategoriesListView: View {
                 viewModel.loadCategories()
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
 
     private var layoutDescription: String {

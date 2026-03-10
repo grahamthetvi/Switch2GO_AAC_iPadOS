@@ -23,6 +23,8 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
     companion object {
         private const val MAIL_TO =
             "mailto:grahamthetvi@icloud.com?subject=Feedback for Switch2Go "
+        private const val IMAGE_TOOL_URL = "https://switch2goaac.org/index.html#image-tool"
+        private const val PRIVACY_POLICY_URL = "https://switch2goaac.org/privacy.html"
         private const val SETTINGS_OPTION_COUNT = 5
     }
 
@@ -62,8 +64,14 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
         binding.version.text = getString(R.string.version, BuildConfig.VERSION_NAME)
 
         binding.privacyPolicyButton.action = {
-            if (findNavController().currentDestination?.id == R.id.settingsFragment) {
-                findNavController().navigate(R.id.action_settingsFragment_to_privacyPolicyFragment)
+            showLeavingAppDialog {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL)))
+            }
+        }
+
+        binding.imageToolButton.action = {
+            showLeavingAppDialog {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(IMAGE_TOOL_URL)))
             }
         }
 
@@ -136,6 +144,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
         binding.apply {
             settingsCloseButton.isEnabled = enable
             privacyPolicyButton.isEnabled = enable
+            imageToolButton.isEnabled = enable
             contactDevsButton.isEnabled = enable
             settingsOptionsContainer.categoriesDisplayButton.isEnabled = enable
             settingsOptionsContainer.resetAppButton.isEnabled = enable

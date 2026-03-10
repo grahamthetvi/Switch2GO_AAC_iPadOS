@@ -218,37 +218,42 @@ struct PhraseButton: View {
         return .medium
     }
     
+    // Default phrase style colors (kept as Swift constants to avoid KMP framework rebuild dependency)
+    private static let defaultTextColor: UInt32      = 0xFF000000 // Black
+    private static let defaultBackgroundColor: UInt32 = 0xFF000000 // Black
+    private static let defaultBorderColor: UInt32    = 0xFFE53935 // Red
+
     private var textColor: Color {
         if let style = phrase.style, let color = style.textColor {
             return Color(hex: color.uint32Value)
         }
-        return .white
+        return Color(hex: PhraseButton.defaultTextColor)
     }
     
     private var backgroundColor: Color {
         if let style = phrase.style, let bgColor = style.backgroundColor {
             return Color(hex: bgColor.uint32Value)
         }
-        return color // Use position color as fallback
+        return Color(hex: PhraseButton.defaultBackgroundColor)
     }
     
     private var borderColor: Color {
         if let style = phrase.style, let bColor = style.borderColor {
             return Color(hex: bColor.uint32Value)
         }
-        return .clear
+        return Color(hex: PhraseButton.defaultBorderColor)
     }
     
     private var borderWidth: CGFloat {
         if let style = phrase.style, let width = style.borderWidthDp {
             return CGFloat(truncating: width)
         }
-        return 0
+        return 6
     }
 
     private func bubbleText(_ text: String, fontSize: CGFloat) -> some View {
         let font = Font.system(size: fontSize, weight: fontWeight, design: .default)
-        let outlineColor = phrase.style?.borderColor != nil ? borderColor : nil
+        let outlineColor = borderWidth > 0 ? borderColor : nil
         let outlineWidth = outlineColor != nil ? max(2, min(8, borderWidth)) : 0
         let offsets: [(CGFloat, CGFloat)] = [
             (-outlineWidth, 0), (outlineWidth, 0),

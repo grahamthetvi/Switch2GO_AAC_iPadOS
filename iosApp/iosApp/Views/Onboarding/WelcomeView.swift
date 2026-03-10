@@ -6,7 +6,7 @@ struct WelcomeView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var currentPage = 0
-    private let totalPages = 4
+    private let totalPages = 8
 
     var body: some View {
         ZStack {
@@ -16,14 +16,17 @@ struct WelcomeView: View {
             VStack(spacing: 0) {
                 TabView(selection: $currentPage) {
                     welcomePage.tag(0)
-                    switchModePage.tag(1)
-                    gettingStartedPage.tag(2)
-                    readyPage.tag(3)
+                    orientationPage.tag(1)
+                    navigationPage.tag(2)
+                    imageToolPage.tag(3)
+                    cviFriendlyPage.tag(4)
+                    cviDisplayPage.tag(5)
+                    switchModePage.tag(6)
+                    readyPage.tag(7)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.easeInOut, value: currentPage)
 
-                // Page indicator and navigation
                 VStack(spacing: 20) {
                     pageIndicator
 
@@ -51,7 +54,7 @@ struct WelcomeView: View {
                                 dismiss()
                             }
                         } label: {
-                            Text(currentPage < totalPages - 1 ? "Next" : "Get Started")
+                            Text(currentPage < totalPages - 1 ? "Next" : "I Agree — Get Started")
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -77,8 +80,80 @@ struct WelcomeView: View {
             title: "Welcome to Switch2GO",
             paragraphs: [
                 "Switch2GO is an Augmentative and Alternative Communication (AAC) app designed for people with Cerebral Visual Impairment (CVI) and others who need accessible communication.",
-                "Choose phrases from categories, then tap or select them to speak out loud. The app works with touch, eye gaze, and head tracking so you can use whatever works best for you.",
-                "The interface uses high-contrast, customizable layouts with fewer symbols per page to reduce visual complexity."
+                "Choose phrases organized into categories, then tap or select them to speak out loud. The app works with touch, eye gaze, head tracking, and USB switch control — use whatever works best.",
+                "The interface uses high-contrast, customizable layouts with fewer symbols per page to reduce visual complexity. Every phrase can be individually styled with custom colors, images, borders, and text sizes."
+            ]
+        )
+    }
+
+    private var orientationPage: some View {
+        OnboardingPageView(
+            icon: "ipad.landscape",
+            iconColor: .orange,
+            title: "Hold Your iPad in Landscape",
+            paragraphs: [
+                "Eye tracking and head tracking require the iPad to be held in landscape orientation with the home button (or USB-C port) on the RIGHT side. This places the front camera on the LEFT — the only position the tracking system supports.",
+                "If you rotate to a different orientation, tracking will pause automatically and a banner will tell you to rotate back. Touch and switch controls work in every orientation.",
+                "Tip: If tracking ever stops responding, try rotating to portrait and back to landscape. This resets the tracking system."
+            ]
+        )
+    }
+
+    private var navigationPage: some View {
+        OnboardingPageView(
+            icon: "hand.tap.fill",
+            iconColor: .green,
+            title: "Navigating the App",
+            paragraphs: [
+                "The main screen shows category tiles (e.g. General, Basic Needs, Feelings). Tap a category to see its phrases, then tap a phrase to speak it out loud. Use the back arrow at the top to return to categories.",
+                "With eye gaze or head tracking enabled, look at a button and hold your gaze — after a short dwell time it will be selected automatically. The blue cursor shows where you're looking, and a green progress ring fills as you dwell.",
+                "To change your input method, open Settings (gear icon, top right) and go to Selection Mode. You can choose Touch Only, Face Tracking (head movements), or Eye Gaze.",
+                "You can add, edit, reorder, and delete categories and phrases from Settings → Edit Categories & Phrases."
+            ]
+        )
+    }
+
+    private var imageToolPage: some View {
+        OnboardingPageView(
+            icon: "photo.fill.on.rectangle.fill",
+            iconColor: .purple,
+            title: "The Image Tool",
+            paragraphs: [
+                "When editing a phrase's image, you can open the Image Tool — a built-in web tool that helps you find and prepare the perfect picture for any phrase.",
+                "Search Wikimedia Commons for thousands of free images — real photographs, not abstract icons — which are much better for users with CVI.",
+                "The tool can automatically remove the background from any image, isolating just the subject. This makes the image cleaner and easier to recognize against your phrase's background color.",
+                "You can also add a high-contrast colored outline around the object. Choose from colors like red, yellow, black, white, blue, green, and more, and adjust the outline thickness. This helps the subject stand out clearly.",
+                "Once you're happy with the result, download the image and assign it to your phrase."
+            ]
+        )
+    }
+
+    private var cviFriendlyPage: some View {
+        OnboardingPageView(
+            icon: "eye.trianglebadge.exclamationmark",
+            iconColor: .red,
+            title: "Making CVI-Friendly Phrases",
+            paragraphs: [
+                "For users with Cortical Visual Impairment (CVI), how a phrase looks matters as much as what it says. Here are best practices for creating effective, high-visibility phrases:",
+                "Use a BLACK background — dark backgrounds reduce visual clutter and help the foreground content stand out.",
+                "Use RED or YELLOW text — these high-contrast colors are typically the easiest for CVI users to see. You can also make text bold and add a colored text border/outline for extra definition.",
+                "Use REAL photographic images, not cartoon icons or abstract symbols. Real photos of familiar objects are much easier for CVI users to recognize. The Image Tool can help you find and prepare these.",
+                "Keep it simple — show fewer symbols per page (2–4 is ideal). Go to Settings → Categories Display → CVI Display Settings to set symbol count and per-position colors.",
+                "All of these options are available in the Phrase Style Editor when you edit any phrase in Settings → Edit Categories & Phrases."
+            ]
+        )
+    }
+
+    private var cviDisplayPage: some View {
+        OnboardingPageView(
+            icon: "square.grid.2x2.fill",
+            iconColor: .teal,
+            title: "CVI Display Settings",
+            paragraphs: [
+                "The CVI Display Settings let you control how many phrase symbols appear on each page. Fewer symbols means less visual clutter — choose between 2, 3, or 4 symbols per page.",
+                "You can also assign a specific background color to each symbol position (e.g. red for top-left, blue for top-right). Consistent position colors help users learn where to look.",
+                "Find these settings at: Settings → Categories Display → CVI Display Settings.",
+                "Combined with per-phrase styling (black background, bold colored text, real images), these layout options create an interface optimized for users with visual impairments."
             ]
         )
     }
@@ -89,46 +164,64 @@ struct WelcomeView: View {
             iconColor: .orange,
             title: "Switch Control (Coming Soon)",
             paragraphs: [
-                "Switch control via USB (e.g. Tapio) is in development. In a future update you’ll be able to connect adaptive switches to your iPad and control the app without Bluetooth.",
-                "For now, you can use touch, eye gaze, or head tracking. Open Settings → Selection Mode to choose your input method."
-            ]
-        )
-    }
-
-    private var gettingStartedPage: some View {
-        OnboardingPageView(
-            icon: "hand.tap.fill",
-            iconColor: .green,
-            title: "Getting Started",
-            paragraphs: [
-                "On the main screen you’ll see category tiles (e.g. General, Basic Needs). Tap a category to open its phrases, then tap a phrase to speak it. Use the back arrow to return to categories.",
-                "To use eye gaze or head tracking: open Settings (gear icon, top right) → Selection Mode, and choose Face Tracking or Eye Gaze. Hold the iPad in landscape with the front camera facing you.",
-                "To reduce clutter: go to Settings → Edit Categories & Phrases and set how many phrases show per page."
+                "Switch2GO supports USB adaptive switch control (e.g. Tapio switch interface). Connect a switch to your iPad and control the app without needing to touch the screen or use eye tracking.",
+                "In Scanning mode, the app automatically steps through each phrase — press the switch to select the highlighted one. In Direct Mapping mode, each switch maps to a specific phrase position.",
+                "To enable switch control, go to Settings → Switch Control. You can configure the scanning speed, switch mappings, and other options there.",
+                "Touch, eye gaze, and head tracking continue to work alongside switch control, so you can combine input methods."
             ]
         )
     }
 
     private var readyPage: some View {
-        VStack(spacing: 24) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: 24) {
+                Spacer(minLength: 20)
 
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 80))
-                .foregroundColor(.green)
+                Image(systemName: "lock.shield.fill")
+                    .font(.system(size: 70))
+                    .foregroundColor(.green)
 
-            Text("You're All Set!")
-                .font(.largeTitle.bold())
-                .multilineTextAlignment(.center)
+                Text("Your Privacy Is Protected")
+                    .font(.largeTitle.bold())
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
 
-            Text("You can revisit this guide anytime from Settings → Show Welcome Guide. Use Settings → Troubleshooting if eye or head tracking isn’t working. Enjoy communicating with Switch2GO!")
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
+                VStack(alignment: .leading, spacing: 16) {
+                    privacyQuote("This app is designed with privacy as a core principle. We do not collect, store, or transmit any personal information from your device. All features operate entirely on your device, with no data sent to external servers.")
+
+                    privacyQuote("We collect ZERO information. This app does not collect personal information, track usage analytics, send crash reports, connect to external servers, use cookies or tracking technologies, collect advertising identifiers, access your location, or store or transmit camera or microphone data.")
+
+                    privacyQuote("No camera images, video, or eye tracking data is stored or transmitted. No audio recordings are stored or transmitted. All processing happens locally on your device.")
+
+                    privacyQuote("We share NO data with anyone. This app uses no third-party services — no analytics platforms, no crash reporting, no advertising networks, no cloud services.")
+
+                    privacyQuote("This app is safe for children and students of all ages. No data collection means compliance with COPPA, FERPA, and GDPR.")
+                }
                 .padding(.horizontal, 32)
 
-            Spacer()
+                Text("You can revisit this guide anytime from Settings → Show Welcome Guide.")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+
+                Spacer(minLength: 20)
+            }
+            .padding()
         }
-        .padding()
+    }
+
+    private func privacyQuote(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Rectangle()
+                .fill(Color.green.opacity(0.6))
+                .frame(width: 3)
+
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     // MARK: - Page Indicator
@@ -146,6 +239,8 @@ struct WelcomeView: View {
 }
 
 /// Reusable page layout for onboarding screens.
+/// Content is placed inside a ScrollView so pages with many paragraphs
+/// remain fully readable on smaller screens or in landscape.
 struct OnboardingPageView: View {
     let icon: String
     let iconColor: Color
@@ -153,32 +248,34 @@ struct OnboardingPageView: View {
     let paragraphs: [String]
 
     var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: 24) {
+                Spacer(minLength: 30)
 
-            Image(systemName: icon)
-                .font(.system(size: 70))
-                .foregroundColor(iconColor)
+                Image(systemName: icon)
+                    .font(.system(size: 70))
+                    .foregroundColor(iconColor)
 
-            Text(title)
-                .font(.largeTitle.bold())
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
+                Text(title)
+                    .font(.largeTitle.bold())
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
 
-            VStack(spacing: 16) {
-                ForEach(paragraphs, id: \.self) { paragraph in
-                    Text(paragraph)
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
+                VStack(spacing: 16) {
+                    ForEach(paragraphs, id: \.self) { paragraph in
+                        Text(paragraph)
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
-            }
-            .padding(.horizontal, 32)
+                .padding(.horizontal, 32)
 
-            Spacer()
+                Spacer(minLength: 30)
+            }
+            .padding()
         }
-        .padding()
     }
 }
 

@@ -57,14 +57,17 @@ data class PhraseStyle(
         /** Default text size in sp */
         const val DEFAULT_TEXT_SIZE_SP = 18f
         
-        /** Default background color (dark gray) */
-        const val DEFAULT_BACKGROUND_COLOR = 0xFF3D3D3D.toInt()
+        /** Default background color (black) */
+        const val DEFAULT_BACKGROUND_COLOR = 0xFF000000.toInt()
         
-        /** Default text color (white) */
-        const val DEFAULT_TEXT_COLOR = 0xFFFFFFFF.toInt()
+        /** Default text color (black) */
+        const val DEFAULT_TEXT_COLOR = 0xFF000000.toInt()
+        
+        /** Default border color (red) */
+        const val DEFAULT_BORDER_COLOR = 0xFFE53935.toInt()
         
         /** Default border width in dp */
-        const val DEFAULT_BORDER_WIDTH_DP = 0f
+        const val DEFAULT_BORDER_WIDTH_DP = 6f
         
         /** Predefined colors for easy selection */
         val PRESET_COLORS = listOf(
@@ -135,6 +138,9 @@ data class PhraseStyle(
     
     /** Returns the effective border width, using default if not set */
     fun effectiveBorderWidth(): Float = borderWidthDp ?: DEFAULT_BORDER_WIDTH_DP
+    
+    /** Returns the effective border color, using default if not set */
+    fun effectiveBorderColor(): Int = borderColor ?: DEFAULT_BORDER_COLOR
     
     /** Returns true if this style has an image set */
     fun hasImage(): Boolean = !imageRef.isNullOrBlank()
