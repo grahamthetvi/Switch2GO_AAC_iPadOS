@@ -39,23 +39,29 @@ class CategoriesViewModel: ObservableObject {
             // Add preset categories
             for preset in presets {
                 let name = self.getCategoryName(for: preset.category_id)
+                let colorHex = preset.color_hex != nil ? UInt32(truncating: preset.color_hex!) : nil
                 displayModels.append(CategoryDisplayModel(
                     id: preset.category_id,
                     name: name,
                     sortOrder: Int(preset.sort_order),
                     isPreset: true,
-                    hidden: preset.hidden == 1
+                    hidden: preset.hidden == 1,
+                    colorHex: colorHex,
+                    symbolName: preset.symbol_name
                 ))
             }
             
             // Add custom categories
             for custom in customs {
+                let colorHex = custom.color_hex != nil ? UInt32(truncating: custom.color_hex!) : nil
                 displayModels.append(CategoryDisplayModel(
                     id: custom.category_id,
                     name: custom.localized_name,
                     sortOrder: Int(custom.sort_order),
                     isPreset: false,
-                    hidden: custom.hidden == 1
+                    hidden: custom.hidden == 1,
+                    colorHex: colorHex,
+                    symbolName: custom.symbol_name
                 ))
             }
             
@@ -69,16 +75,15 @@ class CategoriesViewModel: ObservableObject {
         }
     }
     
-    /// Get localized category name
+    /// Get localized category name (natural, conversational)
     private func getCategoryName(for categoryId: String) -> String {
         switch categoryId {
-        case "preset_general": return "General"
-        case "preset_basic_needs": return "Basic Needs"
-        case "preset_personal_care": return "Personal Care"
-        case "preset_conversation": return "Conversation"
-        case "preset_environment": return "Environment"
-        case "preset_user_keypad": return "123"
-        case "preset_recents": return "Recents"
+        case "preset_routine_activity": return "Daily Activities"
+        case "preset_food_drink": return "Food & Drinks"
+        case "preset_comfort_state": return "How I Feel"
+        case "preset_play_leisure": return "Fun & Games"
+        case "preset_positioning": return "Move Me"
+        case "preset_recents": return "Recently Said"
         default: return categoryId
         }
     }
@@ -91,6 +96,8 @@ struct CategoryDisplayModel: Identifiable {
     let sortOrder: Int
     let isPreset: Bool
     let hidden: Bool
+    let colorHex: UInt32?
+    let symbolName: String?
 }
 
 extension Bool {

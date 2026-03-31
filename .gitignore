@@ -73,3 +73,6 @@ iosApp/Pods/
 # iOS build artifacts
 shared/build/iosApp/Pods/
 iosApp/Pods/
+
+# MediaPipe model
+face_landmarker.task

@@ -3,7 +3,9 @@ CREATE TABLE PresetCategory (
   category_id TEXT NOT NULL PRIMARY KEY,
   hidden INTEGER NOT NULL DEFAULT 0,
   sort_order INTEGER NOT NULL,
-  deleted INTEGER NOT NULL DEFAULT 0
+  deleted INTEGER NOT NULL DEFAULT 0,
+  color_hex INTEGER,
+  symbol_name TEXT
 );
 
 -- Queries
@@ -19,8 +21,8 @@ WHERE hidden = 0 AND deleted = 0
 ORDER BY sort_order ASC;
 
 insertPresetCategory:
-INSERT OR REPLACE INTO PresetCategory (category_id, hidden, sort_order, deleted)
-VALUES (?, ?, ?, ?);
+INSERT OR REPLACE INTO PresetCategory (category_id, hidden, sort_order, deleted, color_hex, symbol_name)
+VALUES (?, ?, ?, ?, ?, ?);
 
 updatePresetCategoryHidden:
 UPDATE PresetCategory SET hidden = ? WHERE category_id = ?;
@@ -30,6 +32,12 @@ UPDATE PresetCategory SET sort_order = ? WHERE category_id = ?;
 
 updatePresetCategoryDeleted:
 UPDATE PresetCategory SET deleted = ? WHERE category_id = ?;
+
+updatePresetCategoryColor:
+UPDATE PresetCategory SET color_hex = ? WHERE category_id = ?;
+
+updatePresetCategorySymbol:
+UPDATE PresetCategory SET symbol_name = ? WHERE category_id = ?;
 
 getPresetCategoryCount:
 SELECT COUNT(*) FROM PresetCategory WHERE deleted = 0;

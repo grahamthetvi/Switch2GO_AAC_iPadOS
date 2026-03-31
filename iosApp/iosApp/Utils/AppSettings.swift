@@ -22,6 +22,8 @@ class AppSettings: ObservableObject {
         static let showTrackingErrorBanner = "showTrackingErrorBanner"
         static let enableDoubleBlinkRecenter = "enableDoubleBlinkRecenter"
         static let enableAutoRecenter = "enableAutoRecenter"
+        static let enableRepeatDwell = "enableRepeatDwell"
+        static let repeatDwellDelay = "repeatDwellDelay"
         static let headCameraPosition = "headCameraPosition"
         static let headCameraOffsetYaw = "headCameraOffsetYaw"
         static let headCameraOffsetPitch = "headCameraOffsetPitch"
@@ -49,6 +51,11 @@ class AppSettings: ObservableObject {
         
         // Onboarding
         static let hasSeenOnboarding = "hasSeenOnboarding"
+        
+        // Debugging
+        static let showDebugCameraPreview = "showDebugCameraPreview"
+        static let debugCameraRotation = "debugCameraRotation"
+        static let enableTrackingDiagnostics = "enableTrackingDiagnostics"
         
         // Per-position colors (9 positions)
         static func symbolColor(_ position: Int) -> String {
@@ -179,6 +186,20 @@ class AppSettings: ObservableObject {
     @Published var enableAutoRecenter: Bool {
         didSet {
             defaults.set(enableAutoRecenter, forKey: Keys.enableAutoRecenter)
+        }
+    }
+
+    /// Enable repeat activation if dwelling continues
+    @Published var enableRepeatDwell: Bool {
+        didSet {
+            defaults.set(enableRepeatDwell, forKey: Keys.enableRepeatDwell)
+        }
+    }
+
+    /// Delay in seconds between repeat dwell activations (0.5 - 5.0)
+    @Published var repeatDwellDelay: Double {
+        didSet {
+            defaults.set(repeatDwellDelay, forKey: Keys.repeatDwellDelay)
         }
     }
 
@@ -335,6 +356,29 @@ class AppSettings: ObservableObject {
         }
     }
     
+    // MARK: - Debugging
+    
+    /// Show raw camera preview overlay with MediaPipe landmarks
+    @Published var showDebugCameraPreview: Bool {
+        didSet {
+            defaults.set(showDebugCameraPreview, forKey: Keys.showDebugCameraPreview)
+        }
+    }
+    
+    /// Manual override for camera rotation angle to MediaPipe (0, 90, 180, 270)
+    @Published var debugCameraRotation: Double {
+        didSet {
+            defaults.set(debugCameraRotation, forKey: Keys.debugCameraRotation)
+        }
+    }
+
+    /// Enable periodic runtime diagnostics logging for gaze tracking
+    @Published var enableTrackingDiagnostics: Bool {
+        didSet {
+            defaults.set(enableTrackingDiagnostics, forKey: Keys.enableTrackingDiagnostics)
+        }
+    }
+    
     // MARK: - Initialization
     
     private init() {
@@ -351,6 +395,8 @@ class AppSettings: ObservableObject {
         self.showTrackingErrorBanner = defaults.object(forKey: Keys.showTrackingErrorBanner) as? Bool ?? true
         self.enableDoubleBlinkRecenter = defaults.object(forKey: Keys.enableDoubleBlinkRecenter) as? Bool ?? true
         self.enableAutoRecenter = defaults.object(forKey: Keys.enableAutoRecenter) as? Bool ?? true
+        self.enableRepeatDwell = defaults.object(forKey: Keys.enableRepeatDwell) as? Bool ?? false
+        self.repeatDwellDelay = defaults.object(forKey: Keys.repeatDwellDelay) as? Double ?? 1.0
         self.headCameraPosition = defaults.string(forKey: Keys.headCameraPosition) ?? "left"
         self.headCameraOffsetYaw = defaults.object(forKey: Keys.headCameraOffsetYaw) as? Double ?? 4.0
         self.headCameraOffsetPitch = defaults.object(forKey: Keys.headCameraOffsetPitch) as? Double ?? 0.0
@@ -379,6 +425,11 @@ class AppSettings: ObservableObject {
 
         // Onboarding
         self.hasSeenOnboarding = defaults.object(forKey: Keys.hasSeenOnboarding) as? Bool ?? false
+        
+        // Debugging
+        self.showDebugCameraPreview = defaults.object(forKey: Keys.showDebugCameraPreview) as? Bool ?? false
+        self.debugCameraRotation = defaults.object(forKey: Keys.debugCameraRotation) as? Double ?? -1.0
+        self.enableTrackingDiagnostics = defaults.object(forKey: Keys.enableTrackingDiagnostics) as? Bool ?? false
     }
     
     /// Reset all settings to defaults
@@ -396,6 +447,8 @@ class AppSettings: ObservableObject {
         showTrackingErrorBanner = true
         enableDoubleBlinkRecenter = true
         enableAutoRecenter = true
+        enableRepeatDwell = false
+        repeatDwellDelay = 1.0
         headCameraPosition = "left"
         headCameraOffsetYaw = 4.0
         headCameraOffsetPitch = 0.0
@@ -416,6 +469,9 @@ class AppSettings: ObservableObject {
         switchKey2 = 31  // Key "2"
         switchKey3 = 32  // Key "3"
         switchKey4 = 33  // Key "4"
+        showDebugCameraPreview = false
+        debugCameraRotation = -1.0
+        enableTrackingDiagnostics = false
         resetColorsToDefaults()
     }
     /// Returns .dark when appBorderColor is dark (low luminance), .light otherwise.

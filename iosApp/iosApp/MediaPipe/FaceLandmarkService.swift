@@ -45,6 +45,20 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
     /// - Parameter useGpu: Whether to use GPU acceleration
     /// - Returns: true if initialization was successful
     func initialize(useGpu: Bool = false) -> Bool {
+        if isInitialized && lastUseGpu == useGpu && faceLandmarker != nil {
+            // Already initialized, just reset state
+            pendingRequest = false
+            isDetecting = false
+            latestSampleBuffer = nil
+            DebugLog.info("Reused existing FaceLandmarker (GPU: \(useGpu))", tag: "MediaPipe")
+            return true
+        }
+
+        // If we are changing GPU settings or re-initializing, clean up the old one first
+        if faceLandmarker != nil {
+            close()
+        }
+
         lastUseGpu = useGpu
 
         // Reset detection state machine.  If a previous landmarker was in the
@@ -117,6 +131,10 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
             DebugLog.error("Failed to create MPImage from sample buffer", tag: "MediaPipe")
             notifyDetectorNoFace()
             return
+        }
+        
+        if AppSettings.shared.showDebugCameraPreview {
+            DebugLog.debug("Sending \(Int(image.width))x\(Int(image.height)) image, orientation: \(orientation.rawValue)", tag: "MediaPipe")
         }
  
         // Get timestamp in milliseconds — must be strictly increasing for live stream mode
@@ -245,12 +263,21 @@ extension FaceLandmarkService: FaceLandmarkerLiveStreamDelegate {
  
         guard let result = result,
               let firstFace = result.faceLandmarks.first else {
+            // Log exactly what happened for debugging
+            if AppSettings.shared.showDebugCameraPreview {
+                DebugLog.warn("No face detected in frame", tag: "MediaPipe")
+            }
             DispatchQueue.main.async {
                 self.currentLandmarks = nil
                 self.isTracking = false
             }
             notifyDetectorNoFace()
             return
+        }
+        
+        // Check if irises were detected (478 points = full face + irises, 468 = face only)
+        if AppSettings.shared.showDebugCameraPreview && firstFace.count < 478 {
+            DebugLog.warn("Face detected but missing irises (count: \(firstFace.count))", tag: "MediaPipe")
         }
  
         DispatchQueue.main.async {

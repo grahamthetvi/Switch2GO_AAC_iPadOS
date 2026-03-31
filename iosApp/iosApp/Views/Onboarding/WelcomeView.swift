@@ -90,11 +90,11 @@ struct WelcomeView: View {
         OnboardingPageView(
             icon: "ipad.landscape",
             iconColor: .orange,
-            title: "Hold Your iPad in Landscape",
+            title: "iPad Orientation",
             paragraphs: [
-                "Eye tracking and head tracking require the iPad to be held in landscape orientation with the home button (or USB-C port) on the RIGHT side. This places the front camera on the LEFT — the only position the tracking system supports.",
-                "If you rotate to a different orientation, tracking will pause automatically and a banner will tell you to rotate back. Touch and switch controls work in every orientation.",
-                "Tip: If tracking ever stops responding, try rotating to portrait and back to landscape. This resets the tracking system."
+                "You can use Switch2GO in almost any orientation. The only unsupported position is when the front camera is upside down.",
+                "If the camera is upside down, eye and head tracking pause automatically and a message prompts you to rotate back. Touch and switch controls still work.",
+                "Tip: If tracking seems off, rotate to a supported orientation and hold the iPad steady for a moment so tracking can recover."
             ]
         )
     }
@@ -106,7 +106,9 @@ struct WelcomeView: View {
             title: "Navigating the App",
             paragraphs: [
                 "The main screen shows category tiles (e.g. General, Basic Needs, Feelings). Tap a category to see its phrases, then tap a phrase to speak it out loud. Use the back arrow at the top to return to categories.",
-                "With eye gaze or head tracking enabled, look at a button and hold your gaze — after a short dwell time it will be selected automatically. The blue cursor shows where you're looking, and a green progress ring fills as you dwell.",
+                "Eye Gaze mode: keep your head as still as possible and move only your eyes. Look at a button and hold your gaze until the dwell ring completes to select it.",
+                "Head Tracking mode: move your head in the direction you want the cursor to go. Moving your head left moves the cursor left, right moves right, up moves up, and down moves down.",
+                "In both tracking modes, the blue cursor shows the current pointer location and the green progress ring fills while you dwell.",
                 "To change your input method, open Settings (gear icon, top right) and go to Selection Mode. You can choose Touch Only, Face Tracking (head movements), or Eye Gaze.",
                 "You can add, edit, reorder, and delete categories and phrases from Settings → Edit Categories & Phrases."
             ]

@@ -1,7 +1,7 @@
 # Switch2Go iOS App - CocoaPods Configuration
 # Run 'pod install' after editing this file
 
-platform :ios, '15.0'
+platform :ios, '17.0'
 
 # Disable CocoaPods analytics
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -27,7 +27,7 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       # Set minimum iOS version
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
 
       # Enable module stability for Swift packages
       config.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'YES'

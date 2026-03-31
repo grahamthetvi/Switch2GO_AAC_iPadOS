@@ -322,6 +322,6 @@ struct PhraseButton: View {
 
 #Preview {
     NavigationStack {
-        PhrasesView(categoryId: "preset_general")
+        PhrasesView(categoryId: "preset_routine_activity")
     }
 }

@@ -4,7 +4,9 @@ CREATE TABLE Category (
   creation_date INTEGER NOT NULL,
   localized_name TEXT NOT NULL,
   hidden INTEGER NOT NULL DEFAULT 0,
-  sort_order INTEGER NOT NULL
+  sort_order INTEGER NOT NULL,
+  color_hex INTEGER,
+  symbol_name TEXT
 );
 
 -- Queries
@@ -18,8 +20,8 @@ getVisibleCategories:
 SELECT * FROM Category WHERE hidden = 0 ORDER BY sort_order ASC;
 
 insertCategory:
-INSERT OR REPLACE INTO Category (category_id, creation_date, localized_name, hidden, sort_order)
-VALUES (?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO Category (category_id, creation_date, localized_name, hidden, sort_order, color_hex, symbol_name)
+VALUES (?, ?, ?, ?, ?, ?, ?);
 
 updateCategoryName:
 UPDATE Category SET localized_name = ? WHERE category_id = ?;
@@ -29,6 +31,12 @@ UPDATE Category SET hidden = ? WHERE category_id = ?;
 
 updateCategorySortOrder:
 UPDATE Category SET sort_order = ? WHERE category_id = ?;
+
+updateCategoryColor:
+UPDATE Category SET color_hex = ? WHERE category_id = ?;
+
+updateCategorySymbol:
+UPDATE Category SET symbol_name = ? WHERE category_id = ?;
 
 deleteCategory:
 DELETE FROM Category WHERE category_id = ?;

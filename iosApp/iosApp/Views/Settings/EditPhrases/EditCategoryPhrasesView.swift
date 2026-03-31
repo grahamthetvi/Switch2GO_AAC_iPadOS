@@ -151,6 +151,6 @@ struct AddPhraseView: View {
 
 #Preview {
     NavigationStack {
-        EditCategoryPhrasesView(categoryId: "preset_general")
+        EditCategoryPhrasesView(categoryId: "preset_routine_activity")
     }
 }

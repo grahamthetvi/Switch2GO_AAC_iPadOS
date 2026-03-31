@@ -4,7 +4,7 @@
 # Core dependencies
 opencv-python>=4.8.0
 numpy>=1.24.0
-mediapipe>=0.10.0
+mediapipe>=0.10.32
 
 # Optional: for advanced Kalman filter implementations
 # filterpy>=1.4.5

@@ -10,6 +10,10 @@ struct EditCategoryDetailView: View {
     @State private var showingDeleteConfirmation = false
     @StateObject private var phrasesViewModel: PhrasesViewModel
     @State private var showingAddPhrase = false
+    @State private var showingColorPicker = false
+    @State private var showingSymbolPicker = false
+    @State private var categoryColorHex: UInt32?
+    @State private var categorySymbolName: String?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
     
@@ -17,6 +21,43 @@ struct EditCategoryDetailView: View {
         self.category = category
         _categoryName = State(initialValue: category.name)
         _phrasesViewModel = StateObject(wrappedValue: PhrasesViewModel(categoryId: category.id))
+        _categoryColorHex = State(initialValue: category.colorHex)
+        _categorySymbolName = State(initialValue: category.symbolName)
+    }
+    
+    private var displayColor: Color {
+        if let hex = categoryColorHex {
+            return Color(hex: hex)
+        }
+        return defaultColorForCategory
+    }
+    
+    private var displaySymbol: String {
+        categorySymbolName ?? defaultSymbolForCategory
+    }
+    
+    private var defaultColorForCategory: Color {
+        switch category.id {
+        case "preset_routine_activity": return Color(hex: 0xFFE53935)
+        case "preset_food_drink": return Color(hex: 0xFF1E88E5)
+        case "preset_comfort_state": return Color(hex: 0xFF43A047)
+        case "preset_play_leisure": return Color(hex: 0xFFFB8C00)
+        case "preset_positioning": return Color(hex: 0xFF8E24AA)
+        case "preset_recents": return Color(hex: 0xFFF06292)
+        default: return Color(hex: 0xFF00ACC1)
+        }
+    }
+    
+    private var defaultSymbolForCategory: String {
+        switch category.id {
+        case "preset_routine_activity": return "checklist"
+        case "preset_food_drink": return "fork.knife"
+        case "preset_comfort_state": return "heart.fill"
+        case "preset_play_leisure": return "gamecontroller.fill"
+        case "preset_positioning": return "figure.stand"
+        case "preset_recents": return "clock.arrow.circlepath"
+        default: return "folder.fill"
+        }
     }
     
     var body: some View {
@@ -34,6 +75,38 @@ struct EditCategoryDetailView: View {
                         .onChange(of: categoryName) { _, newValue in
                             updateCategoryName(newValue)
                         }
+                }
+            }
+            
+            Section("Appearance") {
+                Button(action: { showingColorPicker = true }) {
+                    HStack {
+                        Text("Color")
+                        Spacer()
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(displayColor)
+                            .frame(width: 32, height: 32)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.primary.opacity(0.3), lineWidth: 1)
+                            )
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                Button(action: { showingSymbolPicker = true }) {
+                    HStack {
+                        Text("Icon")
+                        Spacer()
+                        Image(systemName: displaySymbol)
+                            .font(.title2)
+                            .foregroundColor(.primary)
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
             
@@ -124,11 +197,74 @@ struct EditCategoryDetailView: View {
                 phrasesViewModel.loadPhrases()
             }
         }
+        .sheet(isPresented: $showingColorPicker) {
+            ColorPickerView(
+                selectedColor: displayColor,
+                onColorSelected: { color in
+                    let hex = color.toHex()
+                    categoryColorHex = hex
+                    updateCategoryColor(hex)
+                    showingColorPicker = false
+                },
+                onCancel: { showingColorPicker = false }
+            )
+        }
+        .sheet(isPresented: $showingSymbolPicker) {
+            SymbolPickerView(
+                selectedSymbol: displaySymbol,
+                onSymbolSelected: { symbol in
+                    categorySymbolName = symbol
+                    updateCategorySymbol(symbol)
+                    showingSymbolPicker = false
+                },
+                onCancel: { showingSymbolPicker = false }
+            )
+        }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PhrasesUpdated"))) { _ in
             phrasesViewModel.loadPhrases()
         }
         .toolbarBackground(settings.appBorderColor, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
+    }
+    
+    private func updateCategoryColor(_ hex: UInt32) {
+        let database = DatabaseManager.shared.db
+        DispatchQueue.global(qos: .background).async {
+            if category.id.hasPrefix("preset_") {
+                database.presetCategoryQueries.updatePresetCategoryColor(
+                    color_hex: KotlinLong(value: Int64(hex)),
+                    category_id: category.id
+                )
+            } else {
+                database.categoryQueries.updateCategoryColor(
+                    color_hex: KotlinLong(value: Int64(hex)),
+                    category_id: category.id
+                )
+            }
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: Notification.Name("CategoriesUpdated"), object: nil)
+            }
+        }
+    }
+    
+    private func updateCategorySymbol(_ symbol: String) {
+        let database = DatabaseManager.shared.db
+        DispatchQueue.global(qos: .background).async {
+            if category.id.hasPrefix("preset_") {
+                database.presetCategoryQueries.updatePresetCategorySymbol(
+                    symbol_name: symbol,
+                    category_id: category.id
+                )
+            } else {
+                database.categoryQueries.updateCategorySymbol(
+                    symbol_name: symbol,
+                    category_id: category.id
+                )
+            }
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: Notification.Name("CategoriesUpdated"), object: nil)
+            }
+        }
     }
     
     private func updateCategoryName(_ newName: String) {
@@ -168,7 +304,9 @@ struct EditCategoryDetailView: View {
             name: "Test Category",
             sortOrder: 0,
             isPreset: false,
-            hidden: false
+            hidden: false,
+            colorHex: nil,
+            symbolName: nil
         ))
     }
 }

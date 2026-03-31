@@ -51,16 +51,12 @@ sealed class CategoryModel {
  * Enum of all preset categories in the app
  */
 enum class PresetCategories(val id: String, val initialSortOrder: Int) {
-    GENERAL("preset_general", 0),
-    BASIC_NEEDS("preset_basic_needs", 1),
-    PERSONAL_CARE("preset_personal_care", 2),
-    CONVERSATION("preset_conversation", 3),
-    ENVIRONMENT("preset_environment", 4),
-    USER_KEYPAD("preset_user_keypad", 5),
-    RECENTS("preset_recents", 6),
-    // MY_SAYINGS is deprecated - custom categories should be used instead
-    @Deprecated("Use custom categories instead")
-    MY_SAYINGS("preset_user_favorites", 7);
+    ROUTINE_ACTIVITY("preset_routine_activity", 0),
+    FOOD_DRINK("preset_food_drink", 1),
+    COMFORT_STATE("preset_comfort_state", 2),
+    PLAY_LEISURE("preset_play_leisure", 3),
+    POSITIONING("preset_positioning", 4),
+    RECENTS("preset_recents", 5);
     
     companion object {
         fun fromId(id: String): PresetCategories? = entries.find { it.id == id }

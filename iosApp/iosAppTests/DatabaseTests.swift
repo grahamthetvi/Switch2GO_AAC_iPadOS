@@ -25,8 +25,8 @@ class DatabaseTests: XCTestCase {
             
             // Check for specific preset categories
             let categoryIds = categories.map { $0.category_id }
-            XCTAssertTrue(categoryIds.contains("preset_general"))
-            XCTAssertTrue(categoryIds.contains("preset_basic_needs"))
+            XCTAssertTrue(categoryIds.contains("preset_routine_activity"))
+            XCTAssertTrue(categoryIds.contains("preset_food_drink"))
         } catch {
             XCTFail("Failed to load preset categories: \(error)")
         }
@@ -53,7 +53,9 @@ class DatabaseTests: XCTestCase {
                 creation_date: 12345,
                 localized_name: "Test Category",
                 hidden: false,
-                sort_order: 999
+                sort_order: 999,
+                color_hex: nil,
+                symbol_name: nil
             )
             
             let category = try database.categoryQueries.getCategoryById(category_id: categoryId).executeAsOneOrNull()
@@ -73,7 +75,7 @@ class DatabaseTests: XCTestCase {
         do {
             try database.phraseQueries.insertPhrase(
                 phrase_id: phraseId,
-                parent_category_id: "preset_general",
+                parent_category_id: "preset_routine_activity",
                 creation_date: 12345,
                 last_spoken_date: nil,
                 localized_utterance: "Test Phrase",
