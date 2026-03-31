@@ -93,6 +93,9 @@ struct EditCategoriesListView: View {
                 viewModel.reorderCategories(from: from, to: to)
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Edit Categories")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -118,6 +121,8 @@ struct EditCategoriesListView: View {
                 viewModel.loadCategories()
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
 
     private var layoutDescription: String {
@@ -154,12 +159,15 @@ class EditCategoriesViewModel: ObservableObject {
             
             for preset in presets {
                 let name = self.getCategoryName(for: preset.category_id)
+                let colorHex = preset.color_hex != nil ? UInt32(truncating: preset.color_hex!) : nil
                 displayModels.append(CategoryDisplayModel(
                     id: preset.category_id,
                     name: name,
                     sortOrder: Int(preset.sort_order),
                     isPreset: true,
-                    hidden: preset.hidden != 0
+                    hidden: preset.hidden != 0,
+                    colorHex: colorHex,
+                    symbolName: preset.symbol_name
                 ))
             }
             
@@ -169,12 +177,15 @@ class EditCategoriesViewModel: ObservableObject {
                 .executeAsList()
             
             for custom in customs {
+                let colorHex = custom.color_hex != nil ? UInt32(truncating: custom.color_hex!) : nil
                 displayModels.append(CategoryDisplayModel(
                     id: custom.category_id,
                     name: custom.localized_name,
                     sortOrder: Int(custom.sort_order),
                     isPreset: false,
-                    hidden: custom.hidden != 0
+                    hidden: custom.hidden != 0,
+                    colorHex: colorHex,
+                    symbolName: custom.symbol_name
                 ))
             }
             
@@ -243,49 +254,95 @@ class EditCategoriesViewModel: ObservableObject {
     
     private func getCategoryName(for categoryId: String) -> String {
         switch categoryId {
-        case "preset_general": return "General"
-        case "preset_basic_needs": return "Basic Needs"
-        case "preset_personal_care": return "Personal Care"
-        case "preset_conversation": return "Conversation"
-        case "preset_environment": return "Environment"
-        case "preset_user_keypad": return "123"
-        case "preset_recents": return "Recents"
+        case "preset_routine_activity": return "Daily Activities"
+        case "preset_food_drink": return "Food & Drinks"
+        case "preset_comfort_state": return "How I Feel"
+        case "preset_play_leisure": return "Fun & Games"
+        case "preset_positioning": return "Move Me"
+        case "preset_recents": return "Recently Said"
         default: return categoryId
         }
     }
 }
 
+/// Default colors for new custom categories (vibrant palette, no grey)
+private let newCategoryColorPalette: [UInt32] = [
+    0xFFE53935, 0xFF1E88E5, 0xFF43A047, 0xFFFB8C00,
+    0xFF8E24AA, 0xFF00ACC1, 0xFFF06292, 0xFFFFEE58,
+    0xFF26A69A, 0xFF673AB7
+]
+
 /// Add new custom category
 struct AddCategoryView: View {
     @State private var categoryName: String = ""
+    @State private var selectedColorHex: UInt32 = 0xFF00ACC1  // Teal default
+    @State private var selectedSymbol: String = "folder.fill"
+    @State private var showingColorPicker = false
+    @State private var showingSymbolPicker = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
     let onSaved: () -> Void
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
-                TextField("Category Name", text: $categoryName)
-                    .font(.title2)
-                    .padding()
-                    .background(Color(UIColor.secondarySystemBackground))
-                    .cornerRadius(12)
-                    .padding()
+            List {
+                Section("Category Name") {
+                    TextField("Name", text: $categoryName)
+                        .font(.body)
+                }
                 
-                Button(action: saveCategory) {
-                    Text("Save Category")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
+                Section("Appearance") {
+                    Button(action: { showingColorPicker = true }) {
+                        HStack {
+                            Text("Color")
+                            Spacer()
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(hex: selectedColorHex))
+                                .frame(width: 32, height: 32)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.primary.opacity(0.3), lineWidth: 1)
+                                )
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    Button(action: { showingSymbolPicker = true }) {
+                        HStack {
+                            Text("Icon")
+                            Spacer()
+                            Image(systemName: selectedSymbol)
+                                .font(.title2)
+                                .foregroundColor(.primary)
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                
+                Section {
+                    Button(action: saveCategory) {
+                        HStack {
+                            Spacer()
+                            Text("Save Category")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            Spacer()
+                        }
                         .padding()
                         .background(categoryName.isEmpty ? Color.gray : Color.blue)
                         .cornerRadius(12)
+                    }
+                    .disabled(categoryName.isEmpty)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
                 }
-                .disabled(categoryName.isEmpty)
-                .padding(.horizontal)
-                
-                Spacer()
             }
+            .scrollContentBackground(.hidden)
+            .background(Color(UIColor.systemGroupedBackground))
             .navigationTitle("Add Category")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -300,6 +357,26 @@ struct AddCategoryView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showingColorPicker) {
+                ColorPickerView(
+                    selectedColor: Color(hex: selectedColorHex),
+                    onColorSelected: { color in
+                        selectedColorHex = color.toHex()
+                        showingColorPicker = false
+                    },
+                    onCancel: { showingColorPicker = false }
+                )
+            }
+            .sheet(isPresented: $showingSymbolPicker) {
+                SymbolPickerView(
+                    selectedSymbol: selectedSymbol,
+                    onSymbolSelected: { symbol in
+                        selectedSymbol = symbol
+                        showingSymbolPicker = false
+                    },
+                    onCancel: { showingSymbolPicker = false }
+                )
+            }
         }
     }
     
@@ -313,7 +390,9 @@ struct AddCategoryView: View {
             creation_date: timestamp,
             localized_name: categoryName,
             hidden: 0,
-            sort_order: -timestamp
+            sort_order: -timestamp,
+            color_hex: KotlinLong(value: Int64(selectedColorHex)),
+            symbol_name: selectedSymbol
         )
         dismiss()
         onSaved()

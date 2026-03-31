@@ -32,6 +32,46 @@ struct TimingSensitivityView: View {
                 .background(Color(UIColor.secondarySystemBackground))
                 .cornerRadius(12)
                 
+                // Repeat Hover Activation Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Toggle(isOn: $settings.enableRepeatDwell) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Repeat Hover Activation")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Text("If enabled, keeping the cursor on a button will activate it again")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .tint(.blue)
+                    
+                    if settings.enableRepeatDwell {
+                        Divider()
+                            .padding(.vertical, 4)
+                        
+                        Text("Repeat Delay")
+                            .font(.headline)
+                        
+                        Text("How long to wait before activating again")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        VStack(spacing: 8) {
+                            Slider(value: $settings.repeatDwellDelay, in: 0.5...5.0, step: 0.1)
+                                .accentColor(.blue)
+                            
+                            Text("\(settings.repeatDwellDelay, specifier: "%.1f") seconds")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                        }
+                    }
+                }
+                .padding()
+                .background(Color(UIColor.secondarySystemBackground))
+                .cornerRadius(12)
+                
                 // Cursor Sensitivity Section
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Cursor Sensitivity")
@@ -54,6 +94,9 @@ struct TimingSensitivityView: View {
             }
             .padding()
         }
+        .scrollContentBackground(.hidden)
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Timing & Sensitivity")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -70,6 +113,8 @@ struct TimingSensitivityView: View {
                 }
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
     
     private func sensitivityButton(level: Int, label: String) -> some View {

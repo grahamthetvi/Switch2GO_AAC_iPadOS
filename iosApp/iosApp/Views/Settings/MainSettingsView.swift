@@ -8,7 +8,9 @@ struct MainSettingsView: View {
     @StateObject private var settings = AppSettings.shared
 
     @State private var debugTapCount = 0
-    @State private var showDebugLog = false
+    // We use @AppStorage here so the debug menu stays unlocked across sessions
+    // once the user unlocks it by tapping 10 times.
+    @AppStorage("isDeveloperModeUnlocked") private var showDebugLog = false
     @State private var lastDebugTap = Date.distantPast
     
     var body: some View {
@@ -116,6 +118,14 @@ struct MainSettingsView: View {
                                 color: .gray
                             )
                         }
+
+                        Button(action: openImageTool) {
+                            settingsRow(
+                                title: "Image Tool",
+                                icon: "wand.and.stars",
+                                color: .green
+                            )
+                        }
                         
                         Button(action: {
                             if let url = URL(string: "https://grahamthetvi.github.io/Switch2GO_AAC_iPadOS_Explanation_and_Support/index.html") {
@@ -138,6 +148,69 @@ struct MainSettingsView: View {
                                     color: .red
                                 )
                             }
+                            
+                            Toggle(isOn: $settings.showDebugCameraPreview) {
+                                HStack {
+                                    Image(systemName: "camera.viewfinder")
+                                        .font(.title2)
+                                        .foregroundColor(.red)
+                                        .frame(width: 40)
+                                    Text("Debug Camera Preview")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                }
+                            }
+                            .padding()
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .cornerRadius(12)
+                            
+                            Toggle(isOn: $settings.enableTrackingDiagnostics) {
+                                HStack {
+                                    Image(systemName: "waveform.path.ecg")
+                                        .font(.title2)
+                                        .foregroundColor(.orange)
+                                        .frame(width: 40)
+                                    Text("Tracking Diagnostics")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                }
+                            }
+                            .padding()
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .cornerRadius(12)
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "arrow.triangle.2.circlepath.camera")
+                                        .font(.title2)
+                                        .foregroundColor(.red)
+                                        .frame(width: 40)
+                                    Text("Camera Feed Rotation")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                }
+                                
+                                Picker("Rotation (Override)", selection: $settings.debugCameraRotation) {
+                                    Text("Auto").tag(-1.0)
+                                    Text("0°").tag(0.0)
+                                    Text("90°").tag(90.0)
+                                    Text("180°").tag(180.0)
+                                    Text("270°").tag(270.0)
+                                }
+                                .pickerStyle(.segmented)
+                                .onChange(of: settings.debugCameraRotation) { _, _ in
+                                    NotificationCenter.default.post(name: NSNotification.Name("DebugCameraRotationChanged"), object: nil)
+                                }
+                                
+                                Text("Current Device Orientation: \(currentOrientationString())")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .padding(.top, 4)
+                            }
+                            .padding()
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .cornerRadius(12)
                         }
                     }
                     .padding(.horizontal)
@@ -152,6 +225,7 @@ struct MainSettingsView: View {
             }
             .scrollContentBackground(.hidden)
             .background(settings.appBorderColor)
+            .environment(\.colorScheme, settings.preferredColorScheme)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -226,18 +300,41 @@ struct MainSettingsView: View {
             openURL(url)
         }
     }
+
+    private func openImageTool() {
+        guard let url = URL(string: "https://switch2goaac.org/index.html#image-tool") else { return }
+        openURL(url)
+    }
     
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
     }
 
     private var navigationColorScheme: ColorScheme {
-        let components = UIColor(settings.appBorderColor).cgColor.components ?? [0, 0, 0, 1]
-        let r = components[0]
-        let g = components.count > 1 ? components[1] : components[0]
-        let b = components.count > 2 ? components[2] : components[0]
-        let luminance = (0.2126 * r) + (0.7152 * g) + (0.0722 * b)
-        return luminance > 0.6 ? .light : .dark
+        settings.preferredColorScheme
+    }
+    
+    private func currentOrientationString() -> String {
+        guard let scene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene }).first else {
+            return "Unknown"
+        }
+        
+        let orientation: UIInterfaceOrientation
+        if #available(iOS 18.0, *) {
+            orientation = scene.effectiveGeometry.interfaceOrientation
+        } else {
+            orientation = scene.interfaceOrientation
+        }
+        
+        switch orientation {
+        case .portrait: return "Portrait (Camera Top)"
+        case .portraitUpsideDown: return "Portrait Upside Down (Camera Bottom)"
+        case .landscapeLeft: return "Landscape Left (Camera Right)"
+        case .landscapeRight: return "Landscape Right (Camera Left)"
+        case .unknown: return "Unknown"
+        @unknown default: return "Unknown"
+        }
     }
 }
 

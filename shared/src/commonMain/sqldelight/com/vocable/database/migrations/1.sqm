@@ -1,0 +1,5 @@
+-- Migration 1: Add color and symbol customization to Category and PresetCategory
+ALTER TABLE Category ADD COLUMN color_hex INTEGER;
+ALTER TABLE Category ADD COLUMN symbol_name TEXT;
+ALTER TABLE PresetCategory ADD COLUMN color_hex INTEGER;
+ALTER TABLE PresetCategory ADD COLUMN symbol_name TEXT;

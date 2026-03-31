@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.InputMethodManager
@@ -44,6 +45,7 @@ class PhraseStyleEditorFragment : BaseFragment<FragmentPhraseStyleEditorBinding>
         private const val BORDER_WIDTH_THICK_DP = 14f
         private const val BORDER_WIDTH_XL_DP = 20f
         private const val BORDER_WIDTH_XXL_DP = 28f
+        private const val IMAGE_TOOL_URL = "https://switch2goaac.org/index.html#image-tool"
     }
 
     // Track which color property is being edited
@@ -222,6 +224,11 @@ class PhraseStyleEditorFragment : BaseFragment<FragmentPhraseStyleEditorBinding>
         dialog.imageOptionAddImage.action = {
             hideImagePicker()
             imagePickerLauncher.launch(arrayOf("image/*"))
+        }
+
+        dialog.imageOptionImageTool.action = {
+            hideImagePicker()
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(IMAGE_TOOL_URL)))
         }
 
         // Emoji keyboard option

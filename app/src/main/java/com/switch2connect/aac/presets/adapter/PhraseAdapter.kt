@@ -43,13 +43,9 @@ class PhraseAdapter(
                         phraseClickAction?.invoke(gridItem.phraseId)
                     }
                     
-                    // Apply per-phrase style if available, otherwise clear bubble
-                    val style = gridItem.style
-                    if (style != null) {
-                        applyPhraseStyle(binding.root, style)
-                    } else {
-                        PhraseTextBubble.apply(binding.root, null)
-                    }
+                    // Apply per-phrase style if available, otherwise use defaults
+                    val style = gridItem.style ?: PhraseStyle.DEFAULT
+                    applyPhraseStyle(binding.root, style)
                 }
 
                 PhraseGridItem.AddPhrase -> {

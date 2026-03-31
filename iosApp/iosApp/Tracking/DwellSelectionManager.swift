@@ -19,6 +19,9 @@ class DwellSelectionManager: ObservableObject {
     /// Dwell progress for the hovered button (0.0 to 1.0)
     @Published var dwellProgress: Double = 0
 
+    /// Whether the current hover has already triggered an activation
+    @Published var hasActivatedCurrentDwell: Bool = false
+
     /// Fires when a button is activated by dwell or switch press
     @Published var activatedButtonId: String?
 
@@ -159,6 +162,7 @@ class DwellSelectionManager: ObservableObject {
         hoveredButtonId = buttonId
         dwellStartTime = now
         dwellProgress = 0
+        hasActivatedCurrentDwell = false
         activatedButtonId = nil  // Clear previous activation
     }
 
@@ -167,7 +171,11 @@ class DwellSelectionManager: ObservableObject {
 
         let dwellTime = AppSettings.shared.dwellTime
         let elapsed = now - startTime
-        let progress = min(elapsed / dwellTime, 1.0)
+        
+        // If we've already activated and repeat is enabled, we use the repeat delay instead
+        let targetTime = hasActivatedCurrentDwell ? AppSettings.shared.repeatDwellDelay : dwellTime
+        let progress = min(elapsed / targetTime, 1.0)
+        
         dwellProgress = progress
 
         // Debug: log progress every 1s while dwelling (helps diagnose jitter vs hit-test issues)
@@ -177,8 +185,23 @@ class DwellSelectionManager: ObservableObject {
         }
 
         if progress >= 1.0 {
-            // Dwell complete — activate!
-            activateCurrentButton()
+            if !hasActivatedCurrentDwell {
+                // First activation
+                hasActivatedCurrentDwell = true
+                activateCurrentButton()
+                
+                if AppSettings.shared.enableRepeatDwell {
+                    // Reset start time to now to start the repeat delay countdown
+                    dwellStartTime = now
+                    dwellProgress = 0
+                }
+            } else if AppSettings.shared.enableRepeatDwell {
+                // Repeat activation
+                activateCurrentButton()
+                // Reset start time to now to start the next repeat delay countdown
+                dwellStartTime = now
+                dwellProgress = 0
+            }
         }
     }
 
@@ -193,10 +216,9 @@ class DwellSelectionManager: ObservableObject {
         let generator = UIImpactFeedbackGenerator(style: .medium)
         generator.impactOccurred()
 
-        // Reset dwell state after activation
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-            self?.cancelDwell()
-        }
+        // We no longer cancel dwell here. This keeps the cursor "locked" on the button
+        // and prevents it from re-triggering (since hasActivatedCurrentDwell is now true).
+        // The dwell state will be cancelled naturally when the user looks away.
     }
 
     private func cancelDwell() {
@@ -205,6 +227,7 @@ class DwellSelectionManager: ObservableObject {
         hoveredButtonId = nil
         dwellStartTime = nil
         dwellProgress = 0
+        hasActivatedCurrentDwell = false
     }
 
     // MARK: - Reset
@@ -273,15 +296,14 @@ class DwellSelectionManager: ObservableObject {
 
         activatedButtonId = id
         lastActivationTime = now
+        
+        if id == hoveredButtonId {
+            hasActivatedCurrentDwell = true
+        }
 
         // Haptic feedback
         let generator = UIImpactFeedbackGenerator(style: .heavy)
         generator.impactOccurred()
-
-        // Reset dwell state
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-            self?.cancelDwell()
-        }
     }
 
     /// Instantly activate a specific button by ID (for direct mapping mode).
@@ -296,13 +318,13 @@ class DwellSelectionManager: ObservableObject {
 
         activatedButtonId = buttonId
         lastActivationTime = now
+        
+        if buttonId == hoveredButtonId {
+            hasActivatedCurrentDwell = true
+        }
 
         let generator = UIImpactFeedbackGenerator(style: .heavy)
         generator.impactOccurred()
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-            self?.cancelDwell()
-        }
     }
 
     /// Instantly activate the currently hovered button (for external callers).
@@ -313,13 +335,10 @@ class DwellSelectionManager: ObservableObject {
 
         activatedButtonId = buttonId
         lastActivationTime = now
+        hasActivatedCurrentDwell = true
 
         let generator = UIImpactFeedbackGenerator(style: .heavy)
         generator.impactOccurred()
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-            self?.cancelDwell()
-        }
     }
 
     /// Get the ordered list of registered button IDs (for scanning mode).

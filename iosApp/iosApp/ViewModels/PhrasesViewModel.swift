@@ -143,9 +143,18 @@ class PhrasesViewModel: ObservableObject {
             guard let self = self else { return }
             
             if isPreset {
-                self.database.presetPhraseQueries.updatePresetPhraseSortOrder(
+                guard let presetPhrase = self.database.presetPhraseQueries
+                    .getPresetPhraseById(phrase_id: phraseId)
+                    .executeAsOneOrNull() else { return }
+
+                self.database.presetPhraseQueries.insertPresetPhrase(
+                    phrase_id: presetPhrase.phrase_id,
+                    parent_category_id: presetPhrase.parent_category_id,
+                    creation_date: presetPhrase.creation_date,
+                    last_spoken_date: presetPhrase.last_spoken_date,
                     sort_order: Int64(sortOrder),
-                    phrase_id: phraseId
+                    deleted: presetPhrase.deleted,
+                    style: presetPhrase.style
                 )
             } else {
                 self.database.phraseQueries.updatePhraseSortOrder(
@@ -156,90 +165,35 @@ class PhrasesViewModel: ObservableObject {
         }
     }
     
-    /// Get localized phrase text
+    /// Get localized phrase text (natural, conversational)
     private func getPhraseText(for phraseId: String) -> String {
-        // Map of phrase IDs to text (from Android strings.xml)
+        // Map of phrase IDs to text
         let phraseTexts: [String: String] = [
-            // General
-            "preset_please": "Please",
-            "preset_thank_you": "Thank you",
-            "preset_yes": "Yes",
-            "preset_no": "No",
-            "preset_maybe": "Maybe",
-            "preset_please_wait": "Please wait",
-            "preset_i_dont_know": "I don't know",
-            "preset_i_didnt_mean_say_that": "I didn't mean to say that",
-            "preset_be_patient": "Please be patient",
-            // Basic Needs
-            "preset_need_restroom": "I need to go to the restroom",
-            "preset_im_thirsty": "I am thirsty",
-            "preset_im_hungry": "I am hungry",
-            "preset_im_cold": "I am cold",
-            "preset_im_hot": "I am hot",
-            "preset_im_tired": "I am tired",
-            "preset_im_fine": "I am fine",
-            "preset_im_good": "I am good",
-            "preset_im_uncomfortable": "I am uncomfortable",
-            "preset_im_in_pain": "I am in pain",
-            "preset_im_finished": "I am finished",
-            "preset_want_lie_down": "I want to lie down",
-            "preset_want_sit_up": "I want to sit up",
-            // Personal Care
-            "preset_need_medication": "I need my medication",
-            "preset_need_bath": "I need a bath",
-            "preset_need_shower": "I need a shower",
-            "preset_need_wash_face": "I need to wash my face",
-            "preset_want_brush_hair": "I need to brush my hair",
-            "preset_fix_pillow": "Please fix my pillow",
-            "preset_need_spit": "I need to spit",
-            "preset_trouble_breathing": "I am having trouble breathing",
-            "preset_need_jacket": "I need a jacket",
-            // Conversation
-            "preset_hello": "Hello",
-            "preset_good_morning": "Good morning",
-            "preset_good_evening": "Good evening",
-            "preset_pleased_to_meet_you": "Pleased to meet you",
-            "preset_how_is_day": "How is your day?",
-            "preset_how_are_you": "How are you?",
-            "preset_how_is_it_going": "How's it going?",
-            "preset_how_was_your_weekend": "How was your weekend?",
-            "preset_goodbye": "Goodbye",
-            "preset_okay": "Okay",
-            "preset_bad": "Bad",
-            "preset_good": "Good",
-            "preset_that_makes_sense": "That makes sense",
-            "preset_i_like_it": "I like it",
-            "preset_please_stop": "Please stop",
-            "preset_i_do_not_agree": "I do not agree",
-            "preset_please_repeat": "Please repeat what you said",
-            // Environment
-            "preset_turn_on_lights": "Please turn the lights on",
-            "preset_turn_off_lights": "Please turn the lights off",
-            "preset_no_visitors": "No visitors please",
-            "preset_like_visitors": "I would like visitors",
-            "preset_be_quiet": "Please be quiet",
-            "preset_like_to_talk": "I would like to talk",
-            "preset_tv_on": "Please turn the TV on",
-            "preset_tv_off": "Please turn the TV off",
-            "preset_volume_up": "Please turn the volume up",
-            "preset_volume_down": "Please turn the volume down",
-            "preset_open_blinds": "Please open the blinds",
-            "preset_close_blinds": "Please close the blinds",
-            "preset_open_window": "Please open the window",
-            "preset_close_window": "Please close the window",
-            // User Keypad
-            "category_123_0": "0",
-            "category_123_1": "1",
-            "category_123_2": "2",
-            "category_123_3": "3",
-            "category_123_4": "4",
-            "category_123_5": "5",
-            "category_123_6": "6",
-            "category_123_7": "7",
-            "category_123_8": "8",
-            "category_123_9": "9",
-            "category_123_yes": "Yes",
-            "category_123_no": "No"
+            // Daily Activities
+            "preset_need_help": "I need help",
+            "preset_all_done": "I'm all done",
+            "preset_want_more": "I want more",
+            "preset_take_break": "I need a break",
+            // Food & Drinks
+            "preset_eat_food": "I want to eat",
+            "preset_drink_water": "I want a drink",
+            "preset_more_please": "More please",
+            "preset_no_more": "No more",
+            // How I Feel
+            "preset_it_hurts": "It hurts",
+            "preset_feel_good": "I feel good",
+            "preset_i_am_hot": "I'm hot",
+            "preset_i_am_cold": "I'm cold",
+            // Fun & Games
+            "preset_go_now": "Let's go",
+            "preset_stop_now": "Stop",
+            "preset_my_turn": "My turn",
+            "preset_your_turn": "Your turn",
+            // Move Me
+            "preset_move_me": "Move me",
+            "preset_stay_here": "Stay here",
+            "preset_sit_up": "Sit me up",
+            "preset_lay_back": "Lay me back"
         ]
         
         return phraseTexts[phraseId] ?? phraseId

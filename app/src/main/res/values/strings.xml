@@ -219,6 +219,8 @@ By using this app, you acknowledge that:
     <string name="emoji_keyboard">Emoji keyboard</string>
     <string name="emoji_hint">Tap to type with emojis</string>
     <string name="use_emoji">Use Emoji</string>
+    <string name="image_tool">Image Tool</string>
+    <string name="open_image_tool">Open Image Tool</string>
 
     <!-- Eye Gaze Calibration -->
     <string name="calibrate_eye_gaze">Calibrate Eye Gaze</string>

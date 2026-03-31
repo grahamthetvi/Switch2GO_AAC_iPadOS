@@ -15,10 +15,10 @@ object PhraseTextBubble {
      */
     fun apply(textView: VocablePhraseButton, style: PhraseStyle?) {
         // Apply text outline (bubble letters)
-        if (style?.borderColor == null || style.effectiveBorderWidth() <= 0f) {
+        if (style == null || style.effectiveBorderWidth() <= 0f) {
             textView.setTextOutline(null, null)
         } else {
-            textView.setTextOutline(style.borderColor, style.effectiveBorderWidth())
+            textView.setTextOutline(style.effectiveBorderColor(), style.effectiveBorderWidth())
         }
         
         // Apply image

@@ -64,6 +64,8 @@ struct AppBorderColorView: View {
             Spacer()
         }
         .padding()
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Border Color")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -78,6 +80,8 @@ struct AppBorderColorView: View {
                 }
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
 
     private func isSelected(_ color: Color) -> Bool {

@@ -102,16 +102,19 @@ struct CategoriesView: View {
     }
     
     private func categoryColor(for category: CategoryDisplayModel) -> Color {
-        // Use preset colors for preset categories
+        // Use custom color if set
+        if let hex = category.colorHex {
+            return Color(hex: hex)
+        }
+        // Default preset colors (vibrant, not grey)
         switch category.id {
-        case "preset_general": return Color(hex: 0xFFE53935)
-        case "preset_basic_needs": return Color(hex: 0xFF1E88E5)
-        case "preset_personal_care": return Color(hex: 0xFF43A047)
-        case "preset_conversation": return Color(hex: 0xFFFB8C00)
-        case "preset_environment": return Color(hex: 0xFF8E24AA)
-        case "preset_user_keypad": return Color(hex: 0xFF00ACC1)
+        case "preset_routine_activity": return Color(hex: 0xFFE53935)
+        case "preset_food_drink": return Color(hex: 0xFF1E88E5)
+        case "preset_comfort_state": return Color(hex: 0xFF43A047)
+        case "preset_play_leisure": return Color(hex: 0xFFFB8C00)
+        case "preset_positioning": return Color(hex: 0xFF8E24AA)
         case "preset_recents": return Color(hex: 0xFFF06292)
-        default: return Color.gray
+        default: return Color(hex: 0xFF00ACC1)  // Teal - no more grey for custom categories
         }
     }
 }
@@ -145,14 +148,18 @@ struct CategoryButton: View {
     }
     
     private var iconName: String {
+        // Use custom symbol if set
+        if let symbol = category.symbolName, !symbol.isEmpty {
+            return symbol
+        }
+        // Default preset symbols (intuitive, recognizable)
         switch category.id {
-        case "preset_general": return "star.fill"
-        case "preset_basic_needs": return "heart.fill"
-        case "preset_personal_care": return "person.fill"
-        case "preset_conversation": return "bubble.left.and.bubble.right.fill"
-        case "preset_environment": return "house.fill"
-        case "preset_user_keypad": return "textformat.123"
-        case "preset_recents": return "clock.fill"
+        case "preset_routine_activity": return "checklist"
+        case "preset_food_drink": return "fork.knife"
+        case "preset_comfort_state": return "heart.fill"
+        case "preset_play_leisure": return "gamecontroller.fill"
+        case "preset_positioning": return "figure.stand"
+        case "preset_recents": return "clock.arrow.circlepath"
         default: return "folder.fill"
         }
     }

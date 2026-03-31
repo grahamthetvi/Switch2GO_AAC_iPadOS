@@ -27,8 +27,24 @@ class DatabaseManager: ObservableObject {
     private func initializePresetsIfNeeded() {
         let presetCount = database.presetCategoryQueries.getPresetCategoryCount().executeAsOne()
         
-        if presetCount == 0 {
-            DebugLog.info("First launch detected, initializing preset data...", tag: "DatabaseManager")
+        // Check if we have the old categories. If so, we need to migrate to the new ones.
+        let hasOldCategories = database.presetCategoryQueries.getPresetCategoryById(category_id: "preset_general").executeAsOneOrNull() != nil
+        
+        if presetCount == 0 || hasOldCategories {
+            if hasOldCategories {
+                DebugLog.info("Old preset data detected, clearing and re-initializing...", tag: "DatabaseManager")
+                // Clear old presets
+                let oldCategories = database.presetCategoryQueries.getAllPresetCategories().executeAsList()
+                for cat in oldCategories {
+                    database.presetCategoryQueries.updatePresetCategoryDeleted(deleted: 1, category_id: cat.category_id)
+                }
+                let oldPhrases = database.presetPhraseQueries.getAllPresetPhrases().executeAsList()
+                for phrase in oldPhrases {
+                    database.presetPhraseQueries.updatePresetPhraseDeleted(deleted: 1, phrase_id: phrase.phrase_id)
+                }
+            } else {
+                DebugLog.info("First launch detected, initializing preset data...", tag: "DatabaseManager")
+            }
             initializePresetData()
         } else {
             DebugLog.info("Preset data already exists (\(presetCount) categories)", tag: "DatabaseManager")
@@ -45,7 +61,9 @@ class DatabaseManager: ObservableObject {
                 category_id: category.id,
                 hidden: 0,
                 sort_order: Int64(category.initialSortOrder),
-                deleted: 0
+                deleted: 0,
+                color_hex: nil,
+                symbol_name: nil
             )
             DebugLog.debug("Inserted preset category: \(category.id)", tag: "DatabaseManager")
         }

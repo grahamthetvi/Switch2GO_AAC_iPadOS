@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Privacy Policy view that loads content from the local bundled text file
 struct PrivacyPolicyView: View {
+    @StateObject private var settings = AppSettings.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
     @State private var localPolicyText = ""
@@ -17,6 +18,8 @@ struct PrivacyPolicyView: View {
         .onAppear {
             loadLocalPolicy()
         }
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Privacy Policy")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -33,6 +36,8 @@ struct PrivacyPolicyView: View {
                 }
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
 
     private func loadLocalPolicy() {

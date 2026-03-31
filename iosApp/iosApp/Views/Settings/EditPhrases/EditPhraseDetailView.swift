@@ -5,6 +5,7 @@ import VocableShared
 struct EditPhraseDetailView: View {
     let phrase: PhraseDisplayModel
     
+    @StateObject private var settings = AppSettings.shared
     @State private var phraseText: String
     @State private var showingDeleteConfirmation = false
     @Environment(\.dismiss) private var dismiss
@@ -62,6 +63,9 @@ struct EditPhraseDetailView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Edit Phrase")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -81,6 +85,8 @@ struct EditPhraseDetailView: View {
         } message: {
             Text("This will permanently delete '\(phrase.text)'.")
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
     
     private func updatePhraseText(_ newText: String) {

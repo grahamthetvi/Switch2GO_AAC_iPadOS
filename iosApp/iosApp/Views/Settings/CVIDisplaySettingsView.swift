@@ -93,6 +93,9 @@ struct CVIDisplaySettingsView: View {
             }
             .padding()
         }
+        .scrollContentBackground(.hidden)
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("CVI Display Settings")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -107,6 +110,8 @@ struct CVIDisplaySettingsView: View {
                 }
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .sheet(isPresented: $showingColorPicker) {
             if let position = selectedPosition {
                 ColorPickerView(

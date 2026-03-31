@@ -6,6 +6,7 @@ import VocableShared
 struct PhraseStyleEditorView: View {
     let phrase: PhraseDisplayModel
     
+    @StateObject private var settings = AppSettings.shared
     @State private var currentStyle: PhraseStyle
     @State private var showingBackgroundColorPicker = false
     @State private var showingTextColorPicker = false
@@ -52,6 +53,9 @@ struct PhraseStyleEditorView: View {
             }
             .padding(.vertical)
         }
+        .scrollContentBackground(.hidden)
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Edit Style")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -87,6 +91,8 @@ struct PhraseStyleEditorView: View {
         .sheet(isPresented: $showingImagePicker) {
             imagePickerSheet
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
     
     // MARK: - View Components
@@ -270,7 +276,7 @@ struct PhraseStyleEditorView: View {
         if let borderColor = currentStyle.borderColor {
             return Color(hex: borderColor.uint32Value)
         }
-        return .gray
+        return Color(hex: 0xFFE53935) // Default red matches DEFAULT_BORDER_COLOR
     }
     
     // MARK: - Handlers

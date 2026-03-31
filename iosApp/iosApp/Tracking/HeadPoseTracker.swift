@@ -45,10 +45,6 @@ class HeadPoseTracker {
     private var oldSmoothedX: Float?
     private var oldSmoothedY: Float?
 
-    // MARK: - Calibration state
-
-    private var calibrationSamples: [(yaw: Float, pitch: Float)] = []
-
     // MARK: - Result types
 
     struct HeadPose {
@@ -168,54 +164,11 @@ class HeadPoseTracker {
         return leftHeight < 0.015 && rightHeight < 0.015
     }
 
-    // MARK: - Neutral pose calibration
-
-    /// Begin collecting samples for neutral pose calibration.
-    /// User should look at the center of the screen.
-    func beginNeutralPoseCalibration() {
-        calibrationSamples.removeAll()
-    }
-
-    /// Add a calibration sample from the current landmarks.
-    func addCalibrationSample(landmarks: [NormalizedLandmark]) {
-        guard let pose = estimateHeadPose(landmarks: landmarks) else { return }
-        calibrationSamples.append((yaw: pose.yaw, pitch: pose.pitch))
-    }
-
-    /// Finish calibration by averaging collected samples.
-    /// Returns true if enough samples were collected (at least 10).
-    func finishNeutralPoseCalibration() -> Bool {
-        guard calibrationSamples.count >= 10 else { return false }
-
-        // Use median-trimmed mean for robustness against outliers
-        let sortedYaw = calibrationSamples.map(\.yaw).sorted()
-        let sortedPitch = calibrationSamples.map(\.pitch).sorted()
-
-        // Trim 20% from each end
-        let trimCount = max(1, calibrationSamples.count / 5)
-        let trimmedYaw = Array(sortedYaw[trimCount..<(sortedYaw.count - trimCount)])
-        let trimmedPitch = Array(sortedPitch[trimCount..<(sortedPitch.count - trimCount)])
-
-        guard !trimmedYaw.isEmpty, !trimmedPitch.isEmpty else { return false }
-
-        cameraOffsetYaw = trimmedYaw.reduce(0, +) / Float(trimmedYaw.count)
-        cameraOffsetPitch = trimmedPitch.reduce(0, +) / Float(trimmedPitch.count)
-
-        return true
-    }
-
     /// Quick recenter: set current head pose as the new neutral.
     func recenter(landmarks: [NormalizedLandmark]) {
         guard let pose = estimateHeadPose(landmarks: landmarks) else { return }
         cameraOffsetYaw = pose.yaw
         cameraOffsetPitch = pose.pitch
-    }
-
-    /// Reset calibration to defaults.
-    func resetCalibration() {
-        cameraOffsetYaw = 0
-        cameraOffsetPitch = 0
-        calibrationSamples.removeAll()
     }
 
     /// Apply a pre-set camera position offset for common device layouts.

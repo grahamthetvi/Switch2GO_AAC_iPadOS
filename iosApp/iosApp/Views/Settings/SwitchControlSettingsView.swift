@@ -77,6 +77,9 @@ struct SwitchControlSettingsView: View {
             .disabled(true)
             .opacity(0.7)
         }
+        .scrollContentBackground(.hidden)
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Switch Control")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -91,6 +94,8 @@ struct SwitchControlSettingsView: View {
                 Button("Done") { dismiss() }
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .onChange(of: settings.switchControlEnabled) { _, enabled in
             gazeManager.setSwitchControlEnabled(enabled)
         }

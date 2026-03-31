@@ -1,6 +1,7 @@
 import SwiftUI
 import Combine
 import VocableShared
+import AVFoundation
 
 /// Main content view that hosts the AAC interface and gaze tracking overlay.
 struct ContentView: View {
@@ -13,6 +14,7 @@ struct ContentView: View {
     @State private var showTrackingTip = false
     @State private var hasShownTrackingTip = false
     @State private var orientationBanner: OrientationBannerInfo?
+    @State private var currentOrientationText: String = "Unknown"
 
     var body: some View {
         ZStack {
@@ -42,6 +44,35 @@ struct ContentView: View {
                 OrientationModeBanner(info: banner)
                     .transition(.move(edge: .top).combined(with: .opacity))
                     .zIndex(10)
+            }
+
+            // Debug Camera Preview
+            if settings.showDebugCameraPreview && appState.isTrackingEnabled {
+                VStack {
+                    Spacer()
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            CameraPreviewView(session: gazeManager.cameraManager.captureSession)
+                                .frame(width: 160, height: 120)
+                                .cornerRadius(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.red, lineWidth: 2)
+                                )
+                            
+                            Text("Feed: \(Int(CameraManager.videoRotationAngleForCurrentOrientation()))° | UI: \(currentOrientationText)")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.black.opacity(0.7))
+                                .cornerRadius(4)
+                        }
+                        .padding()
+                        Spacer()
+                    }
+                }
+                .zIndex(20)
             }
 
             // Floating controls (top-right to avoid nav bar overlap)
@@ -100,14 +131,13 @@ struct ContentView: View {
                 })
         }
         .onChange(of: showSettings) { _, isOpen in
-            gazeManager.isSettingsOpen = isOpen
+            gazeManager.isModalOpen = isOpen || showOnboarding
             if isOpen {
-                // Pause tracking while the settings menu is open
                 gazeManager.stopTracking()
             } else {
-                // Resume tracking when settings is dismissed
-                updateTrackingForSelectionMode()
-                // Check if user requested to re-show onboarding
+                if !showOnboarding {
+                    updateTrackingForSelectionMode()
+                }
                 if !settings.hasSeenOnboarding {
                     showOnboarding = true
                 }
@@ -116,11 +146,27 @@ struct ContentView: View {
         .fullScreenCover(isPresented: $showOnboarding) {
             WelcomeView()
         }
+        .onChange(of: showOnboarding) { _, isOpen in
+            gazeManager.isModalOpen = isOpen || showSettings
+            if isOpen {
+                gazeManager.stopTracking()
+            } else {
+                if !showSettings {
+                    updateTrackingForSelectionMode()
+                }
+                // Show orientation banner after onboarding if not in the right orientation
+                let inTrackingOrientation = CameraManager.isTrackingSupportedOrientation
+                showOrientationBanner(trackingSupported: inTrackingOrientation)
+            }
+        }
         .onAppear {
             if !settings.hasSeenOnboarding {
                 showOnboarding = true
             }
             updateTrackingForSelectionMode()
+            
+            // Keep the screen on while the app is active
+            UIApplication.shared.isIdleTimerDisabled = true
         }
         .onChange(of: settings.selectionMode) { _, newMode in
             // Only restart tracking if settings sheet is closed.
@@ -140,9 +186,19 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: GazeTrackingManager.orientationTrackingChanged)) { notification in
             let trackingSupported = notification.object as? Bool ?? false
             showOrientationBanner(trackingSupported: trackingSupported)
+            updateOrientationText()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
+            updateOrientationText()
+        }
+        .onAppear {
+            updateOrientationText()
         }
         .onDisappear {
             gazeManager.stopTracking()
+            
+            // Allow the screen to turn off again when the app is no longer active
+            UIApplication.shared.isIdleTimerDisabled = false
         }
         // Re-sync button IDs for directMapping/scanning when buttons re-register
         .onReceive(
@@ -231,6 +287,30 @@ struct ContentView: View {
             switchMgr.stopScanningMode() // No auto-stepping in direct mapping
         } else {
             switchMgr.stopScanningMode()
+        }
+    }
+    
+    private func updateOrientationText() {
+        guard let scene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene }).first else {
+            currentOrientationText = "Unknown"
+            return
+        }
+        
+        let orientation: UIInterfaceOrientation
+        if #available(iOS 18.0, *) {
+            orientation = scene.effectiveGeometry.interfaceOrientation
+        } else {
+            orientation = scene.interfaceOrientation
+        }
+        
+        switch orientation {
+        case .portrait: currentOrientationText = "Portrait"
+        case .portraitUpsideDown: currentOrientationText = "Portrait Upside Down"
+        case .landscapeLeft: currentOrientationText = "Landscape Left"
+        case .landscapeRight: currentOrientationText = "Landscape Right"
+        case .unknown: currentOrientationText = "Unknown"
+        @unknown default: currentOrientationText = "Unknown"
         }
     }
 }
@@ -423,6 +503,32 @@ struct KeyPressInterceptorRepresentable: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: KeyPressInterceptorViewController, context: Context) {
         uiViewController.switchManager = switchManager
+    }
+}
+
+/// A SwiftUI view that displays the camera feed from an AVCaptureSession.
+struct CameraPreviewView: UIViewRepresentable {
+    let session: AVCaptureSession
+
+    func makeUIView(context: Context) -> PreviewView {
+        let view = PreviewView()
+        view.videoPreviewLayer.session = session
+        view.videoPreviewLayer.videoGravity = .resizeAspectFill
+        return view
+    }
+
+    func updateUIView(_ uiView: PreviewView, context: Context) {
+        uiView.videoPreviewLayer.session = session
+    }
+
+    class PreviewView: UIView {
+        override class var layerClass: AnyClass {
+            return AVCaptureVideoPreviewLayer.self
+        }
+        
+        var videoPreviewLayer: AVCaptureVideoPreviewLayer {
+            return layer as! AVCaptureVideoPreviewLayer
+        }
     }
 }
 

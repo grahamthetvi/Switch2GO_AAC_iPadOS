@@ -59,7 +59,6 @@ struct AdvancedEyeTrackingView: View {
                         .fontWeight(.bold)
                     
                     VStack(spacing: 8) {
-                        smoothingButton(mode: "none", label: "None")
                         smoothingButton(mode: "simple", label: "Simple")
                         smoothingButton(mode: "kalman", label: "Kalman Filter")
                         smoothingButton(mode: "adaptive", label: "Adaptive Kalman (Recommended)")
@@ -100,7 +99,7 @@ struct AdvancedEyeTrackingView: View {
                         amplificationButton(value: 2.0, label: "2.0x (High)")
                     }
 
-                    Text("Amplify gaze movement for users with limited range")
+                    Text("Amplify gaze movement for users with limited range. Eye gaze mode only.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.horizontal)
@@ -158,7 +157,7 @@ struct AdvancedEyeTrackingView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Auto‑Recenter When Centered")
                                 .font(.headline)
-                            Text("Recenter after looking straight ahead")
+                            Text("Recenter after looking straight ahead. Eye gaze mode only.")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -278,6 +277,8 @@ struct AdvancedEyeTrackingView: View {
                 }
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
     
     private func trackingModeButton(mode: String, label: String) -> some View {
@@ -376,11 +377,12 @@ struct AdvancedEyeTrackingView: View {
     }
 
     private func resetCalibration() {
-        // Clear calibration data from Storage
         let storage = StorageKt.createStorage()
         _ = storage.deleteCalibrationData(mode: "polynomial")
         _ = storage.deleteCalibrationData(mode: "affine")
         storage.saveBoolean(key: "hasCalibration", value: false)
+        
+        gazeManager.resetGazeCalibration()
         
         DebugLog.info("Calibration data cleared", tag: "AdvancedEyeTrackingView")
     }

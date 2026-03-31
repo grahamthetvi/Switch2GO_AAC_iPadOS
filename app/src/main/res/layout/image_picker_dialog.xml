@@ -47,6 +47,14 @@
                 android:text="@string/add_image" />
 
             <com.switch2connect.aac.customviews.ActionButton
+                android:id="@+id/image_option_image_tool"
+                style="@style/SettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/open_image_tool" />
+
+            <com.switch2connect.aac.customviews.ActionButton
                 android:id="@+id/image_option_emoji_keyboard"
                 style="@style/SettingsButton"
                 android:layout_width="match_parent"

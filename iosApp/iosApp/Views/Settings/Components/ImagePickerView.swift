@@ -3,14 +3,14 @@ import PhotosUI
 
 /// Image/emoji picker with 14 built-in symbols + custom options
 struct ImagePickerView: View {
+    @Environment(\.openURL) private var openURL
+
     let selectedImage: String?
     let onImageSelected: (String?) -> Void
     let onCancel: () -> Void
     
     @State private var showingPhotoPicker = false
     @State private var showingEmojiKeyboard = false
-    @State private var showingWikimediaSearch = false
-    @State private var showingComingSoonAlert = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     
     var body: some View {
@@ -44,11 +44,11 @@ struct ImagePickerView: View {
                         }
 
                         specialButton(
-                            title: "Search Wikimedia Images",
+                            title: "Open Image Tool",
                             icon: "globe",
                             color: .green
                         ) {
-                            showingComingSoonAlert = true
+                            openImageTool()
                         }
                     }
                     .padding(.horizontal)
@@ -75,11 +75,6 @@ struct ImagePickerView: View {
                         showingEmojiKeyboard = false
                     }
                 )
-            }
-            .alert("Coming Soon", isPresented: $showingComingSoonAlert) {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text("Wikimedia image search will be available in a future update. For now, you can use custom images from your photo library or choose an emoji.")
             }
             .photosPicker(isPresented: $showingPhotoPicker, selection: $selectedPhotoItem)
             .onChange(of: selectedPhotoItem) { _, newItem in
@@ -118,6 +113,11 @@ struct ImagePickerView: View {
             .background(Color(UIColor.secondarySystemBackground))
             .cornerRadius(12)
         }
+    }
+
+    private func openImageTool() {
+        guard let url = URL(string: "https://switch2goaac.org/index.html#image-tool") else { return }
+        openURL(url)
     }
     
     private func saveImageToDocuments(data: Data) -> URL? {

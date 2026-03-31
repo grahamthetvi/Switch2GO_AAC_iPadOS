@@ -3,7 +3,7 @@ import UIKit
 import Combine
 /// Manages camera capture for eye tracking.
 class CameraManager: NSObject, ObservableObject {
-    private let captureSession = AVCaptureSession()
+    let captureSession = AVCaptureSession()
     private let videoOutput = AVCaptureVideoDataOutput()
     private let sessionQueue = DispatchQueue(label: "com.switch2go.camera.session")
 
@@ -45,6 +45,14 @@ class CameraManager: NSObject, ObservableObject {
         super.init()
         checkPermission()
         registerOrientationObserver()
+        
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("DebugCameraRotationChanged"),
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.updateRotationAngle()
+        }
     }
 
     deinit {
@@ -70,13 +78,39 @@ class CameraManager: NSObject, ObservableObject {
     }
 
     /// Called on the main thread when the device orientation changes.
-    /// The camera stays locked to landscape-right (rotation 180°) — we never
-    /// change videoRotationAngle dynamically because MediaPipe's liveStream
-    /// mode doesn't handle frame dimension changes.  Instead, we just notify
-    /// consumers so they can stop/start tracking based on orientation.
+    /// Just notifies consumers so they can handle UI updates.
     private func handleOrientationChange() {
-        DispatchQueue.main.async { [weak self] in
-            self?.orientationDidChange?()
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+            
+            if let connection = self.videoOutput.connection(with: .video) {
+                let targetAngle = Self.videoRotationAngleForCurrentOrientation()
+                if connection.isVideoRotationAngleSupported(targetAngle) {
+                    self.captureSession.beginConfiguration()
+                    connection.videoRotationAngle = targetAngle
+                    self.captureSession.commitConfiguration()
+                }
+            }
+            
+            DispatchQueue.main.async {
+                self.orientationDidChange?()
+            }
+        }
+    }
+    
+    /// Update the camera rotation angle manually (used for debugging)
+    func updateRotationAngle() {
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+            
+            if let connection = self.videoOutput.connection(with: .video) {
+                let targetAngle = Self.videoRotationAngleForCurrentOrientation()
+                if connection.isVideoRotationAngleSupported(targetAngle) {
+                    self.captureSession.beginConfiguration()
+                    connection.videoRotationAngle = targetAngle
+                    self.captureSession.commitConfiguration()
+                }
+            }
         }
     }
 
@@ -176,18 +210,14 @@ class CameraManager: NSObject, ObservableObject {
                 connection.isVideoMirrored = true
             }
 
-            // Lock rotation to 180° (landscape right — home button RIGHT, camera LEFT).
-            // Tracking is only supported in this orientation; we never change
-            // the angle dynamically to avoid corrupting MediaPipe's internal state.
-            //
-            // Why 180°? The front camera sensor's native orientation is landscape-left.
-            // When the device is in landscape-right (home button right), the sensor
-            // image is 180° rotated from what the user sees. Rotation 180° corrects this.
-            if connection.isVideoRotationAngleSupported(180) {
-                connection.videoRotationAngle = 180
+            // Lock rotation based on device type and current orientation
+            let targetAngle = Self.videoRotationAngleForCurrentOrientation()
+            
+            if connection.isVideoRotationAngleSupported(targetAngle) {
+                connection.videoRotationAngle = targetAngle
             }
 
-            // After AVFoundation applies rotation (180°) and mirroring, the pixel
+            // After AVFoundation applies rotation and mirroring, the pixel
             // buffer contains an upright, horizontally-mirrored image — the same
             // as a "selfie" view.  Tell MediaPipe it's mirrored so landmarks match.
             currentImageOrientation = .upMirrored
@@ -207,44 +237,49 @@ class CameraManager: NSObject, ObservableObject {
             .compactMap({ $0 as? UIWindowScene }).first else {
             return false
         }
+
         let orientation: UIInterfaceOrientation
-        if #available(iOS 26.0, *) {
+        if #available(iOS 18.0, *) {
             orientation = scene.effectiveGeometry.interfaceOrientation
         } else {
             orientation = scene.interfaceOrientation
         }
-        return orientation == .landscapeRight
+
+        // Explicitly disable tracking in portrait upside-down.
+        return orientation != .portraitUpsideDown
     }
 
     /// Determine the correct video rotation angle for the current device orientation.
     /// Returns degrees to rotate the camera output so frames are upright for face detection.
     static func videoRotationAngleForCurrentOrientation() -> CGFloat {
-        // Get the current interface orientation from the active window scene.
+        let debugRotation = AppSettings.shared.debugCameraRotation
+        if debugRotation >= 0 {
+            return CGFloat(debugRotation)
+        }
+        
         guard let scene = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene }).first else {
-            return 0  // Default: landscape (natural sensor orientation)
+            return 180 // Default to Landscape Right
         }
 
-        // Use effectiveGeometry on iOS 26+ if available, otherwise fall back
         let orientation: UIInterfaceOrientation
-        if #available(iOS 26.0, *) {
-            // effectiveGeometry.interfaceOrientation is the non-deprecated replacement
+        if #available(iOS 18.0, *) {
             orientation = scene.effectiveGeometry.interfaceOrientation
         } else {
             orientation = scene.interfaceOrientation
         }
 
         switch orientation {
-        case .portrait:
-            return 90
-        case .portraitUpsideDown:
-            return 270
         case .landscapeLeft:
             return 0
+        case .portrait:
+            return 90
         case .landscapeRight:
             return 180
+        case .portraitUpsideDown:
+            return 270
         default:
-            return 0  // Landscape default
+            return 180
         }
     }
 

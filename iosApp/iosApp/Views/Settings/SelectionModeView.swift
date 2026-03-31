@@ -101,6 +101,9 @@ struct SelectionModeView: View {
             }
             .padding()
         }
+        .scrollContentBackground(.hidden)
+        .background(settings.appBorderColor)
+        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Selection Mode")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -117,6 +120,8 @@ struct SelectionModeView: View {
                 }
             }
         }
+        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
     }
 
     private var currentModeLabel: String {
