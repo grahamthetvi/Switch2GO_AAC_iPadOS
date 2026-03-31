@@ -81,6 +81,10 @@ class GazeTrackingManager: ObservableObject {
     /// Prevents orientation change from re-enabling tracking while a modal is presented.
     var isModalOpen: Bool = false
 
+    /// Bumped on every `stopTracking()` and on each `startTracking()` attempt so async gaze
+    /// completions cannot resurrect `isTracking` after the camera has stopped.
+    private var trackingEpoch: UInt64 = 0
+
     // Reliability improvements
     private var trackingStartTime: TimeInterval = 0
     private let warmupDuration: TimeInterval = 1.5
@@ -131,12 +135,17 @@ class GazeTrackingManager: ObservableObject {
     }
     
     func startTracking() {
-        // Set isTracking immediately to prevent re-entrant calls from
-        // orientation change notifications that fire during setup.
+        // Recover from stale state: async callbacks can leave isTracking true after the camera stopped.
+        if isTracking && !cameraManager.captureSession.isRunning {
+            DebugLog.warn("Recovering inconsistent tracking state (isTracking=true, camera not running)", tag: "Tracking")
+            stopTracking()
+        }
         guard !isTracking else {
             DebugLog.debug("startTracking() skipped — already tracking", tag: "Tracking")
             return
         }
+
+        trackingEpoch += 1
         isTracking = true
 
         let settings = AppSettings.shared
@@ -181,6 +190,7 @@ class GazeTrackingManager: ObservableObject {
         let initialized = self.detector!.initialize(useGpu: settings.useGPU)
         if !initialized {
             DebugLog.error("Face landmark service failed to initialize", tag: "Tracking")
+            trackingEpoch += 1
             isTracking = false
             return
         }
@@ -221,6 +231,7 @@ class GazeTrackingManager: ObservableObject {
     }
     
     func stopTracking() {
+        trackingEpoch += 1
         let wasTracking = isTracking
         isTracking = false
         if wasTracking {
@@ -259,6 +270,7 @@ class GazeTrackingManager: ObservableObject {
     private func updateGazePosition(from landmarks: [NormalizedLandmark]?) {
         let settings = AppSettings.shared
         guard settings.selectionMode == "face" else { return }
+        guard isTracking, cameraManager.captureSession.isRunning else { return }
 
         let now = CACurrentMediaTime()
         let isWarmingUp = (now - trackingStartTime) < warmupDuration
@@ -510,6 +522,7 @@ class GazeTrackingManager: ObservableObject {
         }
         _isProcessingFrame = true
         lastProcessingStartTime = now
+        let frameEpoch = trackingEpoch
         processingLock.unlock()
 
         eyeFrameCount += 1
@@ -525,21 +538,21 @@ class GazeTrackingManager: ObservableObject {
             if let error = error {
                 self.eyeErrorCount += 1
                 self.logger.error(message: "Gaze processing failed", throwable: KotlinError(error: error))
-                self.handleNoGaze()
+                self.handleNoGaze(epoch: frameEpoch)
                 self.logEyeDiagnostics()
                 return
             }
 
             guard let result = result else {
                 self.eyeNullCount += 1
-                self.handleNoGaze()
+                self.handleNoGaze(epoch: frameEpoch)
                 self.logEyeDiagnostics()
                 return
             }
 
             self.eyeSuccessCount += 1
             self.logEyeDiagnostics()
-            self.handleGazeResult(result, gazeTracker: gazeTracker)
+            self.handleGazeResult(result, gazeTracker: gazeTracker, epoch: frameEpoch)
         }
     }
 
@@ -554,11 +567,13 @@ class GazeTrackingManager: ObservableObject {
         }
     }
 
-    private func handleNoGaze() {
+    private func handleNoGaze(epoch: UInt64) {
+        guard epoch == trackingEpoch else { return }
         if AppSettings.shared.enableTrackingDiagnostics {
             diagnosticsMissCount += 1
         }
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [epoch] in
+            guard epoch == self.trackingEpoch else { return }
             let now = CACurrentMediaTime()
             let isWarmingUp = (now - self.trackingStartTime) < self.warmupDuration
             
@@ -575,7 +590,8 @@ class GazeTrackingManager: ObservableObject {
 
     private var gazeResultLogCount = 0
 
-    private func handleGazeResult(_ result: GazeResult, gazeTracker: GazeTracker) {
+    private func handleGazeResult(_ result: GazeResult, gazeTracker: GazeTracker, epoch: UInt64) {
+        guard epoch == trackingEpoch else { return }
         gazeResultLogCount += 1
         if gazeResultLogCount <= 5 {
             DebugLog.info("Result #\(gazeResultLogCount): gazeX=\(String(format: "%.3f", result.gazeX)) gazeY=\(String(format: "%.3f", result.gazeY)) conf=\(String(format: "%.2f", result.confidence)) blink=\(result.leftBlink)/\(result.rightBlink)", tag: "EyeGaze")
@@ -583,6 +599,8 @@ class GazeTrackingManager: ObservableObject {
 
         let now = CACurrentMediaTime()
         let isWarmingUp = (now - trackingStartTime) < warmupDuration
+
+        guard epoch == trackingEpoch else { return }
 
         if now - lastSuccessfulDetectionTime > trackingLossResetThreshold {
             gazeTracker.reset()
@@ -658,7 +676,10 @@ class GazeTrackingManager: ObservableObject {
             finalPosition = clampedTarget
         }
 
-        DispatchQueue.main.async {
+        guard epoch == trackingEpoch else { return }
+
+        DispatchQueue.main.async { [epoch] in
+            guard epoch == self.trackingEpoch else { return }
             self.isTracking = true
             self.showTrackingError = false
             self.lastLandmarkTime = CACurrentMediaTime()
@@ -731,7 +752,7 @@ class GazeTrackingManager: ObservableObject {
             gazeOffsetX = 0
             gazeOffsetY = 0
             
-            if !isTracking {
+            if !isTracking || !cameraManager.captureSession.isRunning {
                 startTracking()
             }
         } else if !supported && isTracking {
