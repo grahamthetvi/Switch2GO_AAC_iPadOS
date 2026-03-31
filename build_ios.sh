@@ -56,6 +56,9 @@ echo "Building for architecture: $FRAMEWORK_TARGET"
 
 ./gradlew :shared:linkDebugFramework${FRAMEWORK_TARGET} --no-daemon
 
+echo "📦 Building release framework for archiving (iosArm64)..."
+./gradlew :shared:linkReleaseFrameworkIosArm64 --no-daemon
+
 if [ $? -eq 0 ]; then
     echo "✓ Shared framework built successfully"
 else
