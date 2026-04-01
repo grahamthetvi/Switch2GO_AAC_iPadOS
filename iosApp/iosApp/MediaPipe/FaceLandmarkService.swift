@@ -29,7 +29,7 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
     private var pendingRequest = false
     private var isDetecting = false
     private var detectionStartTime: TimeInterval = 0
-    private let detectionTimeout: TimeInterval = 2.0  // Max time to wait for MediaPipe callback
+    private let detectionTimeout: TimeInterval = 0.4  // Max time to wait for MediaPipe callback
     private weak var detector: PlatformFaceLandmarkDetector?
  
     override init() {
@@ -90,7 +90,7 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
             options.numFaces = 1
             options.minFaceDetectionConfidence = 0.5
             options.minFacePresenceConfidence = 0.5
-            options.minTrackingConfidence = 0.5
+            options.minTrackingConfidence = 0.4
             options.outputFaceBlendshapes = false
             options.outputFacialTransformationMatrixes = true
  
@@ -225,20 +225,29 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
         let useGpu = lastUseGpu
         DebugLog.info("Reinitializing for new frame dimensions (GPU: \(useGpu))...", tag: "MediaPipe")
 
-        // Tear down existing landmarker and reset all processing state
-        close()
+        detectionQueue.async { [weak self] in
+            guard let self else { return }
+            
+            // Tear down existing landmarker and reset all processing state
+            self.close()
 
-        // Recreate the landmarker
-        let success = initialize(useGpu: useGpu)
-        DebugLog.log("Reinitialize: \(success ? "success" : "FAILED")", tag: "MediaPipe", level: success ? .info : .error)
+            // Recreate the landmarker
+            let success = self.initialize(useGpu: useGpu)
+            DebugLog.log("Reinitialize: \(success ? "success" : "FAILED")", tag: "MediaPipe", level: success ? .info : .error)
+        }
     }
 
     /// Release resources.
     func close() {
         faceLandmarker = nil
         isInitialized = false
-        currentLandmarks = nil
-        isTracking = false
+        
+        DispatchQueue.main.async {
+            self.currentLandmarks = nil
+            self.isTracking = false
+        }
+        
+
         pendingRequest = false
         isDetecting = false
         latestSampleBuffer = nil
