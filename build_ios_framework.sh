@@ -1,12 +1,34 @@
 #!/bin/bash
 set -e
 
-# Build iOS frameworks for both simulator and device
+# Build iOS frameworks for both simulator and device.
+# This script must work on Intel Macs, Apple Silicon, and non-Homebrew JDK layouts,
+# so JAVA_HOME is discovered rather than hardcoded.
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$SCRIPT_DIR"
+
 echo "Building VocableShared framework for iOS..."
 
-# Set JAVA_HOME
-export JAVA_HOME=/opt/homebrew/opt/openjdk@17
+if [ -z "$JAVA_HOME" ]; then
+    JAVA_HOME="$(/usr/libexec/java_home -v 17 2>/dev/null || true)"
+fi
+if [ -z "$JAVA_HOME" ]; then
+    JAVA_HOME="$(/usr/libexec/java_home 2>/dev/null || true)"
+fi
+if [ -z "$JAVA_HOME" ] && [ -d "/opt/homebrew/opt/openjdk@17" ]; then
+    JAVA_HOME="/opt/homebrew/opt/openjdk@17"
+fi
+if [ -z "$JAVA_HOME" ] && [ -d "/usr/local/opt/openjdk@17" ]; then
+    JAVA_HOME="/usr/local/opt/openjdk@17"
+fi
+if [ -z "$JAVA_HOME" ]; then
+    echo "Error: could not locate a Java 17 installation. Install with 'brew install openjdk@17' or set JAVA_HOME." >&2
+    exit 1
+fi
+export JAVA_HOME
 export PATH="$JAVA_HOME/bin:$PATH"
+echo "Using JAVA_HOME=$JAVA_HOME"
 
 # Build for device (arm64) - Debug
 echo "Building debug framework for device (arm64)..."

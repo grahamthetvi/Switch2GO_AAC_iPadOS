@@ -102,27 +102,49 @@ class FaceTrackingManager(
     }
 
     /**
-     * Returns false and displays an error message if Sceneform can not run, true if Sceneform can run
-     * on this device.
-     *
+     * Returns true if ARCore/Sceneform can run on this device, false otherwise.
      *
      * Sceneform requires Android N on the device as well as OpenGL 3.0 capabilities.
-     *
+     * If ARCore reports anything other than installed-and-supported (e.g. not installed,
+     * unsupported, or an unknown/error/timeout state) we degrade gracefully: head tracking
+     * is disabled and the user can still use the app through touch / eye gaze. This makes
+     * a future ARCore removal a contained, non-crashing change.
      *
      * Disables Permissions if the device is not supported.
      */
     private fun checkIsSupportedDevice(): Boolean {
-        if (ArCoreApk.getInstance().checkAvailability(activity) === ArCoreApk.Availability.UNSUPPORTED_DEVICE_NOT_CAPABLE) {
-            Timber.e("TAG", "Augmented Faces requires ARCore.")
-            Toast.makeText(activity, "Augmented Faces requires ARCore", Toast.LENGTH_LONG).show()
-            return false
+        val availability = ArCoreApk.getInstance().checkAvailability(activity)
+        when (availability) {
+            ArCoreApk.Availability.SUPPORTED_INSTALLED -> Unit // continue checks below
+            ArCoreApk.Availability.SUPPORTED_NOT_INSTALLED,
+            ArCoreApk.Availability.SUPPORTED_APK_TOO_OLD -> {
+                Timber.w("ARCore not installed or out of date: $availability")
+                Toast.makeText(
+                    activity,
+                    "Head tracking unavailable: please install or update ARCore",
+                    Toast.LENGTH_LONG
+                ).show()
+                return false
+            }
+            ArCoreApk.Availability.UNSUPPORTED_DEVICE_NOT_CAPABLE -> {
+                Timber.e("Augmented Faces requires ARCore.")
+                Toast.makeText(activity, "Augmented Faces requires ARCore", Toast.LENGTH_LONG).show()
+                return false
+            }
+            ArCoreApk.Availability.UNKNOWN_CHECKING,
+            ArCoreApk.Availability.UNKNOWN_ERROR,
+            ArCoreApk.Availability.UNKNOWN_TIMED_OUT -> {
+                // Async check incomplete or failed; do not crash. Caller will retry on next launch.
+                Timber.w("ARCore availability check inconclusive: $availability — disabling head tracking for this session")
+                return false
+            }
         }
         val openGlVersionString =
             (activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager)
                 .deviceConfigurationInfo
                 .glEsVersion
         if (java.lang.Double.parseDouble(openGlVersionString) < minOpenGlVersion) {
-            Timber.e("TAG", "Sceneform requires OpenGL ES 3.0 later")
+            Timber.e("Sceneform requires OpenGL ES 3.0 or later")
             Toast.makeText(activity, "Sceneform requires OpenGL ES 3.0 or later", Toast.LENGTH_LONG).show()
             return false
         }

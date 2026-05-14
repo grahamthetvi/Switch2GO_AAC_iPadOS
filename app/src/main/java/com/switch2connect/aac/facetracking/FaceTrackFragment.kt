@@ -8,6 +8,20 @@ import com.google.ar.core.Session
 import com.google.ar.sceneform.ux.ArFragment
 import java.util.EnumSet
 
+/**
+ * Head-tracking fragment. Built on Sceneform 1.17.1, which is unmaintained.
+ *
+ * Migration plan (do NOT undertake without a real device regression pass):
+ *  1. Replace [ArFragment] with a `GLSurfaceView`/`ArCoreApk.Session`-based implementation
+ *     (e.g. the community `sceneview-android` library) so we keep ARCore semantics, OR
+ *  2. Reuse the MediaPipe FaceLandmarker stack already in
+ *     [com.switch2connect.aac.eyegazetracking.MediaPipeIrisGazeTracker] for head pose,
+ *     removing the ARCore dependency entirely.
+ *
+ * Runtime availability is already gated in
+ * [com.switch2connect.aac.utils.FaceTrackingManager.checkIsSupportedDevice]; users on
+ * devices without ARCore support fall back to other input modes.
+ */
 class FaceTrackFragment : ArFragment() {
 
     private val viewModel: FaceTrackingViewModel by activityViewModels()

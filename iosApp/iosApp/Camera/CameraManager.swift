@@ -14,9 +14,13 @@ class CameraManager: NSObject, ObservableObject {
     /// Consumers can use this to update screen dimensions, etc.
     var orientationDidChange: (() -> Void)?
 
-    /// The current image orientation matching the device/camera configuration.
-    /// Updated whenever the camera connection's rotation angle changes.
-    private(set) var currentImageOrientation: UIImage.Orientation = .up
+    /// The current image orientation metadata for MediaPipe.
+    /// This tells MPImage how pixel rows/columns relate to an upright image given
+    /// the connection rotation + mirroring. It is NOT the device orientation.
+    private(set) var mediaPipeSampleBufferOrientation: UIImage.Orientation = .up
+
+    /// The current video rotation angle applied to the camera connection.
+    @Published private(set) var currentVideoRotationAngle: CGFloat = 0
 
     @Published var isRunning = false
     @Published var permissionGranted = false
@@ -39,12 +43,12 @@ class CameraManager: NSObject, ObservableObject {
         }
     }
 
-    private var orientationObserver: NSObjectProtocol?
+    private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
+    private var rotationObservation: NSKeyValueObservation?
 
     override init() {
         super.init()
         checkPermission()
-        registerOrientationObserver()
         
         NotificationCenter.default.addObserver(
             forName: NSNotification.Name("DebugCameraRotationChanged"),
@@ -56,35 +60,20 @@ class CameraManager: NSObject, ObservableObject {
     }
 
     deinit {
-        if let observer = orientationObserver {
-            NotificationCenter.default.removeObserver(observer)
-        }
+        rotationObservation?.invalidate()
     }
 
     // MARK: - Orientation Handling
 
-    /// Register for device orientation change notifications so we can update
-    /// the camera connection's video rotation angle dynamically.
-    private func registerOrientationObserver() {
-        UIDevice.current.beginGeneratingDeviceOrientationNotifications()
-
-        orientationObserver = NotificationCenter.default.addObserver(
-            forName: UIDevice.orientationDidChangeNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.handleOrientationChange()
-        }
-    }
-
-    /// Called on the main thread when the device orientation changes.
-    /// Just notifies consumers so they can handle UI updates.
-    private func handleOrientationChange() {
+    /// Handle changes to the rotation angle from the rotation coordinator.
+    private func handleRotationAngleChange(_ angle: CGFloat) {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
             
+            let debugRotation = AppSettings.shared.debugCameraRotation
+            let targetAngle = debugRotation >= 0 ? CGFloat(debugRotation) : angle
+            
             if let connection = self.videoOutput.connection(with: .video) {
-                let targetAngle = Self.videoRotationAngleForCurrentOrientation()
                 if connection.isVideoRotationAngleSupported(targetAngle) {
                     self.captureSession.beginConfiguration()
                     connection.videoRotationAngle = targetAngle
@@ -93,6 +82,7 @@ class CameraManager: NSObject, ObservableObject {
             }
             
             DispatchQueue.main.async {
+                self.currentVideoRotationAngle = targetAngle
                 self.orientationDidChange?()
             }
         }
@@ -100,17 +90,8 @@ class CameraManager: NSObject, ObservableObject {
     
     /// Update the camera rotation angle manually (used for debugging)
     func updateRotationAngle() {
-        sessionQueue.async { [weak self] in
-            guard let self = self else { return }
-            
-            if let connection = self.videoOutput.connection(with: .video) {
-                let targetAngle = Self.videoRotationAngleForCurrentOrientation()
-                if connection.isVideoRotationAngleSupported(targetAngle) {
-                    self.captureSession.beginConfiguration()
-                    connection.videoRotationAngle = targetAngle
-                    self.captureSession.commitConfiguration()
-                }
-            }
+        if let angle = rotationCoordinator?.videoRotationAngleForHorizonLevelCapture {
+            handleRotationAngleChange(angle)
         }
     }
 
@@ -201,6 +182,13 @@ class CameraManager: NSObject, ObservableObject {
             captureSession.addOutput(videoOutput)
         }
 
+        // Set up rotation coordinator for iOS 17+
+        let coordinator = AVCaptureDevice.RotationCoordinator(device: camera, previewLayer: nil)
+        self.rotationCoordinator = coordinator
+        self.rotationObservation = coordinator.observe(\.videoRotationAngleForHorizonLevelCapture, options: [.initial, .new]) { [weak self] coordinator, _ in
+            self?.handleRotationAngleChange(coordinator.videoRotationAngleForHorizonLevelCapture)
+        }
+
         // Configure connection for front camera with correct orientation
         if let connection = videoOutput.connection(with: .video) {
             // Mirror front camera so the image matches a natural "mirror" view.
@@ -211,16 +199,21 @@ class CameraManager: NSObject, ObservableObject {
             }
 
             // Lock rotation based on device type and current orientation
-            let targetAngle = Self.videoRotationAngleForCurrentOrientation()
+            let debugRotation = AppSettings.shared.debugCameraRotation
+            let targetAngle = debugRotation >= 0 ? CGFloat(debugRotation) : coordinator.videoRotationAngleForHorizonLevelCapture
             
             if connection.isVideoRotationAngleSupported(targetAngle) {
                 connection.videoRotationAngle = targetAngle
             }
 
+            DispatchQueue.main.async { [weak self] in
+                self?.currentVideoRotationAngle = targetAngle
+            }
+
             // After AVFoundation applies rotation and mirroring, the pixel
             // buffer contains an upright, horizontally-mirrored image — the same
             // as a "selfie" view.  Tell MediaPipe it's mirrored so landmarks match.
-            currentImageOrientation = .upMirrored
+            mediaPipeSampleBufferOrientation = .upMirrored
         }
 
         captureSession.commitConfiguration()
@@ -247,40 +240,6 @@ class CameraManager: NSObject, ObservableObject {
 
         // Explicitly disable tracking in portrait upside-down.
         return orientation != .portraitUpsideDown
-    }
-
-    /// Determine the correct video rotation angle for the current device orientation.
-    /// Returns degrees to rotate the camera output so frames are upright for face detection.
-    static func videoRotationAngleForCurrentOrientation() -> CGFloat {
-        let debugRotation = AppSettings.shared.debugCameraRotation
-        if debugRotation >= 0 {
-            return CGFloat(debugRotation)
-        }
-        
-        guard let scene = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene }).first else {
-            return 180 // Default to Landscape Right
-        }
-
-        let orientation: UIInterfaceOrientation
-        if #available(iOS 18.0, *) {
-            orientation = scene.effectiveGeometry.interfaceOrientation
-        } else {
-            orientation = scene.interfaceOrientation
-        }
-
-        switch orientation {
-        case .landscapeLeft:
-            return 0
-        case .portrait:
-            return 90
-        case .landscapeRight:
-            return 180
-        case .portraitUpsideDown:
-            return 270
-        default:
-            return 180
-        }
     }
 
     /// Start camera capture.

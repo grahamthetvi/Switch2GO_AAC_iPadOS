@@ -472,7 +472,7 @@ class GazeTrackingManager: ObservableObject {
         }
 
         // Use the camera manager's tracked orientation rather than hardcoding
-        let orientation = cameraManager.currentImageOrientation
+        let orientation = cameraManager.mediaPipeSampleBufferOrientation
         faceLandmarkService.updateLatestSampleBuffer(sampleBuffer, orientation: orientation)
 
         let settings = AppSettings.shared

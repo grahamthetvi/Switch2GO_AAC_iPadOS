@@ -60,7 +60,7 @@ struct ContentView: View {
                                         .stroke(Color.red, lineWidth: 2)
                                 )
                             
-                            Text("Feed: \(Int(CameraManager.videoRotationAngleForCurrentOrientation()))° | UI: \(currentOrientationText)")
+                            Text("Feed: \(Int(gazeManager.cameraManager.currentVideoRotationAngle))° | UI: \(currentOrientationText)")
                                 .font(.caption)
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 6)

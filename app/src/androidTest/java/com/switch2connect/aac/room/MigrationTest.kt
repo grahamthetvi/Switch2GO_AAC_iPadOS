@@ -43,6 +43,11 @@ class MigrationTest {
         FrameworkSQLiteOpenHelperFactory()
     )
 
+    // Prefs are injected explicitly into prefs-aware migrations to avoid relying on Koin
+    // resolution inside Migration.migrate(). VocableKoinTestRule ensures Koin is initialized
+    // for the tests that still construct VocableSharedPreferences() directly.
+    private val prefs by lazy { VocableSharedPreferences() }
+
     @Test
     @Throws(IOException::class)
     fun migrate2To3() {
@@ -61,7 +66,7 @@ class MigrationTest {
             close()
         }
 
-        helper.runMigrationsAndValidate(TEST_DB, 3, true, VocableDatabaseMigrations.MIGRATION_2_3)
+        helper.runMigrationsAndValidate(TEST_DB, 3, true, VocableDatabaseMigrations.migration2To3(prefs))
             .apply {
                 // Verify that V2 custom phrase was saved in SharedPreferences
                 val sharedPrefs = VocableSharedPreferences()
@@ -117,7 +122,7 @@ class MigrationTest {
             close()
         }
 
-        helper.runMigrationsAndValidate(TEST_DB, 4, true, VocableDatabaseMigrations.MIGRATION_3_4)
+        helper.runMigrationsAndValidate(TEST_DB, 4, true, VocableDatabaseMigrations.migration3To4(prefs))
             .apply {
                 // Verify that new schema is as expected
                 val categoryId = PresetCategories.MY_SAYINGS.id
@@ -168,7 +173,7 @@ class MigrationTest {
             close()
         }
 
-        helper.runMigrationsAndValidate(TEST_DB, 4, true, VocableDatabaseMigrations.MIGRATION_3_4)
+        helper.runMigrationsAndValidate(TEST_DB, 4, true, VocableDatabaseMigrations.migration3To4(prefs))
             .apply {
                 // Verify that new schema is as expected
                 val categoryId = PresetCategories.MY_SAYINGS.id

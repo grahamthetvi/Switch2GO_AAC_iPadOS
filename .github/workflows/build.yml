@@ -10,13 +10,13 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set Up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -25,17 +25,29 @@ jobs:
       - name: Run Unit Tests
         run: ./gradlew testDebug
 
+      # Android Lint runs against a committed baseline (app/lint-baseline.xml).
+      # See build-logic/src/main/java/android.kt for how blocking is gated.
+      - name: Android Lint
+        run: ./gradlew :app:lintDebug --stacktrace
+
       - name: Assemble
         env:
           VERSION_CODE: ${{ github.run_number }}
         run: ./gradlew assembleDebug assembleDebugAndroidTest
 
+      # Stage APKs into a flat directory layout (debug/, androidTest/debug/) so the
+      # downstream Firebase Test Lab workflow (device-tests.yml) finds them at the
+      # paths it expects (apk/debug/app-debug.apk, apk/androidTest/debug/...).
+      - name: Stage APK artifacts
+        run: |
+          mkdir -p apk-artifact/debug apk-artifact/androidTest/debug
+          cp app/build/outputs/apk/debug/app-debug.apk apk-artifact/debug/
+          cp app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk apk-artifact/androidTest/debug/
+
       - uses: actions/upload-artifact@v4
         with:
           name: apk
-          path: |
-            app/build/outputs/apk/debug/app-debug.apk
-            app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+          path: apk-artifact/
 
   pre-release-upload:
     needs: build

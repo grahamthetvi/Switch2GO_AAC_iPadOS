@@ -13,9 +13,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Adapter class that bridges the existing Android ViewModel with the new shared KMP GazeTracker.
+ * EXPERIMENTAL adapter bridging the Android app to the KMP gaze stack in `:shared`.
  *
- * This allows gradual migration:
+ * NOT the production path. The production Android tracker is [MediaPipeIrisGazeTracker]
+ * (wired into [EyeGazeTrackFragment]). This adapter exists so the shared
+ * [com.vocable.eyetracking.GazeTracker] (which iOS already uses) can be evaluated on
+ * Android without disrupting current behavior. Do not switch the production wiring to
+ * this without a calibration/dwell regression pass on real devices.
+ *
+ * Gradual migration:
  * - Existing code continues to work with MediaPipeIrisGazeTracker
  * - New code can use SharedGazeTrackerAdapter for KMP benefits
  * - Eventually, ViewModel can be refactored to use this exclusively
