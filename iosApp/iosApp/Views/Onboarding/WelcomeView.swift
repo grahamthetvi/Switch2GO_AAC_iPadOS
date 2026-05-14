@@ -201,13 +201,28 @@ struct WelcomeView: View {
                 }
                 .padding(.horizontal, 32)
 
-            Text("Our support website (under Settings) also lets you create custom phrase images: pick from Wikimedia or upload your own, then download a version with the background removed and a colored outline—great for making CVI-friendly symbols.")
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                Text("Our support website (under Settings) also lets you create custom phrase images: pick from Wikimedia or upload your own, then download a version with the background removed and a colored outline—great for making CVI-friendly symbols.")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
 
-            Spacer()
+                Spacer(minLength: 20)
+            }
+            .padding()
+        }
+    }
+
+    private func privacyQuote(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Rectangle()
+                .fill(Color.green.opacity(0.6))
+                .frame(width: 3)
+
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
