@@ -229,11 +229,15 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DC669A302F30403B00AED789 /* iosAppTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = iosAppTests;
 			sourceTree = "<group>";
 		};
 		DC669A3A2F30403B00AED789 /* iosAppUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = iosAppUITests;
 			sourceTree = "<group>";
 		};
@@ -1035,8 +1039,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = DC669A412F30403B00AED789 /* Build configuration list for PBXNativeTarget "iosApp" */;
 			buildPhases = (
-				D1A7A61132CA901A8F8F14C3 /* Build Kotlin Framework */,
 				4E3073355912CDB36EBFAB82 /* [CP] Check Pods Manifest.lock */,
+				D1A7A61132CA901A8F8F14C3 /* Build Kotlin Framework */,
 				DC669A1C2F30403900AED789 /* Sources */,
 				DC669A1D2F30403900AED789 /* Frameworks */,
 				DC669A1E2F30403900AED789 /* Resources */,
@@ -1215,6 +1219,7 @@
 		};
 		D1A7A61132CA901A8F8F14C3 /* Build Kotlin Framework */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -1509,7 +1514,6 @@
 				);
 				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = (
 					"$(inherited)",
-					"$(SRCROOT)/../shared/build/bin/iosX64/debugFramework",
 					"$(SRCROOT)/../shared/build/bin/iosSimulatorArm64/debugFramework",
 				);
 				"FRAMEWORK_SEARCH_PATHS[sdk=macosx*]" = (
@@ -1523,7 +1527,6 @@
 				);
 				"HEADER_SEARCH_PATHS[sdk=iphonesimulator*]" = (
 					"$(inherited)",
-					"$(SRCROOT)/../shared/build/bin/iosX64/debugFramework",
 					"$(SRCROOT)/../shared/build/bin/iosSimulatorArm64/debugFramework",
 				);
 				"HEADER_SEARCH_PATHS[sdk=macosx*]" = (
@@ -1580,7 +1583,6 @@
 				);
 				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = (
 					"$(inherited)",
-					"$(SRCROOT)/../shared/build/bin/iosX64/releaseFramework",
 					"$(SRCROOT)/../shared/build/bin/iosSimulatorArm64/releaseFramework",
 				);
 				"FRAMEWORK_SEARCH_PATHS[sdk=macosx*]" = (
@@ -1591,7 +1593,6 @@
 				"HEADER_SEARCH_PATHS[arch=*]" = "$(SRCROOT)/../shared/build/bin/iosArm64/releaseFramework";
 				"HEADER_SEARCH_PATHS[sdk=iphonesimulator*]" = (
 					"$(inherited)",
-					"$(SRCROOT)/../shared/build/bin/iosX64/releaseFramework",
 					"$(SRCROOT)/../shared/build/bin/iosSimulatorArm64/releaseFramework",
 				);
 				"HEADER_SEARCH_PATHS[sdk=macosx*]" = (
