@@ -79,7 +79,9 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        minSdk = 23
+        // Keep aligned with the app's minSdk in build-logic/src/main/java/android.kt
+        // so :app and :shared have the same minimum API surface.
+        minSdk = 24
     }
 
     compileOptions {

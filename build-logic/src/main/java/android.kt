@@ -16,6 +16,16 @@ fun Project.commonAndroid(extension: CommonExtension<*, *, *, *, *, *>) {
             sourceCompatibility = JavaVersion.VERSION_17
             targetCompatibility = JavaVersion.VERSION_17
         }
+        // Wire Android Lint into CI. The first CI run will auto-generate
+        // lint-baseline.xml; commit that file to make new lint regressions fail the
+        // build. Until the baseline is committed, abortOnError stays false so lint is
+        // an informational signal rather than a blocker.
+        lint {
+            warningsAsErrors = false
+            abortOnError = false
+            checkReleaseBuilds = false
+            baseline = file("lint-baseline.xml")
+        }
     }
 
     tasks.withType<KotlinJvmCompile>().configureEach {

@@ -100,6 +100,7 @@ jobs:
       - name: Run Unit Tests
         run: |
           cd iosApp
+          set -o pipefail
           xcodebuild test \
             -workspace iosApp.xcworkspace \
             -scheme iosApp \
@@ -108,7 +109,6 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty
-        continue-on-error: true
 
   # Job 3: Build for App Store (manual trigger only)
   build-ios-release:

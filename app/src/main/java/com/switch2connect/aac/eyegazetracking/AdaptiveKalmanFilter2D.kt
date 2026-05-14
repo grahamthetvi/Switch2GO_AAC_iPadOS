@@ -3,6 +3,14 @@ package com.switch2connect.aac.eyegazetracking
 import kotlin.math.sqrt
 
 /**
+ * PRODUCTION smoothing filter for the Android eye-gaze pipeline. Used by
+ * [MediaPipeIrisGazeTracker] and [EyeGazeTrackingViewModel].
+ *
+ * A near-duplicate exists at `com.vocable.eyetracking.smoothing.AdaptiveKalmanFilter2D`
+ * in `:shared` for the KMP gaze stack (used by [SharedGazeTrackerAdapter] /
+ * [com.vocable.eyetracking.GazeTracker]). Keep tuning constants in sync between the
+ * two until the production wiring is unified.
+ *
  * Adaptive 2D Kalman Filter for gaze smoothing with velocity-adaptive noise parameters.
  *
  * Unlike the standard Kalman filter with fixed noise values, this adaptive version

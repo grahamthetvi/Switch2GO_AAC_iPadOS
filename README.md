@@ -6,8 +6,17 @@
 ![license MIT](https://img.shields.io/badge/license-MIT-brightgreen.svg)
 
 > An accessible AAC application designed to support students with Cerebral Visual Impairment (CVI)
-> 
-> **Now available on both Android and iOS with 100% feature parity!**
+>
+> **Available on both Android and iOS.** The core AAC experience (categories, phrases, customization, eye gaze / head tracking, dwell selection) is at parity; some auxiliary features differ between platforms — see "Platform differences" below.
+
+### Platform differences
+
+| Area | Android | iOS |
+|---|---|---|
+| Persistence | Room (`com.switch2connect.aac.room.VocableDatabase`) | SQLDelight via `:shared` (`com.vocable.data.createDatabase`) |
+| Eye gaze | `MediaPipeIrisGazeTracker` (production) | KMP `GazeTracker` via `GazeTrackingManager.swift` |
+| Head tracking | ARCore + Sceneform (`FaceTrackFragment`) | MediaPipe `HeadPoseTracker.swift` |
+| USB HID switch (Arduino) | not implemented today | `SwitchControlManager.swift` (Game Controller framework) |
 
 ## About Switch2Go
 
@@ -51,7 +60,13 @@ Use an Arduino Micro (or Leonardo) as a USB HID keyboard. Wire physical switches
 
 **Setup:** Settings → Switch Control → Enable USB Switch Control → Mode: "Direct Switch-to-Phrase". See `ArduinoMicro/Switch2GO_USB_Switch/` for the sketch.
 
-## Getting Started (iOS)
+## Getting Started
+
+### Prerequisites (both platforms)
+
+- **JDK 17** (required by Kotlin 2.2 / Gradle / KMP).
+  - Recommended install: `brew install openjdk@17`
+  - The repo's iOS build scripts auto-discover Java via `/usr/libexec/java_home -v 17`; you can also `source setjava.sh` to set `JAVA_HOME` for the current shell.
 
 ### Large Files Not Included in This Repo
 
@@ -78,7 +93,26 @@ pod install
 open iosApp.xcworkspace
 ```
 
-Then build and run from Xcode. The `face_landmarker.task` ML model file (~3.6MB) is included in the repo under `iosApp/Resources/`.
+Then build and run from Xcode. The Xcode project includes a build phase that runs Gradle to produce the KMP `VocableShared.framework` automatically; if you want to build it ahead of time, run `./build_ios.sh` at the repo root.
+
+The `face_landmarker.task` ML model file (~3.6MB) is downloaded to `iosApp/iosApp/Resources/face_landmarker.task` on first build by `build_ios.sh` and by the iOS CI workflow.
+
+### Android Setup After Cloning
+
+```bash
+./gradlew :app:assembleDebug
+```
+
+Open the project in Android Studio (or any IDE with Gradle support); no extra steps beyond a working JDK 17 are required.
+
+## Architecture Notes
+
+- **DI**: Koin across both `:app` and `:shared` (no Hilt).
+- **Persistence**:
+  - Android: Room (`com.switch2connect.aac.room.VocableDatabase`) is canonical. Migrations live in `VocableDatabaseMigrations.kt`; the database does **not** use a blanket `fallbackToDestructiveMigration()`, so future schema bumps without a migration will throw rather than silently wipe user phrases.
+  - iOS: SQLDelight via the `:shared` KMP module (`com.vocable.data.createDatabase`). The Room and SQLDelight schemas are intentionally separate today; keep entity/column names consistent if you change either.
+- **Gaze tracking on Android**: production tracker is `MediaPipeIrisGazeTracker`. `SharedGazeTrackerAdapter` is an experimental bridge to the KMP `GazeTracker` and is not the production path.
+- **Head tracking on Android**: built on Sceneform 1.17.1 (unmaintained); `FaceTrackingManager.checkIsSupportedDevice()` degrades gracefully on devices without ARCore.
 
 ## Device Requirements
 

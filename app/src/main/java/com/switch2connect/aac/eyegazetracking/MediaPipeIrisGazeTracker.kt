@@ -12,7 +12,13 @@ import kotlin.math.abs
 import kotlin.math.sqrt
 
 /**
- * Eye gaze tracker using MediaPipe FaceLandmarker with Iris landmarks.
+ * PRODUCTION eye gaze tracker on Android. Wired into [EyeGazeTrackFragment] /
+ * [EyeGazeTrackingViewModel]. Uses the app-local [AdaptiveKalmanFilter2D] for smoothing.
+ *
+ * A parallel KMP-based gaze stack exists in `:shared` and is bridged via
+ * [SharedGazeTrackerAdapter]; that path is experimental and is NOT the production
+ * tracker on Android today. Behavior changes that need to ship to users should be
+ * made here.
  *
  * This implementation uses MediaPipe's iris landmarks (468-477) to calculate
  * gaze direction based on iris position relative to eye corners. Combined with

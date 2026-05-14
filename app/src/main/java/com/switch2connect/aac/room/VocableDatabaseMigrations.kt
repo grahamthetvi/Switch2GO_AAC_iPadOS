@@ -5,11 +5,31 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.switch2connect.aac.R
 import com.switch2connect.aac.presets.PresetCategories
-import com.switch2connect.aac.utils.VocableSharedPreferences
+import com.switch2connect.aac.utils.IVocableSharedPreferences
 import java.util.*
 
+/**
+ * Room migrations for [VocableDatabase].
+ *
+ * Migrations that need access to encrypted SharedPreferences (My Sayings, etc.) are exposed as
+ * factory functions that take an [IVocableSharedPreferences] explicitly. This avoids reaching
+ * into the Koin graph from inside `Migration.migrate(...)`, which was brittle in isolated
+ * migration tests and assumed a fully initialized Application context.
+ */
 @SuppressLint("Range")
 object VocableDatabaseMigrations {
+
+    /**
+     * Returns all migrations in version order, wired with the supplied [prefs].
+     * Callers should prefer this over assembling the array by hand.
+     */
+    fun all(prefs: IVocableSharedPreferences): Array<Migration> = arrayOf(
+        MIGRATION_1_2,
+        migration2To3(prefs),
+        migration3To4(prefs),
+        MIGRATION_4_5,
+        MIGRATION_5_6,
+    )
 
     val MIGRATION_1_2: Migration = object : Migration(1, 2) {
         override fun migrate(database: SupportSQLiteDatabase) {
@@ -18,7 +38,8 @@ object VocableDatabaseMigrations {
         }
     }
 
-    val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+    /** Builds the 2→3 migration with explicit prefs access for My Sayings. */
+    fun migration2To3(prefs: IVocableSharedPreferences): Migration = object : Migration(2, 3) {
         // Moving to new JSON schema
         override fun migrate(database: SupportSQLiteDatabase) {
             //Create Category-Phrase relation
@@ -47,8 +68,8 @@ object VocableDatabaseMigrations {
             }
             phraseCursor.close()
 
-            // Save My Sayings to Shared Prefs
-            VocableSharedPreferences().setMySayings(mySayings)
+            // Save My Sayings to Shared Prefs (injected, not resolved through Koin here).
+            prefs.setMySayings(mySayings)
 
             // Delete old tables and rename new ones to match old names
             database.execSQL("DROP TABLE Category")
@@ -59,7 +80,8 @@ object VocableDatabaseMigrations {
         }
     }
 
-    val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+    /** Builds the 3→4 migration with explicit prefs access for legacy My Sayings. */
+    fun migration3To4(prefs: IVocableSharedPreferences): Migration = object : Migration(3, 4) {
         // Moving to new JSON schema
         override fun migrate(database: SupportSQLiteDatabase) {
             // Create new Category, Phrase, & Cross Ref tables
@@ -91,8 +113,8 @@ object VocableDatabaseMigrations {
             }
 
             // If we didn't pick up any sayings from scheme 3, check if there were some in
-            // scheme 2
-            val nonLocalizedSayings = VocableSharedPreferences().getMySayings()
+            // scheme 2 (legacy KEY_MY_SAYINGS).
+            val nonLocalizedSayings = prefs.getMySayings()
             if (myLocalizedSayings.isEmpty() && nonLocalizedSayings.isNotEmpty()) {
                 nonLocalizedSayings.forEach {
                     val map = HashMap<String, String>()

@@ -96,7 +96,6 @@
 		1AB2E3DDE32D3CCD57CA523F /* ImagePickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ImagePickerView.swift; path = iosApp/Views/Settings/Components/ImagePickerView.swift; sourceTree = "<group>"; };
 		260908C7C80788094E37EFFF /* CategoriesDisplaySettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoriesDisplaySettingsView.swift; sourceTree = "<group>"; };
 		2DE5735DBAE593FDE41C7FB5 /* Pods_iosApp.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_iosApp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		30BC8E061F3555FBD91D67BE /* ColorPickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ColorPickerView.swift; sourceTree = "<group>"; };
 		33081441238DA1F2A748982E /* Pods_iosAppUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_iosAppUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		41574EED91B5D3FEAC7209D5 /* PhraseStyleEditorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PhraseStyleEditorView.swift; sourceTree = "<group>"; };
 		49B8B55947CA829740ECED5F /* MainSettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MainSettingsView.swift; sourceTree = "<group>"; };
@@ -310,7 +309,6 @@
 		D350BD48FF6FEC0074551D21 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				30BC8E061F3555FBD91D67BE /* ColorPickerView.swift */,
 				0B36D02D00EAB90D5E35D77E /* SymbolPickerView.swift */,
 				A4AF0370E837280C6085EC30 /* BorderWidthPickerView.swift */,
 				BFE7C269918DF0B28C2AD9ED /* EmojiKeyboardView.swift */,
@@ -1535,8 +1533,6 @@
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Switch2GO AAC";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Switch2Go uses Bluetooth to connect to external tactile switches for hands-free button activation alongside eye or head tracking.";
-				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Switch2Go uses Bluetooth to connect to external tactile switches for hands-free button activation.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Switch2Go needs camera access for eye gaze tracking to enable hands-free communication. Your camera feed is processed on-device and is never stored or transmitted.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Switch2Go may use the microphone for speech recognition input.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Switch2Go needs access to your photo library to allow custom images on phrase buttons for better visual communication.";
@@ -1605,8 +1601,6 @@
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Switch2GO AAC";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Switch2Go uses Bluetooth to connect to external tactile switches for hands-free button activation alongside eye or head tracking.";
-				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Switch2Go uses Bluetooth to connect to external tactile switches for hands-free button activation.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Switch2Go needs camera access for eye gaze tracking to enable hands-free communication. Your camera feed is processed on-device and is never stored or transmitted.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Switch2Go may use the microphone for speech recognition input.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Switch2Go needs access to your photo library to allow custom images on phrase buttons for better visual communication.";

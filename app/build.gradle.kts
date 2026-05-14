@@ -91,11 +91,8 @@ dependencies {
     implementation(libs.google.arcore)
     implementation(libs.google.sceneform)
 
-    // MediaPipe for face detection (used by L2CS-Net pipeline)
+    // MediaPipe for face detection / iris landmarks (powers the production gaze tracker).
     implementation(libs.mediapipe.tasks.vision)
-
-    // ONNX Runtime for L2CS-Net gaze estimation
-    implementation(libs.onnxruntime.android)
 
     // CameraX for MediaPipe camera input
     implementation(libs.androidx.camera.core)
@@ -110,10 +107,6 @@ dependencies {
     // View customization
     implementation(libs.inflationx.calligraphy)
     implementation(libs.inflationx.viewpump)
-
-    // Android Arch (Legacy)
-    implementation(libs.android.arch.lifecycle.extensions)
-    implementation(libs.android.arch.lifecycle.viewmodel)
 
     // Room
     implementation(libs.androidx.room.runtime)

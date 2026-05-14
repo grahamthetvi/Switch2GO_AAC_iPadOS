@@ -110,7 +110,7 @@ val vocableKoinModule = module {
     single { RoomPresetCategoriesRepository(get()) } bind PresetCategoriesRepository::class
     single { RoomStoredPhrasesRepository(get(), get()) } bind StoredPhrasesRepository::class
     single { RoomPresetPhrasesRepository(get(), get()) } bind PresetPhrasesRepository::class
-    single { VocableDatabase.createVocableDatabase(get()) }
+    single { VocableDatabase.createVocableDatabase(get(), get()) }
     single { get<VocableDatabase>().presetPhrasesDao() }
     single<VocableEnvironment> { VocableEnvironmentImpl() }
     viewModel { PresetsViewModel(get(), get(), get(named<PresetsViewModel>()), get()) }

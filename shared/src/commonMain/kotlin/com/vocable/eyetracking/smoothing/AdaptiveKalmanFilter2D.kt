@@ -3,6 +3,13 @@ package com.vocable.eyetracking.smoothing
 import kotlin.math.sqrt
 
 /**
+ * KMP / shared smoothing filter used by the cross-platform gaze stack
+ * (`com.vocable.eyetracking.GazeTracker`). On iOS this is the production smoother;
+ * on Android it is reached only through the experimental [SharedGazeTrackerAdapter],
+ * NOT the production [MediaPipeIrisGazeTracker] path. An Android-app-local copy lives
+ * at `com.switch2connect.aac.eyegazetracking.AdaptiveKalmanFilter2D` — keep tuning
+ * constants in sync between the two until the production wiring is unified.
+ *
  * Adaptive 2D Kalman Filter for gaze smoothing with velocity-adaptive noise parameters.
  *
  * Unlike the standard Kalman filter with fixed noise values, this adaptive version
