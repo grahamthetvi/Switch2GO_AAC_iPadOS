@@ -197,6 +197,8 @@ struct AdvancedEyeTrackingView: View {
                     .background(Color(UIColor.tertiarySystemBackground))
                     .cornerRadius(10)
 
+                    // camera position block was here, removed the Calibrate button that followed it
+
                     // Sensitivity sliders
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Horizontal Sensitivity: \(String(format: "%.1f", settings.headSensitivityX))")
@@ -259,9 +261,6 @@ struct AdvancedEyeTrackingView: View {
         }
         .scrollIndicators(.visible)
         .scrollBounceBehavior(.basedOnSize)
-        .scrollContentBackground(.hidden)
-        .background(settings.appBorderColor)
-        .environment(\.colorScheme, settings.preferredColorScheme)
         .navigationTitle("Advanced Eye Tracking")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -388,6 +387,8 @@ struct AdvancedEyeTrackingView: View {
         DebugLog.info("Calibration data cleared", tag: "AdvancedEyeTrackingView")
     }
 }
+
+// MARK: - Previews
 
 #Preview {
     NavigationStack {

@@ -33,7 +33,7 @@ struct PhraseStyleEditorView: View {
         _currentStyle = State(initialValue: PhraseStyle(
             backgroundColor: baseStyle.backgroundColor,
             textColor: baseStyle.textColor,
-            textSizeSp: nil,
+            textSizeSp: baseStyle.textSizeSp,
             isBold: baseStyle.isBold,
             borderColor: baseStyle.borderColor,
             borderWidthDp: baseStyle.borderWidthDp,
@@ -430,7 +430,7 @@ struct PhraseStyleEditorView: View {
             let styleToSave = PhraseStyle(
                 backgroundColor: currentStyle.backgroundColor,
                 textColor: currentStyle.textColor,
-                textSizeSp: nil,
+                textSizeSp: currentStyle.textSizeSp,
                 isBold: currentStyle.isBold,
                 borderColor: currentStyle.borderColor,
                 borderWidthDp: currentStyle.borderWidthDp,

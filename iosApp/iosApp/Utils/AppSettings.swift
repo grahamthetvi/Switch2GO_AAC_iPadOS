@@ -263,7 +263,7 @@ class AppSettings: ObservableObject {
         }
     }
 
-    /// Switch control mode: "direct" or "scanning"
+    /// Switch control mode: "direct", "directMapping", or "scanning"
     @Published var switchControlMode: String {
         didSet {
             defaults.set(switchControlMode, forKey: Keys.switchControlMode)
@@ -319,28 +319,28 @@ class AppSettings: ObservableObject {
         }
     }
 
-    /// HID usage code for switch 1 key (default: Space = 44)
+    /// HID usage code for switch 1 key (default: Key "1" = 30)
     @Published var switchKey1: Int {
         didSet {
             defaults.set(switchKey1, forKey: Keys.switchKey1)
         }
     }
 
-    /// HID usage code for switch 2 key (default: Right Arrow = 79)
+    /// HID usage code for switch 2 key (default: Key "2" = 31)
     @Published var switchKey2: Int {
         didSet {
             defaults.set(switchKey2, forKey: Keys.switchKey2)
         }
     }
 
-    /// HID usage code for switch 3 key (default: Left Arrow = 80)
+    /// HID usage code for switch 3 key (default: Key "3" = 32)
     @Published var switchKey3: Int {
         didSet {
             defaults.set(switchKey3, forKey: Keys.switchKey3)
         }
     }
 
-    /// HID usage code for switch 4 key (default: Escape = 41)
+    /// HID usage code for switch 4 key (default: Key "4" = 33)
     @Published var switchKey4: Int {
         didSet {
             defaults.set(switchKey4, forKey: Keys.switchKey4)

@@ -1,32 +1,19 @@
 import SwiftUI
-import WebKit
 
-/// Privacy Policy web view
+/// Privacy Policy view that loads content from the local bundled text file
 struct PrivacyPolicyView: View {
     @StateObject private var settings = AppSettings.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
-    @State private var showLocalPolicy = false
     @State private var localPolicyText = ""
     
     var body: some View {
-        Group {
-            if showLocalPolicy {
-                ScrollView {
-                    Text(localPolicyText)
-                        .font(.body)
-                        .foregroundColor(.primary)
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            } else {
-                WebView(
-                    url: URL(string: "https://switch2goaac.org/privacy.html")!,
-                    onFail: {
-                        showLocalPolicy = true
-                    }
-                )
-            }
+        ScrollView {
+            Text(localPolicyText)
+                .font(.body)
+                .foregroundColor(.primary)
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .onAppear {
             loadLocalPolicy()
@@ -60,43 +47,6 @@ struct PrivacyPolicyView: View {
             localPolicyText = text
         } else {
             localPolicyText = "Privacy policy is unavailable offline."
-        }
-    }
-}
-
-/// WebKit WebView wrapper for SwiftUI
-struct WebView: UIViewRepresentable {
-    let url: URL
-    let onFail: (() -> Void)?
-    
-    func makeUIView(context: Context) -> WKWebView {
-        let webView = WKWebView()
-        webView.navigationDelegate = context.coordinator
-        webView.load(URLRequest(url: url))
-        return webView
-    }
-    
-    func updateUIView(_ webView: WKWebView, context: Context) {
-        // No updates needed
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onFail: onFail)
-    }
-
-    final class Coordinator: NSObject, WKNavigationDelegate {
-        private let onFail: (() -> Void)?
-
-        init(onFail: (() -> Void)?) {
-            self.onFail = onFail
-        }
-
-        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-            onFail?()
-        }
-
-        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-            onFail?()
         }
     }
 }
