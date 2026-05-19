@@ -1,116 +1,94 @@
-import type { FaceLandmarkFrame } from './types'
-import type { WorkerOutMessage } from './worker/faceLandmarker.worker'
+import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision'
+import type { FaceLandmarkFrame, LandmarkPoint } from './types'
 
-const WASM_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/wasm'
+// Must match installed @mediapipe/tasks-vision version (see package-lock).
+const MEDIAPIPE_VERSION = '0.10.21'
+const WASM_BASE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}/wasm`
 const MODEL_URL = `${import.meta.env.BASE_URL}models/face_landmarker.task`
 
-/** Runs MediaPipe FaceLandmarker off the main thread. */
+/** MediaPipe FaceLandmarker on the main thread (WASM does not load in ESM workers). */
 export class FaceLandmarkerClient {
-  private worker: Worker | null = null
-  private ready = false
+  private landmarker: FaceLandmarker | null = null
+  private canvas = document.createElement('canvas')
+  private ctx = this.canvas.getContext('2d')
   private initPromise: Promise<void> | null = null
-  private nextFrameId = 0
-  private pending = new Map<
-    number,
-    { resolve: (frame: FaceLandmarkFrame) => void; reject: (err: Error) => void }
-  >()
 
   async init(useGPU: boolean): Promise<void> {
     if (this.initPromise) return this.initPromise
 
-    this.initPromise = new Promise<void>((resolve, reject) => {
-      this.disposeWorker()
-      this.worker = new Worker(new URL('./worker/faceLandmarker.worker.ts', import.meta.url), {
-        type: 'module',
-      })
-
-      const onMessage = (event: MessageEvent<WorkerOutMessage>) => {
-        const msg = event.data
-        if (msg.type === 'ready') {
-          this.ready = true
-          this.worker?.removeEventListener('message', onMessage)
-          resolve()
-        } else if (msg.type === 'error' && msg.frameId == null) {
-          this.worker?.removeEventListener('message', onMessage)
-          reject(new Error(msg.message))
-        }
+    this.initPromise = (async () => {
+      this.disposeLandmarker()
+      if (!this.ctx) {
+        throw new Error('Canvas 2D context unavailable')
       }
 
-      this.worker.addEventListener('message', onMessage)
-      this.worker.addEventListener('message', (event: MessageEvent<WorkerOutMessage>) => {
-        this.handleMessage(event.data)
+      const vision = await FilesetResolver.forVisionTasks(WASM_BASE)
+      this.landmarker = await FaceLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: MODEL_URL,
+          delegate: useGPU ? 'GPU' : 'CPU',
+        },
+        runningMode: 'IMAGE',
+        numFaces: 1,
+        outputFaceBlendshapes: false,
+        outputFacialTransformationMatrixes: true,
       })
+    })()
 
-      this.worker.postMessage({
-        type: 'init',
-        useGPU,
-        modelUrl: MODEL_URL,
-        wasmBase: WASM_BASE,
-      })
-    })
-
-    return this.initPromise
+    try {
+      await this.initPromise
+    } catch (e) {
+      this.initPromise = null
+      throw e
+    }
   }
 
   async detect(bitmap: ImageBitmap): Promise<FaceLandmarkFrame> {
-    if (!this.worker || !this.ready) {
+    if (!this.landmarker || !this.ctx) {
       bitmap.close()
-      throw new Error('FaceLandmarker worker not ready')
+      throw new Error('FaceLandmarker not ready')
     }
 
-    const frameId = this.nextFrameId++
-    return new Promise<FaceLandmarkFrame>((resolve, reject) => {
-      this.pending.set(frameId, { resolve, reject })
-      this.worker!.postMessage(
-        { type: 'detect', frameId, bitmap, timestamp: performance.now() },
-        [bitmap],
-      )
-    })
+    try {
+      this.canvas.width = bitmap.width
+      this.canvas.height = bitmap.height
+      this.ctx.drawImage(bitmap, 0, 0)
+
+      const result = this.landmarker.detect(this.canvas)
+      const face = result.faceLandmarks[0]
+      if (!face) {
+        return {
+          landmarks: [],
+          frameWidth: this.canvas.width,
+          frameHeight: this.canvas.height,
+        }
+      }
+
+      const landmarks: LandmarkPoint[] = face.map((lm) => ({
+        x: lm.x,
+        y: lm.y,
+        z: lm.z ?? 0,
+      }))
+
+      const matrix = result.facialTransformationMatrixes?.[0]?.data
+      return {
+        landmarks,
+        frameWidth: this.canvas.width,
+        frameHeight: this.canvas.height,
+        facialTransformationMatrix: matrix ? Array.from(matrix) : undefined,
+      }
+    } finally {
+      bitmap.close()
+    }
   }
 
   dispose(): void {
-    this.pending.forEach(({ reject }) => reject(new Error('Worker disposed')))
-    this.pending.clear()
-    if (this.worker) {
-      this.worker.postMessage({ type: 'dispose' })
-      this.worker.terminate()
-    }
-    this.worker = null
-    this.ready = false
+    this.disposeLandmarker()
     this.initPromise = null
   }
 
-  private disposeWorker(): void {
-    if (this.worker) {
-      this.worker.postMessage({ type: 'dispose' })
-      this.worker.terminate()
-    }
-    this.worker = null
-    this.ready = false
-  }
-
-  private handleMessage(msg: WorkerOutMessage): void {
-    if (msg.type === 'ready') return
-    if (msg.type === 'error') {
-      if (msg.frameId != null) {
-        const pending = this.pending.get(msg.frameId)
-        if (pending) {
-          this.pending.delete(msg.frameId)
-          pending.reject(new Error(msg.message))
-        }
-      }
-      return
-    }
-
-    const pending = this.pending.get(msg.frameId)
-    if (!pending) return
-    this.pending.delete(msg.frameId)
-
-    pending.resolve({
-      landmarks: msg.landmarks,
-      frameWidth: msg.frameWidth,
-      frameHeight: msg.frameHeight,
-      facialTransformationMatrix: msg.facialTransformationMatrix,
-    })
+  private disposeLandmarker(): void {
+    this.landmarker?.close()
+    this.landmarker = null
   }
 }
