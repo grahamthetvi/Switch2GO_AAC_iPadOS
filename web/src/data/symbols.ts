@@ -1,0 +1,48 @@
+/** Web category icons (stored in DB; shown as emoji on tiles). */
+export const CATEGORY_SYMBOLS: { id: string; label: string; emoji: string }[] = [
+  { id: 'folder', label: 'Folder', emoji: '📁' },
+  { id: 'star', label: 'Star', emoji: '⭐' },
+  { id: 'heart', label: 'Heart', emoji: '❤️' },
+  { id: 'book', label: 'Book', emoji: '📖' },
+  { id: 'house', label: 'Home', emoji: '🏠' },
+  { id: 'person', label: 'Person', emoji: '👤' },
+  { id: 'figure', label: 'Standing', emoji: '🧍' },
+  { id: 'walk', label: 'Walking', emoji: '🚶' },
+  { id: 'food', label: 'Food', emoji: '🍽️' },
+  { id: 'drink', label: 'Drink', emoji: '🥤' },
+  { id: 'car', label: 'Car', emoji: '🚗' },
+  { id: 'plane', label: 'Travel', emoji: '✈️' },
+  { id: 'play', label: 'Play', emoji: '🎮' },
+  { id: 'music', label: 'Music', emoji: '🎵' },
+  { id: 'paint', label: 'Art', emoji: '🎨' },
+  { id: 'checklist', label: 'Checklist', emoji: '✅' },
+  { id: 'clock', label: 'Clock', emoji: '🕐' },
+  { id: 'bell', label: 'Bell', emoji: '🔔' },
+  { id: 'mail', label: 'Mail', emoji: '✉️' },
+  { id: 'phone', label: 'Phone', emoji: '📞' },
+  { id: 'camera', label: 'Camera', emoji: '📷' },
+  { id: 'light', label: 'Light', emoji: '💡' },
+  { id: 'bolt', label: 'Energy', emoji: '⚡' },
+  { id: 'water', label: 'Water', emoji: '💧' },
+  { id: 'leaf', label: 'Nature', emoji: '🌿' },
+  { id: 'paw', label: 'Pet', emoji: '🐾' },
+  { id: 'fish', label: 'Fish', emoji: '🐟' },
+  { id: 'bird', label: 'Bird', emoji: '🐦' },
+  { id: 'thumbsup', label: 'Yes', emoji: '👍' },
+  { id: 'thumbsdown', label: 'No', emoji: '👎' },
+  { id: 'plus', label: 'Add', emoji: '➕' },
+  { id: 'minus', label: 'Remove', emoji: '➖' },
+  { id: 'question', label: 'Question', emoji: '❓' },
+  { id: 'alert', label: 'Alert', emoji: '⚠️' },
+  { id: 'refresh', label: 'Again', emoji: '🔄' },
+  { id: 'gear', label: 'Settings', emoji: '⚙️' },
+  { id: 'tools', label: 'Tools', emoji: '🔧' },
+  { id: 'medical', label: 'Medical', emoji: '➕' },
+  { id: 'bed', label: 'Rest', emoji: '🛏️' },
+  { id: 'move', label: 'Move', emoji: '↔️' },
+]
+
+export function symbolEmoji(symbolId: string | null | undefined): string {
+  if (!symbolId) return '📁'
+  return CATEGORY_SYMBOLS.find((s) => s.id === symbolId)?.emoji ?? '📁'
+}

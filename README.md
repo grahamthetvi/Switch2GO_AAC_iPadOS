@@ -2,12 +2,13 @@
 
 ![Platform Android](https://img.shields.io/badge/Platform-Android-blue.svg)
 ![Platform iOS](https://img.shields.io/badge/Platform-iOS-lightgrey.svg)
+![Platform Web](https://img.shields.io/badge/Platform-Web-green.svg)
 ![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-purple.svg)
 ![license MIT](https://img.shields.io/badge/license-MIT-brightgreen.svg)
 
 > An accessible AAC application designed to support students with Cerebral Visual Impairment (CVI)
 >
-> **Available on both Android and iOS.** The core AAC experience (categories, phrases, customization, eye gaze / head tracking, dwell selection) is at parity; some auxiliary features differ between platforms — see "Platform differences" below.
+> **Available on Android, iOS, and Web.** The core AAC experience (categories, phrases, customization, eye gaze / head tracking, dwell selection) is at parity across mobile; the web app is in [`web/`](web/) and deploys to GitHub Pages. Some auxiliary features differ between platforms — see "Platform differences" below.
 
 ### Platform differences
 
@@ -17,6 +18,8 @@
 | Eye gaze | `MediaPipeIrisGazeTracker` (production) | KMP `GazeTracker` via `GazeTrackingManager.swift` |
 | Head tracking | ARCore + Sceneform (`FaceTrackFragment`) | MediaPipe `HeadPoseTracker.swift` |
 | USB HID switch (Arduino) | not implemented today | `SwitchControlManager.swift` (Game Controller framework) |
+| Web | IndexedDB (Dexie) | SQLDelight via `:shared` |
+| Web input | Keyboard 1–4, touch, MediaPipe gaze/head | Same + USB HID (Arduino) on iOS |
 
 ## About Switch2Go
 
@@ -96,6 +99,20 @@ open iosApp.xcworkspace
 Then build and run from Xcode. The Xcode project includes a build phase that runs Gradle to produce the KMP `VocableShared.framework` automatically; if you want to build it ahead of time, run `./build_ios.sh` at the repo root.
 
 The `face_landmarker.task` ML model file (~3.6MB) is downloaded to `iosApp/iosApp/Resources/face_landmarker.task` on first build by `build_ios.sh` and by the iOS CI workflow.
+
+### Web (GitHub Pages)
+
+The browser app lives in [`web/`](web/). It mirrors the iOS AAC flow: preset categories/phrases, CVI layout (1–4 symbols per page), TTS, touch and keyboard switches (keys 1–4), dwell selection, and MediaPipe eye gaze / head tracking (no calibration step — ready to use like iOS).
+
+```bash
+cd web
+npm install
+npm run dev          # local dev at http://localhost:5173
+npm run build        # output in web/dist
+```
+
+Deployed URL (after enabling **GitHub Pages → GitHub Actions** in repo settings):  
+`https://grahamthetvi.github.io/Switch2GO_AAC_iPadOS/`
 
 ### Android Setup After Cloning
 

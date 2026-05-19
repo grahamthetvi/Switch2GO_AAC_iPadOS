@@ -1,0 +1,32 @@
+{
+  "categories": [
+    { "categoryId": "preset_routine_activity", "name": "Daily Activities", "sortOrder": 0, "defaultColor": "#FFE53935", "symbol": "checklist" },
+    { "categoryId": "preset_food_drink", "name": "Food & Drinks", "sortOrder": 1, "defaultColor": "#FF1E88E5", "symbol": "food" },
+    { "categoryId": "preset_comfort_state", "name": "How I Feel", "sortOrder": 2, "defaultColor": "#FF43A047", "symbol": "heart" },
+    { "categoryId": "preset_play_leisure", "name": "Fun & Games", "sortOrder": 3, "defaultColor": "#FFFB8C00", "symbol": "play" },
+    { "categoryId": "preset_positioning", "name": "Move Me", "sortOrder": 4, "defaultColor": "#FF8E24AA", "symbol": "move" },
+    { "categoryId": "preset_recents", "name": "Recently Said", "sortOrder": 5, "defaultColor": "#FF78909C", "symbol": "clock" }
+  ],
+  "phrases": [
+    { "phraseId": "preset_need_help", "parentCategoryId": "preset_routine_activity", "text": "I need help", "sortOrder": 0 },
+    { "phraseId": "preset_all_done", "parentCategoryId": "preset_routine_activity", "text": "I'm all done", "sortOrder": 1 },
+    { "phraseId": "preset_want_more", "parentCategoryId": "preset_routine_activity", "text": "I want more", "sortOrder": 2 },
+    { "phraseId": "preset_take_break", "parentCategoryId": "preset_routine_activity", "text": "I need a break", "sortOrder": 3 },
+    { "phraseId": "preset_eat_food", "parentCategoryId": "preset_food_drink", "text": "I want to eat", "sortOrder": 0 },
+    { "phraseId": "preset_drink_water", "parentCategoryId": "preset_food_drink", "text": "I want a drink", "sortOrder": 1 },
+    { "phraseId": "preset_more_please", "parentCategoryId": "preset_food_drink", "text": "More please", "sortOrder": 2 },
+    { "phraseId": "preset_no_more", "parentCategoryId": "preset_food_drink", "text": "No more", "sortOrder": 3 },
+    { "phraseId": "preset_it_hurts", "parentCategoryId": "preset_comfort_state", "text": "It hurts", "sortOrder": 0 },
+    { "phraseId": "preset_feel_good", "parentCategoryId": "preset_comfort_state", "text": "I feel good", "sortOrder": 1 },
+    { "phraseId": "preset_i_am_hot", "parentCategoryId": "preset_comfort_state", "text": "I'm hot", "sortOrder": 2 },
+    { "phraseId": "preset_i_am_cold", "parentCategoryId": "preset_comfort_state", "text": "I'm cold", "sortOrder": 3 },
+    { "phraseId": "preset_go_now", "parentCategoryId": "preset_play_leisure", "text": "Let's go", "sortOrder": 0 },
+    { "phraseId": "preset_stop_now", "parentCategoryId": "preset_play_leisure", "text": "Stop", "sortOrder": 1 },
+    { "phraseId": "preset_my_turn", "parentCategoryId": "preset_play_leisure", "text": "My turn", "sortOrder": 2 },
+    { "phraseId": "preset_your_turn", "parentCategoryId": "preset_play_leisure", "text": "Your turn", "sortOrder": 3 },
+    { "phraseId": "preset_move_me", "parentCategoryId": "preset_positioning", "text": "Move me", "sortOrder": 0 },
+    { "phraseId": "preset_stay_here", "parentCategoryId": "preset_positioning", "text": "Stay here", "sortOrder": 1 },
+    { "phraseId": "preset_sit_up", "parentCategoryId": "preset_positioning", "text": "Sit me up", "sortOrder": 2 },
+    { "phraseId": "preset_lay_back", "parentCategoryId": "preset_positioning", "text": "Lay me back", "sortOrder": 3 }
+  ]
+}
