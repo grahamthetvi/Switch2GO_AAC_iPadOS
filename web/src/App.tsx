@@ -43,11 +43,13 @@ export default function App() {
 
   useEffect(() => {
     const prime = () => prepareSpeech()
-    window.addEventListener('pointerdown', prime, { once: true, passive: true })
-    window.addEventListener('keydown', prime, { once: true })
+    window.addEventListener('pointerdown', prime, { capture: true, passive: true })
+    window.addEventListener('touchstart', prime, { capture: true, passive: true })
+    window.addEventListener('keydown', prime, { capture: true })
     return () => {
-      window.removeEventListener('pointerdown', prime)
-      window.removeEventListener('keydown', prime)
+      window.removeEventListener('pointerdown', prime, { capture: true })
+      window.removeEventListener('touchstart', prime, { capture: true })
+      window.removeEventListener('keydown', prime, { capture: true })
     }
   }, [])
 

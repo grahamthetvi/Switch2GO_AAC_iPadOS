@@ -49,23 +49,37 @@ export function PhrasesPage() {
 
   const selectPhrase = useCallback(
     async (phrase: PhraseDisplay) => {
-      prepareSpeech()
       speak(phrase.text, locale)
       await markPhraseSpoken(phrase.id, phrase.isPreset)
     },
     [locale],
   )
 
+  const speakPhrase = useCallback(
+    (phrase: PhraseDisplay) => {
+      prepareSpeech()
+      speak(phrase.text, locale)
+    },
+    [locale],
+  )
+
+  const recordPhrase = useCallback(async (phrase: PhraseDisplay) => {
+    await markPhraseSpoken(phrase.id, phrase.isPreset)
+  }, [])
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const idx = '1234'.indexOf(e.key)
       if (idx >= 0 && idx < pagePhrases.length) {
-        void selectPhrase(pagePhrases[idx])
+        const phrase = pagePhrases[idx]
+        prepareSpeech()
+        speak(phrase.text, locale)
+        void markPhraseSpoken(phrase.id, phrase.isPreset)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [pagePhrases, selectPhrase])
+  }, [pagePhrases, locale])
 
   useEffect(() => {
     if (settings.selectionMode !== 'armRaise') return
@@ -168,7 +182,8 @@ export function PhrasesPage() {
                     ...tileStyle,
                     ...(spanFullWidth ? { gridColumn: '1 / -1' } : undefined),
                   }}
-                  onActivate={() => void selectPhrase(phrase)}
+                  onSpeak={() => speakPhrase(phrase)}
+                  onActivate={() => void recordPhrase(phrase)}
                 >
                   <PhraseMedia imageRef={phrase.style?.imageRef} />
                   <span className="tile-label" style={labelStyle}>

@@ -1,6 +1,7 @@
 import { GazePointer } from './GazePointer'
 import { TrackingErrorBoundary } from './TrackingErrorBoundary'
 import { TrackingFallbackBanner } from './TrackingFallbackBanner'
+import { TtsStatusBanner } from './TtsStatusBanner'
 import { useSettings } from '../settings/settingsStore'
 import { useTracking } from '../tracking/TrackingContext'
 
@@ -94,6 +95,7 @@ function GazeOverlayContent() {
         />
       ) : null}
 
+      <TtsStatusBanner />
     </>
   )
 }

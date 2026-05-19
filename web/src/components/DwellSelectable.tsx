@@ -4,12 +4,13 @@ import { useTracking } from '../tracking/TrackingContext'
 interface Props {
   id: string
   onActivate: () => void
+  onSpeak?: () => void
   children: ReactNode
   className?: string
   style?: React.CSSProperties
 }
 
-export function DwellSelectable({ id, onActivate, children, className, style }: Props) {
+export function DwellSelectable({ id, onActivate, onSpeak, children, className, style }: Props) {
   const ref = useRef<HTMLButtonElement>(null)
   const { dwell, dwellProgress, tracking } = useTracking()
 
@@ -38,9 +39,12 @@ export function DwellSelectable({ id, onActivate, children, className, style }: 
 
   useEffect(() => {
     return dwell.subscribe((buttonId) => {
-      if (buttonId === id) onActivate()
+      if (buttonId === id) {
+        onSpeak?.()
+        onActivate()
+      }
     })
-  }, [id, dwell, onActivate])
+  }, [id, dwell, onActivate, onSpeak])
 
   const isHovered = dwell.hoveredButtonId === id
   const progress = isHovered ? dwellProgress : 0
@@ -51,6 +55,7 @@ export function DwellSelectable({ id, onActivate, children, className, style }: 
       ref={ref}
       type="button"
       className={className}
+      onPointerDown={() => onSpeak?.()}
       onClick={onActivate}
       data-dwell-id={id}
       style={{

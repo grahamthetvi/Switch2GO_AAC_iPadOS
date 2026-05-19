@@ -219,6 +219,10 @@ a {
   top: 12px;
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(92vw, 560px);
   background: rgba(0, 0, 0, 0.85);
   color: #fff;
   padding: 10px 20px;
@@ -229,6 +233,16 @@ a {
 
 .tracking-banner.error {
   background: rgba(183, 28, 28, 0.95);
+}
+
+.tts-banner-dismiss {
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  color: inherit;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .arm-raise-hint {
