@@ -88,6 +88,8 @@ a {
 
 .grid-phrases {
   flex: 1;
+  min-height: 0;
+  align-content: stretch;
 }
 
 .tile {
@@ -116,17 +118,35 @@ a {
   line-height: 1;
 }
 
-.category-tile .tile-label,
-.phrase-tile .tile-label {
+.category-tile .tile-label {
   font-size: clamp(1.1rem, 3vw, 1.75rem);
   font-weight: 700;
   line-height: 1.2;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
+.phrase-tile {
+  container-type: size;
+  min-height: 0;
+  height: 100%;
+}
+
+.phrase-tile .tile-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  font-size: clamp(1.75rem, 14cqmin, 5rem);
+  font-weight: 700;
+  line-height: 1.15;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
 .phrase-emoji {
-  font-size: 2.5rem;
+  font-size: clamp(2rem, 8cqmin, 4rem);
   margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 .pager {
@@ -209,6 +229,21 @@ a {
 
 .tracking-banner.error {
   background: rgba(183, 28, 28, 0.95);
+}
+
+.arm-raise-hint {
+  margin: 0 12px 8px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.tile.arm-raise-highlight {
+  outline: 4px solid rgba(255, 255, 255, 0.85);
+  outline-offset: -4px;
 }
 
 .tracking-fallback {
@@ -763,10 +798,11 @@ button.settings-hub-row {
 }
 
 .phrase-image {
-  max-width: 72px;
-  max-height: 72px;
+  max-width: min(72px, 22cqw);
+  max-height: min(72px, 22cqh);
   object-fit: contain;
   margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 .phrase-style-preview {
@@ -1217,18 +1253,21 @@ button.settings-hub-row {
     height: 3.5rem;
   }
 
-  .category-tile .tile-label,
-  .phrase-tile .tile-label {
+  .category-tile .tile-label {
     font-size: clamp(1.5rem, 2.5vw, 2.25rem);
   }
 
+  .phrase-tile .tile-label {
+    font-size: clamp(2.25rem, 16cqmin, 6rem);
+  }
+
   .phrase-emoji {
-    font-size: 3.5rem;
+    font-size: clamp(2.5rem, 10cqmin, 5rem);
   }
 
   .phrase-image {
-    max-width: 120px;
-    max-height: 120px;
+    max-width: min(120px, 24cqw);
+    max-height: min(120px, 24cqh);
   }
 
   .pager button {
@@ -1242,7 +1281,7 @@ button.settings-hub-row {
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .grid-phrases .tile {
-    min-height: 240px;
+  .grid-phrases .phrase-tile {
+    min-height: 0;
   }
 }

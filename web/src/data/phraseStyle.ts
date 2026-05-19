@@ -114,7 +114,6 @@ export function phraseStyleToTileStyle(
   const bg =
     style?.backgroundColor != null ? colorToCss(style.backgroundColor) : fallbackBackgroundCss
   const color = style?.textColor != null ? colorToCss(style.textColor) : '#ffffff'
-  const fontSize = `${effectiveFontSize(style)}px`
   const borderWidth = style?.borderWidth ?? 0
   const borderColor =
     style?.borderColor != null ? colorToCss(style.borderColor) : colorToCss(DEFAULT_BORDER)
@@ -122,9 +121,22 @@ export function phraseStyleToTileStyle(
   return {
     background: bg,
     color,
-    fontSize,
     fontWeight: style?.bold ? 'bold' : undefined,
     border: borderWidth > 0 ? `${borderWidth}px solid ${borderColor}` : undefined,
+  }
+}
+
+/** Text styles for phrase label (separate from tile chrome). */
+export function phraseStyleToLabelStyle(style: PhraseStyle | null): CSSProperties {
+  const color =
+    style?.textColor != null ? colorToCss(style.textColor) : undefined
+  const fontSize =
+    style?.fontSize != null ? `${effectiveFontSize(style)}px` : undefined
+
+  return {
+    color,
+    fontSize,
+    fontWeight: style?.bold ? 'bold' : undefined,
   }
 }
 

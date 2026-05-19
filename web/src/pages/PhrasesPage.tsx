@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { DwellSelectable } from '../components/DwellSelectable'
 import { PhraseMedia } from '../components/phrases/PhraseMedia'
 import { loadPhrases, markPhraseSpoken } from '../data/repository'
-import { phraseStyleToTileStyle } from '../data/phraseStyle'
+import { phraseStyleToLabelStyle, phraseStyleToTileStyle } from '../data/phraseStyle'
 import type { PhraseDisplay } from '../data/types'
 import { useTranslation } from '../i18n/useTranslation'
 import { hexToCss, useSettings } from '../settings/settingsStore'
@@ -17,7 +17,7 @@ export function PhrasesPage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
   const settings = useSettings()
-  const { dwell } = useTracking()
+  const { dwell, armRaise, subscribeArmRaise } = useTracking()
 
   const symbolCount = settings.symbolCount
   const totalPages = Math.max(1, Math.ceil(phrases.length / symbolCount))
@@ -66,8 +66,31 @@ export function PhrasesPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [pagePhrases, selectPhrase])
 
+  useEffect(() => {
+    if (settings.selectionMode !== 'armRaise') return
+    return subscribeArmRaise((side) => {
+      if (symbolCount !== 2 || pagePhrases.length !== 2) return
+      const idx = side === 'left' ? 0 : 1
+      void selectPhrase(pagePhrases[idx])
+    })
+  }, [settings.selectionMode, subscribeArmRaise, pagePhrases, selectPhrase, symbolCount])
+
   const borderColor = hexToCss(settings.appBorderColor)
-  const cols = symbolCount <= 2 ? 2 : 2
+  const armRaiseActive = settings.selectionMode === 'armRaise'
+  const armRaiseReady = armRaiseActive && symbolCount === 2 && pagePhrases.length === 2
+
+  const phraseGridStyle = useMemo(() => {
+    switch (symbolCount) {
+      case 1:
+        return { gridTemplateColumns: '1fr', gridTemplateRows: '1fr' }
+      case 2:
+        return { gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr' }
+      case 3:
+        return { gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr' }
+      default:
+        return { gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr' }
+    }
+  }, [symbolCount])
 
   return (
     <div className="page" style={{ background: borderColor }}>
@@ -88,24 +111,43 @@ export function PhrasesPage() {
         <p className="status">No phrases in this category</p>
       ) : (
         <>
-          <div
-            className="grid grid-phrases"
-            style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
-          >
+          {armRaiseActive && !armRaiseReady ? (
+            <p className="arm-raise-hint">
+              Arm raise selection works with 2 phrases per page (left and right). Change layout in
+              Settings → CVI Display.
+            </p>
+          ) : null}
+          {armRaiseReady ? (
+            <p className="arm-raise-hint">
+              Raise your left arm for the left phrase, or your right arm for the right phrase.
+            </p>
+          ) : null}
+          <div className="grid grid-phrases" style={phraseGridStyle}>
             {pagePhrases.map((phrase, index) => {
               const position = page * symbolCount + index + 1
               const posColor = hexToCss(settings.getSymbolColor(position))
               const tileStyle = phraseStyleToTileStyle(phrase.style, posColor)
+              const labelStyle = phraseStyleToLabelStyle(phrase.style)
+              const spanFullWidth = symbolCount === 3 && index === 2
+              const armHighlighted =
+                armRaiseReady &&
+                ((index === 0 && armRaise.armState.leftRaised) ||
+                  (index === 1 && armRaise.armState.rightRaised))
               return (
                 <DwellSelectable
                   key={phrase.id}
                   id={`phrase_${phrase.id}`}
-                  className="tile phrase-tile"
-                  style={tileStyle}
+                  className={`tile phrase-tile${armHighlighted ? ' arm-raise-highlight' : ''}`}
+                  style={{
+                    ...tileStyle,
+                    ...(spanFullWidth ? { gridColumn: '1 / -1' } : undefined),
+                  }}
                   onActivate={() => void selectPhrase(phrase)}
                 >
                   <PhraseMedia imageRef={phrase.style?.imageRef} />
-                  <span className="tile-label">{phrase.text}</span>
+                  <span className="tile-label" style={labelStyle}>
+                    {phrase.text}
+                  </span>
                 </DwellSelectable>
               )
             })}

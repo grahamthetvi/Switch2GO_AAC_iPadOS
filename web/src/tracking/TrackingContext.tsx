@@ -10,11 +10,17 @@ import {
 } from 'react'
 import { useSettings } from '../settings/settingsStore'
 import { requestCameraAccess } from './cameraAccess'
+import {
+  armRaiseTrackingManager,
+  type ArmRaiseTrackingState,
+} from './armRaiseTrackingManager'
 import { DwellSelectionManager } from './dwellManager'
+import type { ArmSide } from './armRaiseDetector'
 import { trackingManager, type TrackingState } from './trackingManager'
 
 interface TrackingContextValue {
   tracking: TrackingState
+  armRaise: ArmRaiseTrackingState
   dwell: DwellSelectionManager
   dwellProgress: number
   videoRef: React.RefObject<HTMLVideoElement | null>
@@ -25,6 +31,7 @@ interface TrackingContextValue {
   fallbackToTouch: () => void
   retryTracking: () => void
   reportTrackingError: (message: string) => void
+  subscribeArmRaise: (listener: (side: ArmSide) => void) => () => void
 }
 
 const TrackingContext = createContext<TrackingContextValue | null>(null)
@@ -52,6 +59,12 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     showTrackingError: false,
     errorMessage: null,
   })
+  const [armRaise, setArmRaise] = useState<ArmRaiseTrackingState>({
+    isTracking: false,
+    armState: { leftRaised: false, rightRaised: false },
+    showTrackingError: false,
+    errorMessage: null,
+  })
 
   const dwell = useMemo(
     () =>
@@ -69,7 +82,8 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
   )
 
   useEffect(() => {
-    dwell.isEnabled = settings.selectionMode !== 'none'
+    dwell.isEnabled =
+      settings.selectionMode !== 'none' && settings.selectionMode !== 'armRaise'
   }, [dwell, settings.selectionMode])
 
   useEffect(() => {
@@ -81,6 +95,17 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     return trackingManager.subscribe(setTracking)
   }, [])
+
+  useEffect(() => {
+    return armRaiseTrackingManager.subscribeState(setArmRaise)
+  }, [])
+
+  useEffect(() => {
+    armRaiseTrackingManager.configure({
+      useGPU: settings.useGPU,
+      holdMs: settings.dwellTime * 1000,
+    })
+  }, [settings.useGPU, settings.dwellTime])
 
   useEffect(() => {
     trackingManager.configure({
@@ -104,7 +129,11 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
   }, [settings])
 
   useEffect(() => {
-    if (tracking.gazePosition && settings.selectionMode !== 'none') {
+    if (
+      tracking.gazePosition &&
+      settings.selectionMode !== 'none' &&
+      settings.selectionMode !== 'armRaise'
+    ) {
       dwell.updateGazePosition(tracking.gazePosition)
     } else {
       dwell.updateGazePosition(null)
@@ -122,7 +151,11 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     const video = videoRef.current
     if (!video) return
     try {
-      await trackingManager.start(video)
+      if (settings.selectionMode === 'armRaise') {
+        await armRaiseTrackingManager.start(video)
+      } else {
+        await trackingManager.start(video)
+      }
       setTrackingBlockedReason(null)
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Camera or tracking unavailable'
@@ -136,6 +169,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
 
   const stopTracking = useCallback(() => {
     trackingManager.stop()
+    armRaiseTrackingManager.stop()
   }, [])
 
   const recenterCursor = useCallback(() => {
@@ -183,9 +217,15 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     }
   }, [settings.selectionMode, tracking.showTrackingError, tracking.errorMessage])
 
+  const subscribeArmRaise = useCallback(
+    (listener: (side: ArmSide) => void) => armRaiseTrackingManager.subscribeActivation(listener),
+    [],
+  )
+
   const value = useMemo(
     () => ({
       tracking,
+      armRaise,
       dwell,
       dwellProgress,
       videoRef,
@@ -196,9 +236,11 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       fallbackToTouch,
       retryTracking,
       reportTrackingError,
+      subscribeArmRaise,
     }),
     [
       tracking,
+      armRaise,
       dwell,
       dwellProgress,
       startTracking,
@@ -208,6 +250,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       fallbackToTouch,
       retryTracking,
       reportTrackingError,
+      subscribeArmRaise,
     ],
   )
 

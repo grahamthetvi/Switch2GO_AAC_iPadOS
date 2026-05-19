@@ -74,5 +74,6 @@ iosApp/Pods/
 shared/build/iosApp/Pods/
 iosApp/Pods/
 
-# MediaPipe model
+# MediaPipe models
 face_landmarker.task
+pose_landmarker_lite.task

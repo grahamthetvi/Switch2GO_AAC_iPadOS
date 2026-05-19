@@ -17,6 +17,12 @@ const MODES: { id: SelectionMode; title: string; description: string; icon: stri
     icon: '👁',
   },
   {
+    id: 'armRaise',
+    title: 'Arm raise selection',
+    description: 'Raise your left or right arm to choose the left or right phrase (2-symbol layout)',
+    icon: '🙋',
+  },
+  {
     id: 'none',
     title: 'Touch only',
     description: 'Use touch only, no head or eye tracking',

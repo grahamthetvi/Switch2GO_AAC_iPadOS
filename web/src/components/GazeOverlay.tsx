@@ -7,6 +7,7 @@ import { useTracking } from '../tracking/TrackingContext'
 function GazeOverlayContent() {
   const {
     tracking,
+    armRaise,
     dwell,
     dwellProgress,
     videoRef,
@@ -15,7 +16,9 @@ function GazeOverlayContent() {
     retryTracking,
   } = useTracking()
   const settings = useSettings()
+  const isArmRaise = settings.selectionMode === 'armRaise'
   const showPointer =
+    !isArmRaise &&
     settings.selectionMode !== 'none' &&
     tracking.isTracking &&
     tracking.isCursorVisible &&
@@ -46,12 +49,23 @@ function GazeOverlayContent() {
       ) : null}
 
       {settings.enableOutOfBoundsHiding &&
+        !isArmRaise &&
         settings.selectionMode !== 'none' &&
         tracking.isGazeOutOfBounds ? (
         <div className="tracking-banner">Look at the screen</div>
       ) : null}
 
       {settings.showTrackingErrorBanner &&
+        isArmRaise &&
+        armRaise.showTrackingError &&
+        !trackingBlockedReason ? (
+        <div className="tracking-banner error">
+          {armRaise.errorMessage ?? 'Body not detected — show your shoulders in the camera'}
+        </div>
+      ) : null}
+
+      {settings.showTrackingErrorBanner &&
+        !isArmRaise &&
         settings.selectionMode !== 'none' &&
         tracking.showTrackingError &&
         !trackingBlockedReason ? (
