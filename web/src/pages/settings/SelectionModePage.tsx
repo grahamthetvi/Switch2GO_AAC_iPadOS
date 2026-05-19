@@ -1,6 +1,7 @@
 import { SettingsCard } from '../../components/settings/SettingsCard'
 import { SettingsLayout } from '../../components/settings/SettingsLayout'
 import { useSettings, type SelectionMode } from '../../settings/settingsStore'
+import { requestCameraAccess } from '../../tracking/cameraAccess'
 
 const MODES: { id: SelectionMode; title: string; description: string; icon: string }[] = [
   {
@@ -26,6 +27,19 @@ const MODES: { id: SelectionMode; title: string; description: string; icon: stri
 export function SelectionModePage() {
   const s = useSettings()
 
+  const selectMode = async (mode: SelectionMode) => {
+    if (mode === 'none') {
+      s.setSelectionMode('none')
+      return
+    }
+    try {
+      await requestCameraAccess()
+    } catch {
+      return
+    }
+    s.setSelectionMode(mode)
+  }
+
   return (
     <SettingsLayout title="Selection Mode">
       <p className="hint settings-intro">Choose how you want to control the app</p>
@@ -34,7 +48,7 @@ export function SelectionModePage() {
           key={mode.id}
           type="button"
           className={`selection-mode-btn${s.selectionMode === mode.id ? ' selected' : ''}`}
-          onClick={() => s.setSelectionMode(mode.id)}
+          onClick={() => void selectMode(mode.id)}
         >
           <span className="selection-mode-icon" aria-hidden>
             {mode.icon}

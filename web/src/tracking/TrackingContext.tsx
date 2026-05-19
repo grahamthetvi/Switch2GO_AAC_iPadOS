@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useSettings } from '../settings/settingsStore'
+import { requestCameraAccess } from './cameraAccess'
 import { DwellSelectionManager } from './dwellManager'
 import { trackingManager, type TrackingState } from './trackingManager'
 
@@ -145,7 +146,9 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     if (mode === 'none') {
       useSettings.getState().setSelectionMode('eyeGaze')
     }
-    void startTracking().catch(() => {})
+    void requestCameraAccess()
+      .then(() => startTracking())
+      .catch(() => {})
   }, [startTracking])
 
   useEffect(() => {

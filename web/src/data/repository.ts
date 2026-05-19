@@ -70,12 +70,10 @@ export async function getCategoryById(categoryId: string): Promise<CategoryDispl
 
 export async function loadCategories(): Promise<CategoryDisplay[]> {
   const presetRows = await db.presetCategory
-    .where('hidden')
-    .equals(0)
-    .filter((r) => r.deleted === 0)
+    .filter((r) => r.hidden === 0 && r.deleted === 0)
     .toArray()
 
-  const customRows = await db.category.where('hidden').equals(0).toArray()
+  const customRows = await db.category.filter((r) => r.hidden === 0).toArray()
 
   const display: CategoryDisplay[] = [
     ...presetRows.map((r) => ({

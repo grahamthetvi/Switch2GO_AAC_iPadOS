@@ -12,14 +12,22 @@ export function CategoriesPage() {
   const { t, locale } = useTranslation()
   const [categories, setCategories] = useState<CategoryDisplay[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const settings = useSettings()
   const navigate = useNavigate()
   const { dwell } = useTracking()
 
   const refresh = useCallback(async () => {
     setLoading(true)
-    setCategories(await loadCategories())
-    setLoading(false)
+    setLoadError(null)
+    try {
+      setCategories(await loadCategories())
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : 'Failed to load categories')
+      setCategories([])
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -42,7 +50,9 @@ export function CategoriesPage() {
         </Link>
       </header>
 
-      {loading ? (
+      {loadError ? (
+        <p className="status error">{loadError}</p>
+      ) : loading ? (
         <p className="status">{t('loadingCategories')}</p>
       ) : categories.length === 0 ? (
         <div className="empty-state">
