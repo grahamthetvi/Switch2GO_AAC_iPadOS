@@ -27,6 +27,7 @@ import { DataBackupPage } from './pages/settings/DataBackupPage'
 import { TroubleshootingPage } from './pages/settings/TroubleshootingPage'
 import { useSettings } from './settings/settingsStore'
 import { TrackingProvider } from './tracking/TrackingContext'
+import { prepareSpeech } from './tts/speak'
 
 export default function App() {
   const [ready, setReady] = useState(false)
@@ -39,6 +40,16 @@ export default function App() {
   useEffect(() => {
     document.documentElement.lang = locale
   }, [locale])
+
+  useEffect(() => {
+    const prime = () => prepareSpeech()
+    window.addEventListener('pointerdown', prime, { once: true, passive: true })
+    window.addEventListener('keydown', prime, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', prime)
+      window.removeEventListener('keydown', prime)
+    }
+  }, [])
 
   useEffect(() => {
     ensureDatabaseSeeded()

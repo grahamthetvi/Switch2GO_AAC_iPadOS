@@ -14,13 +14,19 @@ import {
   armRaiseTrackingManager,
   type ArmRaiseTrackingState,
 } from './armRaiseTrackingManager'
+import {
+  handGestureTrackingManager,
+  type HandGestureTrackingState,
+} from './handGestureTrackingManager'
 import { DwellSelectionManager } from './dwellManager'
 import type { ArmSide } from './armRaiseDetector'
+import type { HandSide } from './handGestureDetector'
 import { trackingManager, type TrackingState } from './trackingManager'
 
 interface TrackingContextValue {
   tracking: TrackingState
   armRaise: ArmRaiseTrackingState
+  handGesture: HandGestureTrackingState
   dwell: DwellSelectionManager
   dwellProgress: number
   videoRef: React.RefObject<HTMLVideoElement | null>
@@ -32,6 +38,7 @@ interface TrackingContextValue {
   retryTracking: () => void
   reportTrackingError: (message: string) => void
   subscribeArmRaise: (listener: (side: ArmSide) => void) => () => void
+  subscribeHandGesture: (listener: (side: HandSide) => void) => () => void
 }
 
 const TrackingContext = createContext<TrackingContextValue | null>(null)
@@ -65,6 +72,12 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     showTrackingError: false,
     errorMessage: null,
   })
+  const [handGesture, setHandGesture] = useState<HandGestureTrackingState>({
+    isTracking: false,
+    handState: { leftPose: null, rightPose: null },
+    showTrackingError: false,
+    errorMessage: null,
+  })
 
   const dwell = useMemo(
     () =>
@@ -83,7 +96,9 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     dwell.isEnabled =
-      settings.selectionMode !== 'none' && settings.selectionMode !== 'armRaise'
+      settings.selectionMode !== 'none' &&
+      settings.selectionMode !== 'armRaise' &&
+      settings.selectionMode !== 'handGesture'
   }, [dwell, settings.selectionMode])
 
   useEffect(() => {
@@ -101,11 +116,21 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
+    return handGestureTrackingManager.subscribeState(setHandGesture)
+  }, [])
+
+  useEffect(() => {
     armRaiseTrackingManager.configure({
       useGPU: settings.useGPU,
       holdMs: settings.dwellTime * 1000,
     })
   }, [settings.useGPU, settings.dwellTime])
+
+  useEffect(() => {
+    handGestureTrackingManager.configure({
+      useGPU: settings.useGPU,
+    })
+  }, [settings.useGPU])
 
   useEffect(() => {
     trackingManager.configure({
@@ -132,7 +157,8 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     if (
       tracking.gazePosition &&
       settings.selectionMode !== 'none' &&
-      settings.selectionMode !== 'armRaise'
+      settings.selectionMode !== 'armRaise' &&
+      settings.selectionMode !== 'handGesture'
     ) {
       dwell.updateGazePosition(tracking.gazePosition)
     } else {
@@ -153,6 +179,8 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     try {
       if (settings.selectionMode === 'armRaise') {
         await armRaiseTrackingManager.start(video)
+      } else if (settings.selectionMode === 'handGesture') {
+        await handGestureTrackingManager.start(video)
       } else {
         await trackingManager.start(video)
       }
@@ -170,6 +198,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
   const stopTracking = useCallback(() => {
     trackingManager.stop()
     armRaiseTrackingManager.stop()
+    handGestureTrackingManager.stop()
   }, [])
 
   const recenterCursor = useCallback(() => {
@@ -222,10 +251,17 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const subscribeHandGesture = useCallback(
+    (listener: (side: HandSide) => void) =>
+      handGestureTrackingManager.subscribeActivation(listener),
+    [],
+  )
+
   const value = useMemo(
     () => ({
       tracking,
       armRaise,
+      handGesture,
       dwell,
       dwellProgress,
       videoRef,
@@ -237,10 +273,12 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       retryTracking,
       reportTrackingError,
       subscribeArmRaise,
+      subscribeHandGesture,
     }),
     [
       tracking,
       armRaise,
+      handGesture,
       dwell,
       dwellProgress,
       startTracking,
@@ -251,6 +289,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       retryTracking,
       reportTrackingError,
       subscribeArmRaise,
+      subscribeHandGesture,
     ],
   )
 

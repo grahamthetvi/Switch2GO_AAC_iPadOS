@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Locale } from '../i18n/i18n'
 
-export type SelectionMode = 'none' | 'eyeGaze' | 'face' | 'armRaise'
+export type SelectionMode = 'none' | 'eyeGaze' | 'face' | 'armRaise' | 'handGesture'
 export type TrackingMode = '2D' | '3D'
 export type SmoothingMode = 'none' | 'simple' | 'kalman' | 'adaptive' | 'combined'
 export type EyeSelection = 'both' | 'left' | 'right'

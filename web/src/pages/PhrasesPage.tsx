@@ -7,7 +7,7 @@ import { phraseStyleToLabelStyle, phraseStyleToTileStyle } from '../data/phraseS
 import type { PhraseDisplay } from '../data/types'
 import { useTranslation } from '../i18n/useTranslation'
 import { hexToCss, useSettings } from '../settings/settingsStore'
-import { speak } from '../tts/speak'
+import { prepareSpeech, speak } from '../tts/speak'
 import { useTracking } from '../tracking/TrackingContext'
 
 export function PhrasesPage() {
@@ -17,7 +17,7 @@ export function PhrasesPage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
   const settings = useSettings()
-  const { dwell, armRaise, subscribeArmRaise } = useTracking()
+  const { dwell, armRaise, handGesture, subscribeArmRaise, subscribeHandGesture } = useTracking()
 
   const symbolCount = settings.symbolCount
   const totalPages = Math.max(1, Math.ceil(phrases.length / symbolCount))
@@ -49,10 +49,11 @@ export function PhrasesPage() {
 
   const selectPhrase = useCallback(
     async (phrase: PhraseDisplay) => {
-      speak(phrase.text)
+      prepareSpeech()
+      speak(phrase.text, locale)
       await markPhraseSpoken(phrase.id, phrase.isPreset)
     },
-    [],
+    [locale],
   )
 
   useEffect(() => {
@@ -75,9 +76,22 @@ export function PhrasesPage() {
     })
   }, [settings.selectionMode, subscribeArmRaise, pagePhrases, selectPhrase, symbolCount])
 
+  useEffect(() => {
+    if (settings.selectionMode !== 'handGesture') return
+    return subscribeHandGesture((side) => {
+      if (symbolCount !== 2 || pagePhrases.length !== 2) return
+      const idx = side === 'left' ? 0 : 1
+      void selectPhrase(pagePhrases[idx])
+    })
+  }, [settings.selectionMode, subscribeHandGesture, pagePhrases, selectPhrase, symbolCount])
+
   const borderColor = hexToCss(settings.appBorderColor)
   const armRaiseActive = settings.selectionMode === 'armRaise'
+  const handGestureActive = settings.selectionMode === 'handGesture'
+  const binarySelectionActive = armRaiseActive || handGestureActive
   const armRaiseReady = armRaiseActive && symbolCount === 2 && pagePhrases.length === 2
+  const handGestureReady = handGestureActive && symbolCount === 2 && pagePhrases.length === 2
+  const binarySelectionReady = armRaiseReady || handGestureReady
 
   const phraseGridStyle = useMemo(() => {
     switch (symbolCount) {
@@ -111,15 +125,22 @@ export function PhrasesPage() {
         <p className="status">No phrases in this category</p>
       ) : (
         <>
-          {armRaiseActive && !armRaiseReady ? (
+          {binarySelectionActive && !binarySelectionReady ? (
             <p className="arm-raise-hint">
-              Arm raise selection works with 2 phrases per page (left and right). Change layout in
-              Settings → CVI Display.
+              {armRaiseActive
+                ? 'Arm raise selection works with 2 phrases per page (left and right). Change layout in Settings → CVI Display.'
+                : 'Hand gesture selection works with 2 phrases per page (left and right). Change layout in Settings → CVI Display.'}
             </p>
           ) : null}
           {armRaiseReady ? (
             <p className="arm-raise-hint">
               Raise your left arm for the left phrase, or your right arm for the right phrase.
+            </p>
+          ) : null}
+          {handGestureReady ? (
+            <p className="arm-raise-hint">
+              Open then close your left hand (or close then open) for the left phrase. Use your
+              right hand for the right phrase.
             </p>
           ) : null}
           <div className="grid grid-phrases" style={phraseGridStyle}>
@@ -133,11 +154,16 @@ export function PhrasesPage() {
                 armRaiseReady &&
                 ((index === 0 && armRaise.armState.leftRaised) ||
                   (index === 1 && armRaise.armState.rightRaised))
+              const handHighlighted =
+                handGestureReady &&
+                ((index === 0 && handGesture.handState.leftPose != null) ||
+                  (index === 1 && handGesture.handState.rightPose != null))
+              const gestureHighlighted = armHighlighted || handHighlighted
               return (
                 <DwellSelectable
                   key={phrase.id}
                   id={`phrase_${phrase.id}`}
-                  className={`tile phrase-tile${armHighlighted ? ' arm-raise-highlight' : ''}`}
+                  className={`tile phrase-tile${gestureHighlighted ? ' arm-raise-highlight' : ''}`}
                   style={{
                     ...tileStyle,
                     ...(spanFullWidth ? { gridColumn: '1 / -1' } : undefined),

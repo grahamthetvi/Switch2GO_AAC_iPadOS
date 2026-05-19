@@ -8,6 +8,7 @@ function GazeOverlayContent() {
   const {
     tracking,
     armRaise,
+    handGesture,
     dwell,
     dwellProgress,
     videoRef,
@@ -17,8 +18,10 @@ function GazeOverlayContent() {
   } = useTracking()
   const settings = useSettings()
   const isArmRaise = settings.selectionMode === 'armRaise'
+  const isHandGesture = settings.selectionMode === 'handGesture'
+  const isBodyGesture = isArmRaise || isHandGesture
   const showPointer =
-    !isArmRaise &&
+    !isBodyGesture &&
     settings.selectionMode !== 'none' &&
     tracking.isTracking &&
     tracking.isCursorVisible &&
@@ -49,7 +52,7 @@ function GazeOverlayContent() {
       ) : null}
 
       {settings.enableOutOfBoundsHiding &&
-        !isArmRaise &&
+        !isBodyGesture &&
         settings.selectionMode !== 'none' &&
         tracking.isGazeOutOfBounds ? (
         <div className="tracking-banner">Look at the screen</div>
@@ -65,7 +68,16 @@ function GazeOverlayContent() {
       ) : null}
 
       {settings.showTrackingErrorBanner &&
-        !isArmRaise &&
+        isHandGesture &&
+        handGesture.showTrackingError &&
+        !trackingBlockedReason ? (
+        <div className="tracking-banner error">
+          {handGesture.errorMessage ?? 'Hands not detected — hold your hands in view of the camera'}
+        </div>
+      ) : null}
+
+      {settings.showTrackingErrorBanner &&
+        !isBodyGesture &&
         settings.selectionMode !== 'none' &&
         tracking.showTrackingError &&
         !trackingBlockedReason ? (

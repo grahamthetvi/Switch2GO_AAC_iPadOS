@@ -28,6 +28,8 @@ jobs:
             -o public/models/face_landmarker.task
           curl -fsSL "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task" \
             -o public/models/pose_landmarker_lite.task
+          curl -fsSL "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task" \
+            -o public/models/gesture_recognizer.task
 
       - name: Install dependencies
         run: npm ci

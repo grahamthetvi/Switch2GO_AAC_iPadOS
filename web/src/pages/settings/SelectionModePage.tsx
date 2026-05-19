@@ -23,6 +23,13 @@ const MODES: { id: SelectionMode; title: string; description: string; icon: stri
     icon: '🙋',
   },
   {
+    id: 'handGesture',
+    title: 'Hand gesture selection',
+    description:
+      'Open then close (or close then open) your left or right hand to choose the matching phrase (2-symbol layout)',
+    icon: '✋',
+  },
+  {
     id: 'none',
     title: 'Touch only',
     description: 'Use touch only, no head or eye tracking',
