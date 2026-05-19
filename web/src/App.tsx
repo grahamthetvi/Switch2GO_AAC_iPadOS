@@ -27,6 +27,7 @@ import { DataBackupPage } from './pages/settings/DataBackupPage'
 import { TroubleshootingPage } from './pages/settings/TroubleshootingPage'
 import { useSettings } from './settings/settingsStore'
 import { TrackingProvider } from './tracking/TrackingContext'
+import { initTts } from './tts/speak'
 
 export default function App() {
   const [ready, setReady] = useState(false)
@@ -41,6 +42,7 @@ export default function App() {
   }, [locale])
 
   useEffect(() => {
+    initTts()
     ensureDatabaseSeeded()
       .then(() => setReady(true))
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load data'))
