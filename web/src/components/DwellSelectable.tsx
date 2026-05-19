@@ -11,7 +11,7 @@ interface Props {
 
 export function DwellSelectable({ id, onActivate, children, className, style }: Props) {
   const ref = useRef<HTMLButtonElement>(null)
-  const { dwell, tracking } = useTracking()
+  const { dwell, dwellProgress, tracking } = useTracking()
 
   useEffect(() => {
     const el = ref.current
@@ -43,7 +43,7 @@ export function DwellSelectable({ id, onActivate, children, className, style }: 
   }, [id, dwell, onActivate])
 
   const isHovered = dwell.hoveredButtonId === id
-  const progress = isHovered ? dwell.dwellProgress : 0
+  const progress = isHovered ? dwellProgress : 0
   const trackingActive = tracking.isTracking && tracking.isCursorVisible
 
   return (

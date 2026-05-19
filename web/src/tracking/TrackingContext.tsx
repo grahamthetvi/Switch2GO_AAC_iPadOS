@@ -16,6 +16,7 @@ import { trackingManager, type TrackingState } from './trackingManager'
 interface TrackingContextValue {
   tracking: TrackingState
   dwell: DwellSelectionManager
+  dwellProgress: number
   videoRef: React.RefObject<HTMLVideoElement | null>
   startTracking: () => Promise<void>
   stopTracking: () => void
@@ -42,6 +43,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
   const settings = useSettings()
   const videoRef = useRef<HTMLVideoElement>(null)
   const [trackingBlockedReason, setTrackingBlockedReason] = useState<string | null>(null)
+  const [dwellProgress, setDwellProgress] = useState(0)
   const [tracking, setTracking] = useState<TrackingState>({
     gazePosition: null,
     isTracking: false,
@@ -69,6 +71,12 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     dwell.isEnabled = settings.selectionMode !== 'none'
   }, [dwell, settings.selectionMode])
+
+  useEffect(() => {
+    return dwell.subscribeProgress((progress) => {
+      setDwellProgress(progress)
+    })
+  }, [dwell])
 
   useEffect(() => {
     return trackingManager.subscribe(setTracking)
@@ -179,6 +187,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     () => ({
       tracking,
       dwell,
+      dwellProgress,
       videoRef,
       startTracking,
       stopTracking,
@@ -191,6 +200,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     [
       tracking,
       dwell,
+      dwellProgress,
       startTracking,
       stopTracking,
       recenterCursor,

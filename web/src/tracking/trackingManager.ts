@@ -69,7 +69,12 @@ function gazeCameraOffsetX(headCameraPosition: string, headOffsetYaw: number): n
   }
 }
 
-/** Full gaze pipeline with Web Worker MediaPipe and KMP-ported GazeTracker. */
+/** Front-camera landmarks are unmirrored; flip X so gaze matches the screen (iOS uses mirrored capture). */
+function mirrorScreenPoint(point: Point): Point {
+  return { x: window.innerWidth - point.x, y: point.y }
+}
+
+/** Full gaze pipeline with MediaPipe FaceLandmarker and KMP-ported GazeTracker. */
 export class TrackingManager {
   private client = new FaceLandmarkerClient()
   private gazeTracker: GazeTracker | null = null
@@ -349,7 +354,7 @@ export class TrackingManager {
     }
 
     const isWarmingUp = now - this.trackingStartTime < WARMUP_DURATION_MS
-    const target = { x: result.screenX, y: result.screenY }
+    const target = mirrorScreenPoint({ x: result.screenX, y: result.screenY })
     this.isTracking = true
     this.showTrackingError = false
     this.isGazeOutOfBounds = result.isOutOfBounds
@@ -401,10 +406,10 @@ export class TrackingManager {
       }
     }
 
-    target = {
+    target = mirrorScreenPoint({
       x: Math.min(window.innerWidth, Math.max(0, target.x)),
       y: Math.min(window.innerHeight, Math.max(0, target.y)),
-    }
+    })
 
     this.isTracking = true
     this.showTrackingError = false

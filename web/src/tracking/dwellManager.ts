@@ -1,4 +1,5 @@
 export type DwellListener = (buttonId: string) => void
+export type DwellProgressListener = (progress: number, hoveredButtonId: string | null) => void
 
 export interface Point {
   x: number
@@ -18,6 +19,7 @@ export class DwellSelectionManager {
   private exitGraceTimer: ReturnType<typeof setTimeout> | null = null
   private animationFrame: number | null = null
   private listeners = new Set<DwellListener>()
+  private progressListeners = new Set<DwellProgressListener>()
 
   private readonly hitTestPadding = 16
   private readonly exitGracePeriod = 250
@@ -31,6 +33,12 @@ export class DwellSelectionManager {
   subscribe(listener: DwellListener): () => void {
     this.listeners.add(listener)
     return () => this.listeners.delete(listener)
+  }
+
+  subscribeProgress(listener: DwellProgressListener): () => void {
+    this.progressListeners.add(listener)
+    listener(this.dwellProgress, this.hoveredButtonId)
+    return () => this.progressListeners.delete(listener)
   }
 
   registerButton(id: string, frame: DOMRect): void {
@@ -69,6 +77,7 @@ export class DwellSelectionManager {
         this.dwellProgress = 0
         this.activatedWhileHovering = false
         this.lastActivationTime = 0
+        this.emitProgress()
       }
       this.tickDwell()
     } else {
@@ -117,10 +126,31 @@ export class DwellSelectionManager {
     this.dwellProgress = 0
     this.activatedWhileHovering = false
     this.lastActivationTime = 0
+    this.stopDwellAnimation()
+    this.emitProgress()
+  }
+
+  private emitProgress(): void {
+    for (const listener of this.progressListeners) {
+      listener(this.dwellProgress, this.hoveredButtonId)
+    }
+  }
+
+  private stopDwellAnimation(): void {
     if (this.animationFrame != null) {
       cancelAnimationFrame(this.animationFrame)
       this.animationFrame = null
     }
+  }
+
+  private scheduleDwellAnimation(): void {
+    if (this.animationFrame != null) return
+    this.animationFrame = requestAnimationFrame(() => {
+      this.animationFrame = null
+      if (this.hoveredButtonId && this.dwellStartTime != null) {
+        this.tickDwell()
+      }
+    })
   }
 
   private tickDwell(): void {
@@ -128,6 +158,7 @@ export class DwellSelectionManager {
     const elapsed = performance.now() - this.dwellStartTime
     const dwellMs = this.getDwellTimeMs()
     this.dwellProgress = Math.min(1, elapsed / dwellMs)
+    this.emitProgress()
     if (elapsed >= dwellMs) {
       const now = performance.now()
       const repeat = this.getRepeatSettings()
@@ -142,13 +173,10 @@ export class DwellSelectionManager {
         this.activatedWhileHovering = true
         this.dwellStartTime = performance.now()
         this.dwellProgress = 0
+        this.emitProgress()
       }
     }
-    if (this.animationFrame == null) {
-      this.animationFrame = requestAnimationFrame(() => {
-        this.animationFrame = null
-      })
-    }
+    this.scheduleDwellAnimation()
   }
 
   private activate(id: string): void {

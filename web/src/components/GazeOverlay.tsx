@@ -1,3 +1,4 @@
+import { GazePointer } from './GazePointer'
 import { TrackingErrorBoundary } from './TrackingErrorBoundary'
 import { TrackingFallbackBanner } from './TrackingFallbackBanner'
 import { useSettings } from '../settings/settingsStore'
@@ -6,6 +7,8 @@ import { useTracking } from '../tracking/TrackingContext'
 function GazeOverlayContent() {
   const {
     tracking,
+    dwell,
+    dwellProgress,
     videoRef,
     trackingBlockedReason,
     fallbackToTouch,
@@ -35,13 +38,10 @@ function GazeOverlayContent() {
       )}
 
       {showPointer && tracking.gazePosition ? (
-        <div
-          className="gaze-pointer"
-          style={{
-            left: tracking.gazePosition.x,
-            top: tracking.gazePosition.y,
-          }}
-          aria-hidden
+        <GazePointer
+          x={tracking.gazePosition.x}
+          y={tracking.gazePosition.y}
+          dwellProgress={dwell.hoveredButtonId ? dwellProgress : 0}
         />
       ) : null}
 

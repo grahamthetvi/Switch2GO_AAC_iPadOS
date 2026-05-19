@@ -153,18 +153,45 @@ a {
   opacity: 0.85;
 }
 
-.gaze-pointer {
+.gaze-pointer-wrap {
   position: fixed;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.gaze-dwell-ring {
+  position: absolute;
+  left: -32px;
+  top: -32px;
+  transform: rotate(-90deg);
+}
+
+.gaze-dwell-ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 5;
+}
+
+.gaze-dwell-ring-progress {
+  fill: none;
+  stroke: #ffeb3b;
+  stroke-width: 5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.05s linear;
+}
+
+.gaze-pointer {
+  position: absolute;
+  left: -14px;
+  top: -14px;
   width: 28px;
   height: 28px;
-  margin-left: -14px;
-  margin-top: -14px;
   border-radius: 50%;
   background: radial-gradient(circle, #ffeb3b 0%, #ff9800 70%, transparent 100%);
   border: 3px solid #fff;
   box-shadow: 0 0 12px rgba(255, 235, 59, 0.8);
-  pointer-events: none;
-  z-index: 9999;
 }
 
 .tracking-banner {
