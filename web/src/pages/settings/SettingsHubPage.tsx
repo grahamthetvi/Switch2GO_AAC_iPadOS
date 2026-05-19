@@ -96,6 +96,13 @@ export function SettingsHubPage() {
           </span>
         </button>
         <SettingsHubRow
+          to="/settings/backup"
+          title={t('dataBackup.title')}
+          icon="💾"
+          iconClass="icon-teal"
+          subtitle={t('dataBackup.hubSubtitle')}
+        />
+        <SettingsHubRow
           to="/settings/troubleshooting"
           title={t('troubleshooting')}
           icon="🔧"

@@ -23,6 +23,7 @@ import { SwitchControlPage } from './pages/settings/SwitchControlPage'
 import { TimingSensitivityPage } from './pages/settings/TimingSensitivityPage'
 import { LanguagePage } from './pages/settings/LanguagePage'
 import { PrivacyPolicyPage } from './pages/settings/PrivacyPolicyPage'
+import { DataBackupPage } from './pages/settings/DataBackupPage'
 import { TroubleshootingPage } from './pages/settings/TroubleshootingPage'
 import { useSettings } from './settings/settingsStore'
 import { TrackingProvider } from './tracking/TrackingContext'
@@ -79,6 +80,7 @@ export default function App() {
           <Route path="/settings/head-tracking" element={<HeadTrackingPage />} />
           <Route path="/settings/switch-control" element={<SwitchControlPage />} />
           <Route path="/settings/language" element={<LanguagePage />} />
+          <Route path="/settings/backup" element={<DataBackupPage />} />
           <Route path="/settings/troubleshooting" element={<TroubleshootingPage />} />
           <Route path="/settings/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/settings/reset" element={<ResetAppPage />} />

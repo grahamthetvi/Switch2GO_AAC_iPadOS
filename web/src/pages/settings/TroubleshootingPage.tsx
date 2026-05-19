@@ -71,6 +71,19 @@ export function TroubleshootingPage() {
         iconClass="icon-orange"
         steps={[t('troubleshootingGuide.switch1'), t('troubleshootingGuide.switch2'), t('troubleshootingGuide.switch3')]}
       />
+      <TroubleshootingSection
+        title={t('troubleshootingGuide.safariTitle')}
+        icon="📱"
+        iconClass="icon-teal"
+        steps={[
+          t('troubleshootingGuide.safariIntro'),
+          t('troubleshootingGuide.safariEye'),
+          t('troubleshootingGuide.safariHead'),
+          t('troubleshootingGuide.safariDwell'),
+          t('troubleshootingGuide.safariCameraDeny'),
+          t('troubleshootingGuide.safariTouch'),
+        ]}
+      />
     </SettingsLayout>
   )
 }

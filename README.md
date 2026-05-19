@@ -107,12 +107,22 @@ The browser app lives in [`web/`](web/). It mirrors the iOS AAC flow: preset cat
 ```bash
 cd web
 npm install
-npm run dev          # local dev at http://localhost:5173
+# MediaPipe model (~3.6MB) for local eye/head tracking:
+mkdir -p public/models
+curl -fsSL "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task" \
+  -o public/models/face_landmarker.task
+npm run dev          # local dev (Vite base path matches GitHub Pages)
 npm run build        # output in web/dist
 ```
 
 Deployed URL (after enabling **GitHub Pages → GitHub Actions** in repo settings):  
 `https://grahamthetvi.github.io/Switch2GO_AAC_iPadOS/`
+
+**Backup:** Settings → Backup & Restore exports categories, phrases, images, and settings as JSON (device-only). Import replaces local data.
+
+**CI:** Pull requests run `npm run build` in `web/` via `.github/workflows/web.yml`. Pages deploy downloads the face model before build.
+
+**iPad Safari QA:** See Settings → Troubleshooting → iPad Safari checklist (eye gaze, head tracking, dwell, camera denied → touch fallback).
 
 ### Android Setup After Cloning
 

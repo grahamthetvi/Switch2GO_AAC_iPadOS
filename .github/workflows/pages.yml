@@ -29,6 +29,13 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
+      - name: Download face landmarker model
+        working-directory: web
+        run: |
+          mkdir -p public/models
+          curl -fsSL "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task" \
+            -o public/models/face_landmarker.task
+
       - name: Install dependencies
         working-directory: web
         run: npm ci

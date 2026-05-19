@@ -25,7 +25,7 @@ todos:
     status: pending
   - id: p8-qa-deploy
     content: "Phase 8: iPad Safari QA, data export/import, CI hardening"
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -19,13 +19,28 @@ interface TrackingContextValue {
   startTracking: () => Promise<void>
   stopTracking: () => void
   recenterCursor: () => void
+  trackingBlockedReason: string | null
+  fallbackToTouch: () => void
+  retryTracking: () => void
+  reportTrackingError: (message: string) => void
 }
 
 const TrackingContext = createContext<TrackingContextValue | null>(null)
 
+function isCameraDenied(message: string): boolean {
+  const lower = message.toLowerCase()
+  return (
+    lower.includes('permission') ||
+    lower.includes('denied') ||
+    lower.includes('notallowed') ||
+    lower.includes('not allowed')
+  )
+}
+
 export function TrackingProvider({ children }: { children: ReactNode }) {
   const settings = useSettings()
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [trackingBlockedReason, setTrackingBlockedReason] = useState<string | null>(null)
   const [tracking, setTracking] = useState<TrackingState>({
     gazePosition: null,
     isTracking: false,
@@ -87,11 +102,28 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     }
   }, [tracking.gazePosition, dwell, settings.selectionMode])
 
+  const reportTrackingError = useCallback((message: string) => {
+    setTrackingBlockedReason(message)
+    if (settings.selectionMode !== 'none') {
+      useSettings.getState().setSelectionMode('none')
+    }
+  }, [settings.selectionMode])
+
   const startTracking = useCallback(async () => {
     const video = videoRef.current
     if (!video) return
-    await trackingManager.start(video)
-  }, [])
+    try {
+      await trackingManager.start(video)
+      setTrackingBlockedReason(null)
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Camera or tracking unavailable'
+      setTrackingBlockedReason(message)
+      if (settings.selectionMode !== 'none') {
+        useSettings.getState().setSelectionMode('none')
+      }
+      throw e
+    }
+  }, [settings.selectionMode])
 
   const stopTracking = useCallback(() => {
     trackingManager.stop()
@@ -101,18 +133,69 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     trackingManager.recenter()
   }, [])
 
+  const fallbackToTouch = useCallback(() => {
+    setTrackingBlockedReason(null)
+    useSettings.getState().setSelectionMode('none')
+    stopTracking()
+  }, [stopTracking])
+
+  const retryTracking = useCallback(() => {
+    setTrackingBlockedReason(null)
+    const mode = useSettings.getState().selectionMode
+    if (mode === 'none') {
+      useSettings.getState().setSelectionMode('eyeGaze')
+    }
+    void startTracking().catch(() => {})
+  }, [startTracking])
+
   useEffect(() => {
     if (settings.selectionMode === 'none') {
       stopTracking()
       return
     }
-    void startTracking().catch(() => {})
+    setTrackingBlockedReason(null)
+    void startTracking().catch((e) => {
+      const message = e instanceof Error ? e.message : 'Tracking unavailable'
+      setTrackingBlockedReason(message)
+    })
     return () => stopTracking()
   }, [settings.selectionMode, startTracking, stopTracking])
 
+  useEffect(() => {
+    if (
+      settings.selectionMode !== 'none' &&
+      tracking.showTrackingError &&
+      tracking.errorMessage &&
+      isCameraDenied(tracking.errorMessage)
+    ) {
+      setTrackingBlockedReason(tracking.errorMessage)
+    }
+  }, [settings.selectionMode, tracking.showTrackingError, tracking.errorMessage])
+
   const value = useMemo(
-    () => ({ tracking, dwell, videoRef, startTracking, stopTracking, recenterCursor }),
-    [tracking, dwell, startTracking, stopTracking, recenterCursor],
+    () => ({
+      tracking,
+      dwell,
+      videoRef,
+      startTracking,
+      stopTracking,
+      recenterCursor,
+      trackingBlockedReason,
+      fallbackToTouch,
+      retryTracking,
+      reportTrackingError,
+    }),
+    [
+      tracking,
+      dwell,
+      startTracking,
+      stopTracking,
+      recenterCursor,
+      trackingBlockedReason,
+      fallbackToTouch,
+      retryTracking,
+      reportTrackingError,
+    ],
   )
 
   return (
