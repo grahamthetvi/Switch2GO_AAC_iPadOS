@@ -8,7 +8,7 @@ import type { PhraseDisplay } from '../data/types'
 import { useTranslation } from '../i18n/useTranslation'
 import { hexToCss, useSettings } from '../settings/settingsStore'
 import { prepareSpeech, speak } from '../tts/speak'
-import { useTracking } from '../tracking/TrackingContext'
+import { useTrackingActions, useTrackingState } from '../tracking/TrackingContext'
 
 export function PhrasesPage() {
   const { t, locale } = useTranslation()
@@ -17,7 +17,8 @@ export function PhrasesPage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
   const settings = useSettings()
-  const { armRaise, handGesture, subscribeArmRaise, subscribeHandGesture } = useTracking()
+  const { armRaise, handGesture } = useTrackingState()
+  const { subscribeArmRaise, subscribeHandGesture } = useTrackingActions()
 
   const symbolCount = settings.symbolCount
   const totalPages = Math.max(1, Math.ceil(phrases.length / symbolCount))

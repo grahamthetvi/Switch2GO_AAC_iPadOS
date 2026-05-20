@@ -3,7 +3,7 @@ import { TrackingErrorBoundary } from './TrackingErrorBoundary'
 import { TrackingFallbackBanner } from './TrackingFallbackBanner'
 import { TtsStatusBanner } from './TtsStatusBanner'
 import { useSettings } from '../settings/settingsStore'
-import { useTracking } from '../tracking/TrackingContext'
+import { useTracking, useTrackingActions } from '../tracking/TrackingContext'
 
 function GazeOverlayContent() {
   const {
@@ -101,7 +101,7 @@ function GazeOverlayContent() {
 }
 
 function GazeOverlayRoot() {
-  const { reportTrackingError } = useTracking()
+  const { reportTrackingError } = useTrackingActions()
   return (
     <TrackingErrorBoundary onError={reportTrackingError}>
       <GazeOverlayContent />

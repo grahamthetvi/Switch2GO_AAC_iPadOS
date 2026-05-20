@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useCallback,
@@ -23,17 +24,20 @@ import type { ArmSide } from './armRaiseDetector'
 import type { HandSide } from './handGestureDetector'
 import { trackingManager, type TrackingState } from './trackingManager'
 
-interface TrackingContextValue {
+interface TrackingStateContextValue {
   tracking: TrackingState
   armRaise: ArmRaiseTrackingState
   handGesture: HandGestureTrackingState
-  dwell: DwellSelectionManager
   dwellProgress: number
+  trackingBlockedReason: string | null
+}
+
+interface TrackingActionsContextValue {
+  dwell: DwellSelectionManager
   videoRef: React.RefObject<HTMLVideoElement | null>
   startTracking: () => Promise<void>
   stopTracking: () => void
   recenterCursor: () => void
-  trackingBlockedReason: string | null
   fallbackToTouch: () => void
   retryTracking: () => void
   reportTrackingError: (message: string) => void
@@ -41,7 +45,17 @@ interface TrackingContextValue {
   subscribeHandGesture: (listener: (side: HandSide) => void) => () => void
 }
 
-const TrackingContext = createContext<TrackingContextValue | null>(null)
+interface DwellStatusContextValue {
+  dwellProgress: number
+  hoveredButtonId: string | null
+  trackingActive: boolean
+}
+
+type TrackingContextValue = TrackingStateContextValue & TrackingActionsContextValue
+
+const TrackingStateContext = createContext<TrackingStateContextValue | null>(null)
+const TrackingActionsContext = createContext<TrackingActionsContextValue | null>(null)
+const DwellStatusContext = createContext<DwellStatusContextValue | null>(null)
 
 function isCameraDenied(message: string): boolean {
   const lower = message.toLowerCase()
@@ -57,7 +71,10 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
   const settings = useSettings()
   const videoRef = useRef<HTMLVideoElement>(null)
   const [trackingBlockedReason, setTrackingBlockedReason] = useState<string | null>(null)
-  const [dwellProgress, setDwellProgress] = useState(0)
+  const [dwellStatus, setDwellStatus] = useState({
+    progress: 0,
+    hoveredButtonId: null as string | null,
+  })
   const [tracking, setTracking] = useState<TrackingState>({
     gazePosition: null,
     isTracking: false,
@@ -102,8 +119,12 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
   }, [dwell, settings.selectionMode])
 
   useEffect(() => {
-    return dwell.subscribeProgress((progress) => {
-      setDwellProgress(progress)
+    return dwell.subscribeProgress((progress, hoveredButtonId) => {
+      setDwellStatus((current) =>
+        current.progress === progress && current.hoveredButtonId === hoveredButtonId
+          ? current
+          : { progress, hoveredButtonId },
+      )
     })
   }, [dwell])
 
@@ -257,18 +278,24 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     [],
   )
 
-  const value = useMemo(
+  const stateValue = useMemo(
     () => ({
       tracking,
       armRaise,
       handGesture,
+      dwellProgress: dwellStatus.progress,
+      trackingBlockedReason,
+    }),
+    [tracking, armRaise, handGesture, dwellStatus.progress, trackingBlockedReason],
+  )
+
+  const actionsValue = useMemo(
+    () => ({
       dwell,
-      dwellProgress,
       videoRef,
       startTracking,
       stopTracking,
       recenterCursor,
-      trackingBlockedReason,
       fallbackToTouch,
       retryTracking,
       reportTrackingError,
@@ -276,15 +303,10 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       subscribeHandGesture,
     }),
     [
-      tracking,
-      armRaise,
-      handGesture,
       dwell,
-      dwellProgress,
       startTracking,
       stopTracking,
       recenterCursor,
-      trackingBlockedReason,
       fallbackToTouch,
       retryTracking,
       reportTrackingError,
@@ -293,13 +315,51 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     ],
   )
 
+  const dwellStatusValue = useMemo(
+    () => ({
+      dwellProgress: dwellStatus.progress,
+      hoveredButtonId: dwellStatus.hoveredButtonId,
+      trackingActive: tracking.isTracking && tracking.isCursorVisible,
+    }),
+    [
+      dwellStatus.progress,
+      dwellStatus.hoveredButtonId,
+      tracking.isTracking,
+      tracking.isCursorVisible,
+    ],
+  )
+
   return (
-    <TrackingContext.Provider value={value}>{children}</TrackingContext.Provider>
+    <TrackingStateContext.Provider value={stateValue}>
+      <TrackingActionsContext.Provider value={actionsValue}>
+        <DwellStatusContext.Provider value={dwellStatusValue}>
+          {children}
+        </DwellStatusContext.Provider>
+      </TrackingActionsContext.Provider>
+    </TrackingStateContext.Provider>
   )
 }
 
 export function useTracking(): TrackingContextValue {
-  const ctx = useContext(TrackingContext)
-  if (!ctx) throw new Error('useTracking must be used within TrackingProvider')
+  const state = useTrackingState()
+  const actions = useTrackingActions()
+  return useMemo(() => ({ ...state, ...actions }), [state, actions])
+}
+
+export function useTrackingState(): TrackingStateContextValue {
+  const ctx = useContext(TrackingStateContext)
+  if (!ctx) throw new Error('useTrackingState must be used within TrackingProvider')
+  return ctx
+}
+
+export function useTrackingActions(): TrackingActionsContextValue {
+  const ctx = useContext(TrackingActionsContext)
+  if (!ctx) throw new Error('useTrackingActions must be used within TrackingProvider')
+  return ctx
+}
+
+export function useDwellStatus(): DwellStatusContextValue {
+  const ctx = useContext(DwellStatusContext)
+  if (!ctx) throw new Error('useDwellStatus must be used within TrackingProvider')
   return ctx
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
-import { useTracking } from '../tracking/TrackingContext'
+import { useDwellStatus, useTrackingActions } from '../tracking/TrackingContext'
 
 interface Props {
   id: string
@@ -12,7 +12,8 @@ interface Props {
 
 export function DwellSelectable({ id, onActivate, onSpeak, children, className, style }: Props) {
   const ref = useRef<HTMLButtonElement>(null)
-  const { dwell, dwellProgress, tracking } = useTracking()
+  const { dwell } = useTrackingActions()
+  const { dwellProgress, hoveredButtonId, trackingActive } = useDwellStatus()
 
   useEffect(() => {
     const el = ref.current
@@ -46,9 +47,8 @@ export function DwellSelectable({ id, onActivate, onSpeak, children, className, 
     })
   }, [id, dwell, onActivate, onSpeak])
 
-  const isHovered = dwell.hoveredButtonId === id
+  const isHovered = hoveredButtonId === id
   const progress = isHovered ? dwellProgress : 0
-  const trackingActive = tracking.isTracking && tracking.isCursorVisible
 
   return (
     <button

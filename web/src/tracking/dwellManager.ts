@@ -155,13 +155,22 @@ export class DwellSelectionManager {
 
   private tickDwell(): void {
     if (!this.hoveredButtonId || this.dwellStartTime == null) return
+    const repeat = this.getRepeatSettings()
+    if (this.activatedWhileHovering && !repeat.enabled) {
+      if (this.dwellProgress !== 1) {
+        this.dwellProgress = 1
+        this.emitProgress()
+      }
+      this.stopDwellAnimation()
+      return
+    }
+
     const elapsed = performance.now() - this.dwellStartTime
     const dwellMs = this.getDwellTimeMs()
     this.dwellProgress = Math.min(1, elapsed / dwellMs)
     this.emitProgress()
     if (elapsed >= dwellMs) {
       const now = performance.now()
-      const repeat = this.getRepeatSettings()
       const minGap = this.activatedWhileHovering && repeat.enabled
         ? repeat.delayMs
         : this.activationCooldown

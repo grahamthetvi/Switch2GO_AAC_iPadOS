@@ -3,11 +3,11 @@ import { SettingsHubRow } from '../../components/settings/SettingsHubRow'
 import { SettingsLayout } from '../../components/settings/SettingsLayout'
 import { useTranslation } from '../../i18n/useTranslation'
 import { useSettings } from '../../settings/settingsStore'
-import { useTracking } from '../../tracking/TrackingContext'
+import { useTrackingActions } from '../../tracking/TrackingContext'
 
 export function SettingsHubPage() {
   const { t } = useTranslation()
-  const { recenterCursor } = useTracking()
+  const { recenterCursor } = useTrackingActions()
   const requestOnboarding = useSettings((s) => s.requestOnboarding)
 
   return (
