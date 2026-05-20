@@ -2,7 +2,6 @@ import type { Locale } from '../i18n/i18n'
 import { useSettings } from '../settings/settingsStore'
 import {
   disableNativeSpeech,
-  getNativeVoiceCount,
   isNativeSpeechDisabled,
   isNativeSpeechSupported,
   nativeSpeakStarted,
@@ -64,16 +63,4 @@ export function stopSpeech(): void {
   }
   stopPiperSpeech()
   setTtsStatus({ state: 'idle', message: null })
-}
-
-export function getSpeechDiagnostics(): {
-  nativeSupported: boolean
-  nativeVoiceCount: number
-  usingPiperFallback: boolean
-} {
-  return {
-    nativeSupported: isNativeSpeechSupported(),
-    nativeVoiceCount: getNativeVoiceCount(),
-    usingPiperFallback: isNativeSpeechDisabled() || getNativeVoiceCount() === 0,
-  }
 }
