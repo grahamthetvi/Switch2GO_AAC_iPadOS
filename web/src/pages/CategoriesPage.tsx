@@ -6,7 +6,6 @@ import { getPresetCategoryColor, loadCategories } from '../data/repository'
 import type { CategoryDisplay } from '../data/types'
 import { useTranslation } from '../i18n/useTranslation'
 import { hexToCss, useSettings } from '../settings/settingsStore'
-import { useTracking } from '../tracking/TrackingContext'
 
 export function CategoriesPage() {
   const { t, locale } = useTranslation()
@@ -15,7 +14,6 @@ export function CategoriesPage() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const settings = useSettings()
   const navigate = useNavigate()
-  const { dwell } = useTracking()
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -33,11 +31,6 @@ export function CategoriesPage() {
   useEffect(() => {
     void refresh()
   }, [refresh, locale])
-
-  useEffect(() => {
-    dwell.clearAllButtons()
-    return () => dwell.clearAllButtons()
-  }, [dwell])
 
   const borderColor = hexToCss(settings.appBorderColor)
 

@@ -17,7 +17,7 @@ export function PhrasesPage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
   const settings = useSettings()
-  const { dwell, armRaise, handGesture, subscribeArmRaise, subscribeHandGesture } = useTracking()
+  const { armRaise, handGesture, subscribeArmRaise, subscribeHandGesture } = useTracking()
 
   const symbolCount = settings.symbolCount
   const totalPages = Math.max(1, Math.ceil(phrases.length / symbolCount))
@@ -32,11 +32,6 @@ export function PhrasesPage() {
   useEffect(() => {
     void refresh()
   }, [refresh, locale])
-
-  useEffect(() => {
-    dwell.clearAllButtons()
-    return () => dwell.clearAllButtons()
-  }, [dwell, page, symbolCount])
 
   useEffect(() => {
     setPage(0)
