@@ -26,7 +26,8 @@ import {
 import { isYouTubeMediaRef } from '../../data/youtube'
 import { getPresetPhraseText, loadPhrasesForEdit } from '../../data/repository'
 import type { PhraseDisplay, PhraseStyle } from '../../data/types'
-import { hexToCss } from '../../settings/settingsStore'
+import { selectionModeSupportsGames } from '../../settings/selectionModeGames'
+import { hexToCss, useSettings } from '../../settings/settingsStore'
 
 type ColorField = 'background' | 'text' | 'border'
 
@@ -36,6 +37,8 @@ export function PhraseStyleEditorPage() {
   const isPreset = searchParams.get('preset') === '1'
   const categoryId = searchParams.get('category') ?? ''
   const navigate = useNavigate()
+  const selectionMode = useSettings((s) => s.selectionMode)
+  const gamesSupported = selectionModeSupportsGames(selectionMode)
 
   const [phrase, setPhrase] = useState<PhraseDisplay | null>(null)
   const [style, setStyle] = useState<PhraseStyle>({ ...EMPTY_PHRASE_STYLE })
@@ -114,7 +117,11 @@ export function PhraseStyleEditorPage() {
     : 'YouTube: None'
 
   const gameLabel =
-    style.gameType === GAME_TYPE_CURSOR_ROCKET ? 'Game: Rocket cursor follower' : 'Game: None'
+    style.gameType === GAME_TYPE_CURSOR_ROCKET
+      ? 'Game: Rocket cursor follower'
+      : gamesSupported
+        ? 'Game: None'
+        : 'Game: None (eye / head / touch only)'
 
   const clearPreviousMedia = async (nextRef: string | null | undefined) => {
     if (!style.mediaRef || style.mediaRef === nextRef) return
@@ -130,6 +137,7 @@ export function PhraseStyleEditorPage() {
   }
 
   const attachGame = async (gameType: string | null) => {
+    if (gameType && !gamesSupported) return
     if (gameType) {
       await clearPreviousMedia(null)
       await persist({
@@ -354,6 +362,7 @@ export function PhraseStyleEditorPage() {
       {showGamePicker ? (
         <GamePickerModal
           currentGameType={style.gameType}
+          gamesSupported={gamesSupported}
           onSelect={(gameType) => {
             void attachGame(gameType)
           }}

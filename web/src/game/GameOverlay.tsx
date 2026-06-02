@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { GazePointer } from '../components/GazePointer'
 import { GAME_TYPE_CURSOR_ROCKET } from '../data/phraseStyle'
+import {
+  selectionModeUsesGazeForGames,
+  selectionModeUsesTouchForGames,
+} from '../settings/selectionModeGames'
 import { hexToCss, useSettings } from '../settings/settingsStore'
 import { useTrackingActions, useDwellStatus, useTrackingState } from '../tracking/TrackingContext'
 import { CursorRocketGame } from './CursorRocketGame'
@@ -67,19 +71,17 @@ export function GameOverlay({ coordinator, state }: Props) {
 
   const gameType = phrase.style?.gameType
   const useGaze =
-    settings.selectionMode !== 'none' &&
-    settings.selectionMode !== 'armRaise' &&
-    settings.selectionMode !== 'handGesture' &&
+    selectionModeUsesGazeForGames(settings.selectionMode) &&
     tracking.isTracking &&
     tracking.isCursorVisible &&
     tracking.gazePosition
+  const useTouch = selectionModeUsesTouchForGames(settings.selectionMode)
 
   const targetX = useGaze ? tracking.gazePosition!.x : pointer.x
   const targetY = useGaze ? tracking.gazePosition!.y : pointer.y
 
-  const showPointer =
-    useGaze &&
-    tracking.gazePosition
+  const showPointer = useGaze && tracking.gazePosition
+  const showTouchExit = useTouch
 
   return (
     <div
@@ -108,7 +110,7 @@ export function GameOverlay({ coordinator, state }: Props) {
         />
       ) : null}
 
-      {state.showExitControl ? (
+      {showTouchExit || state.showExitControl ? (
         <button
           type="button"
           className="media-playback-control media-playback-control-exit"

@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 import VocableShared
 
 private let gameExitButtonId = "game_exit"
@@ -9,6 +10,7 @@ struct GameOverlayView: View {
     @ObservedObject var coordinator: GamePlaybackCoordinator
     @ObservedObject var dwellManager: DwellSelectionManager
     @ObservedObject var gazeManager: GazeTrackingManager
+    @ObservedObject var settings: AppSettings
     var isTrackingEnabled: Bool
 
     @State private var touchTarget: CGPoint?
@@ -22,7 +24,10 @@ struct GameOverlayView: View {
 
                 gameGazeZones
 
-                if isTrackingEnabled && gazeManager.isTracking && gazeManager.isCursorVisible {
+                if GameSelectionMode.usesGaze(selectionMode: settings.selectionMode),
+                   isTrackingEnabled,
+                   gazeManager.isTracking,
+                   gazeManager.isCursorVisible {
                     GazePointerView(
                         position: gazeManager.gazePosition,
                         dwellProgress: dwellManager.dwellProgress,
@@ -31,7 +36,7 @@ struct GameOverlayView: View {
                     .allowsHitTesting(false)
                 }
 
-                if coordinator.showExitControl {
+                if GameSelectionMode.usesTouch(selectionMode: settings.selectionMode) || coordinator.showExitControl {
                     exitButton
                 }
             }
@@ -60,9 +65,13 @@ struct GameOverlayView: View {
     private func gameContent(phrase: PhraseDisplayModel) -> some View {
         GeometryReader { geo in
             let defaultCenter = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
-            let gazeTarget = (isTrackingEnabled && gazeManager.isTracking && gazeManager.isCursorVisible)
-                ? gazeManager.gazePosition
-                : nil
+            let gazeTarget: CGPoint? = {
+                guard GameSelectionMode.usesGaze(selectionMode: settings.selectionMode),
+                      isTrackingEnabled,
+                      gazeManager.isTracking,
+                      gazeManager.isCursorVisible else { return nil }
+                return gazeManager.gazePosition
+            }()
             let target = gazeTarget ?? touchTarget ?? defaultCenter
 
             if phrase.style?.isCursorRocketGame() == true {

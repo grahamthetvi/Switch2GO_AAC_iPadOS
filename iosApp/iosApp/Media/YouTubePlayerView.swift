@@ -17,6 +17,9 @@ struct YouTubePlayerView: UIViewRepresentable {
         if #available(iOS 10.0, *) {
             config.mediaTypesRequiringUserActionForPlayback = []
         }
+        if #available(iOS 14.0, *) {
+            config.defaultWebpagePreferences.allowsContentJavaScript = true
+        }
         config.userContentController.add(context.coordinator, name: "playback")
 
         let webView = WKWebView(frame: .zero, configuration: config)
@@ -50,10 +53,30 @@ struct YouTubePlayerView: UIViewRepresentable {
                   let body = message.body as? [String: Any],
                   let type = body["type"] as? String else { return }
             switch type {
-            case "ended", "error":
+            case "ended":
                 holder.onEnded?()
+            case "error":
+                let code = body["code"] as? Int ?? -1
+                DebugLog.error("YouTube player error \(code)", tag: "YouTube")
+                if Self.isFatalYouTubeError(code) {
+                    holder.onEnded?()
+                }
+            case "debug":
+                if let message = body["message"] as? String {
+                    DebugLog.debug(message, tag: "YouTube")
+                }
             default:
                 break
+            }
+        }
+
+        /// Errors where retrying or continuing is pointless (see YouTube IFrame API docs).
+        private static func isFatalYouTubeError(_ code: Int) -> Bool {
+            switch code {
+            case 2, 5, 100, 101, 150, 153:
+                return true
+            default:
+                return false
             }
         }
     }
@@ -63,7 +86,9 @@ struct YouTubePlayerView: UIViewRepresentable {
         <!DOCTYPE html>
         <html>
         <head>
+        <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <meta name="referrer" content="strict-origin-when-cross-origin">
         <style>
         html, body { margin:0; padding:0; background:#000; height:100%; overflow:hidden; }
         #player { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
@@ -72,38 +97,79 @@ struct YouTubePlayerView: UIViewRepresentable {
         <body>
         <div id="player"></div>
         <script>
-        var tag = document.createElement('script');
-        tag.src = 'https://www.youtube.com/iframe_api';
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-        window.mediaPlayer = null;
-        function onYouTubeIframeAPIReady() {
-          window.mediaPlayer = new YT.Player('player', {
-            height: '100%',
-            width: '100%',
-            videoId: '\(videoId)',
-            playerVars: {
-              autoplay: 1,
-              controls: 0,
-              modestbranding: 1,
-              rel: 0,
-              playsinline: 1,
-              fs: 0,
-              disablekb: 1,
-              iv_load_policy: 3
-            },
-            events: {
-              onStateChange: function(event) {
-                if (event.data === YT.PlayerState.ENDED) {
-                  window.webkit.messageHandlers.playback.postMessage({ type: 'ended' });
-                }
+        (function() {
+          var ORIGIN = 'https://www.youtube.com';
+          var startMuted = true;
+          var unmuteAttempted = false;
+
+          function post(type, extra) {
+            var payload = Object.assign({ type: type }, extra || {});
+            window.webkit.messageHandlers.playback.postMessage(payload);
+          }
+
+          function tryUnmute(player) {
+            if (unmuteAttempted || !player || !player.unMute) return;
+            unmuteAttempted = true;
+            try { player.unMute(); } catch (e) {}
+          }
+
+          window.mediaPlayer = null;
+          window.onYouTubeIframeAPIReady = function() {
+            window.mediaPlayer = new YT.Player('player', {
+              height: '100%',
+              width: '100%',
+              videoId: '\(videoId)',
+              playerVars: {
+                autoplay: 0,
+                controls: 0,
+                modestbranding: 1,
+                rel: 0,
+                playsinline: 1,
+                fs: 0,
+                disablekb: 1,
+                iv_load_policy: 3,
+                enablejsapi: 1,
+                origin: ORIGIN,
+                widget_referrer: ORIGIN + '/',
+                mute: 1
               },
-              onError: function() {
-                window.webkit.messageHandlers.playback.postMessage({ type: 'error' });
+              events: {
+                onReady: function(event) {
+                  post('debug', { message: 'onReady' });
+                  event.target.playVideo();
+                },
+                onStateChange: function(event) {
+                  if (event.data === YT.PlayerState.PLAYING) {
+                    if (startMuted) {
+                      startMuted = false;
+                      setTimeout(function() { tryUnmute(event.target); }, 250);
+                    }
+                  }
+                  if (event.data === YT.PlayerState.ENDED) {
+                    post('ended');
+                  }
+                },
+                onAutoplayBlocked: function() {
+                  post('debug', { message: 'onAutoplayBlocked — retrying muted' });
+                  var p = window.mediaPlayer;
+                  if (!p) return;
+                  try {
+                    p.mute();
+                    p.playVideo();
+                  } catch (e) {}
+                },
+                onError: function(event) {
+                  post('error', { code: event.data });
+                }
               }
-            }
-          });
-        }
+            });
+          };
+
+          var tag = document.createElement('script');
+          tag.src = 'https://www.youtube.com/iframe_api';
+          var firstScriptTag = document.getElementsByTagName('script')[0];
+          firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        })();
         </script>
         </body>
         </html>
@@ -127,8 +193,21 @@ final class YouTubePlayerHolder: ObservableObject {
     }
 
     func setPaused(_ paused: Bool) {
-        let command = paused ? "pauseVideo" : "playVideo"
-        webView?.evaluateJavaScript("window.mediaPlayer && window.mediaPlayer.\(command)();", completionHandler: nil)
+        if paused {
+            webView?.evaluateJavaScript("window.mediaPlayer && window.mediaPlayer.pauseVideo();", completionHandler: nil)
+        } else {
+            webView?.evaluateJavaScript(
+                """
+                (function() {
+                  var p = window.mediaPlayer;
+                  if (!p) return;
+                  if (p.unMute) p.unMute();
+                  p.playVideo();
+                })();
+                """,
+                completionHandler: nil
+            )
+        }
     }
 
     func stop() {

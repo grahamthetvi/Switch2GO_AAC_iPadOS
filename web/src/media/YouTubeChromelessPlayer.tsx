@@ -21,12 +21,13 @@ export function YouTubeChromelessPlayer({ videoId, isPaused, onEnded, onError }:
       if (cancelled || !hostRef.current || !window.YT?.Player) return
 
       playerRef.current?.destroy()
+      const origin = window.location.origin || 'https://www.youtube.com'
       playerRef.current = new window.YT.Player(hostRef.current, {
         videoId,
         width: '100%',
         height: '100%',
         playerVars: {
-          autoplay: 1,
+          autoplay: 0,
           controls: 0,
           modestbranding: 1,
           rel: 0,
@@ -34,17 +35,34 @@ export function YouTubeChromelessPlayer({ videoId, isPaused, onEnded, onError }:
           fs: 0,
           disablekb: 1,
           iv_load_policy: 3,
+          enablejsapi: 1,
+          origin,
+          mute: 1,
         },
         events: {
           onReady: () => {
             readyRef.current = true
-            if (isPaused) playerRef.current?.pauseVideo()
-            else playerRef.current?.playVideo()
+            const player = playerRef.current
+            if (!player) return
+            if (isPaused) player.pauseVideo()
+            else player.playVideo()
           },
           onStateChange: (event) => {
+            if (event.data === window.YT!.PlayerState.PLAYING) {
+              playerRef.current?.unMute()
+            }
             if (event.data === window.YT!.PlayerState.ENDED) onEnded()
           },
-          onError: () => onError(),
+          onAutoplayBlocked: () => {
+            const player = playerRef.current
+            if (!player) return
+            player.mute()
+            player.playVideo()
+          },
+          onError: (event) => {
+            console.error('[YouTube] player error', event.data)
+            onError()
+          },
         },
       })
     })

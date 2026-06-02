@@ -16,6 +16,7 @@ declare namespace YT {
       onReady?: (event: { target: Player }) => void
       onStateChange?: (event: { data: number; target: Player }) => void
       onError?: (event: { data: number; target: Player }) => void
+      onAutoplayBlocked?: () => void
     }
   }
 
@@ -24,6 +25,8 @@ declare namespace YT {
     playVideo(): void
     pauseVideo(): void
     stopVideo(): void
+    mute(): void
+    unMute(): void
     destroy(): void
   }
 }

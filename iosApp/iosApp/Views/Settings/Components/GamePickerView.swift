@@ -11,7 +11,7 @@ struct GamePickerView: View {
         NavigationStack {
             List {
                 Section {
-                    Text("After this phrase is selected, the game starts if no other phrase is chosen within the delay in Timing & Sensitivity.")
+                    Text("After this phrase is selected, the game starts if no other phrase is chosen within the delay in Timing & Sensitivity. Games work with eye gaze, head tracking, or touch only.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

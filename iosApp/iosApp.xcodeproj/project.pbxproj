@@ -52,6 +52,8 @@
 		GAMEB0022F6000GAME000002 /* GameOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0022F6000GAME000002 /* GameOverlayView.swift */; };
 		GAMEB0032F6000GAME000003 /* CursorRocketGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0032F6000GAME000003 /* CursorRocketGameView.swift */; };
 		GAMEB0042F6000GAME000004 /* GamePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0042F6000GAME000004 /* GamePickerView.swift */; };
+		GAMEB0052F6000GAME000005 /* GameSelectionMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0052F6000GAME000005 /* GameSelectionMode.swift */; };
+		GAMEB0062F6000GAME000006 /* GameUnsupportedBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0062F6000GAME000006 /* GameUnsupportedBanner.swift */; };
 		DCDD8ACF2F3185FF000B97D2 /* LocalizationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDD8AC72F3185FF000B97D2 /* LocalizationHelper.swift */; };
 		DCDD8AD02F3185FF000B97D2 /* AccessibilityHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDD8AC42F3185FF000B97D2 /* AccessibilityHelpers.swift */; };
 		DCDD8AD42F318624000B97D2 /* PhrasesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDD8AD22F318624000B97D2 /* PhrasesViewModel.swift */; };
@@ -156,6 +158,8 @@
 		GAMEF0022F6000GAME000002 /* GameOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverlayView.swift; sourceTree = "<group>"; };
 		GAMEF0032F6000GAME000003 /* CursorRocketGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorRocketGameView.swift; sourceTree = "<group>"; };
 		GAMEF0042F6000GAME000004 /* GamePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GamePickerView.swift; path = iosApp/Views/Settings/Components/GamePickerView.swift; sourceTree = "<group>"; };
+		GAMEF0052F6000GAME000005 /* GameSelectionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSelectionMode.swift; sourceTree = "<group>"; };
+		GAMEF0062F6000GAME000006 /* GameUnsupportedBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameUnsupportedBanner.swift; sourceTree = "<group>"; };
 		DCDD8AC72F3185FF000B97D2 /* LocalizationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationHelper.swift; sourceTree = "<group>"; };
 		E13A5C1818C74A03B44B1F39 /* PerformanceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceMonitor.swift; sourceTree = "<group>"; };
 		DCDD8AC92F3185FF000B97D2 /* TTSManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSManager.swift; sourceTree = "<group>"; };
@@ -600,6 +604,8 @@
 				GAMEF0012F6000GAME000001 /* GamePlaybackCoordinator.swift */,
 				GAMEF0022F6000GAME000002 /* GameOverlayView.swift */,
 				GAMEF0032F6000GAME000003 /* CursorRocketGameView.swift */,
+				GAMEF0052F6000GAME000005 /* GameSelectionMode.swift */,
+				GAMEF0062F6000GAME000006 /* GameUnsupportedBanner.swift */,
 			);
 			path = Game;
 			sourceTree = "<group>";
@@ -1324,6 +1330,8 @@
 				GAMEB0022F6000GAME000002 /* GameOverlayView.swift in Sources */,
 				GAMEB0032F6000GAME000003 /* CursorRocketGameView.swift in Sources */,
 				GAMEB0042F6000GAME000004 /* GamePickerView.swift in Sources */,
+				GAMEB0052F6000GAME000005 /* GameSelectionMode.swift in Sources */,
+				GAMEB0062F6000GAME000006 /* GameUnsupportedBanner.swift in Sources */,
 				DCDD8ACF2F3185FF000B97D2 /* LocalizationHelper.swift in Sources */,
 				DCDD8AEC2F318A60000B97D2 /* NumberPadView.swift in Sources */,
 				DCDD8AE92F318A37000B97D2 /* KeyboardView.swift in Sources */,

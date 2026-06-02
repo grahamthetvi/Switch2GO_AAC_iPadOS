@@ -23,9 +23,11 @@ export class GamePlaybackCoordinator {
   private idleTimer: ReturnType<typeof setTimeout> | null = null
   private armedPhrase: PhraseDisplay | null = null
   private getDelay: () => number
+  private getSupportsGames: () => boolean
 
-  constructor(getDelay: () => number) {
+  constructor(getDelay: () => number, getSupportsGames: () => boolean) {
     this.getDelay = getDelay
+    this.getSupportsGames = getSupportsGames
   }
 
   subscribe(listener: GamePlaybackListener): () => void {
@@ -45,7 +47,7 @@ export class GamePlaybackCoordinator {
       this.idleTimer = null
     }
 
-    if (!hasPhraseGame(phrase.style)) {
+    if (!hasPhraseGame(phrase.style) || !this.getSupportsGames()) {
       if (this.state.phase === 'armed') {
         this.armedPhrase = null
         this.state = { ...initialState }
@@ -83,7 +85,7 @@ export class GamePlaybackCoordinator {
 
   beginGame() {
     const phrase = this.armedPhrase
-    if (!phrase || !hasPhraseGame(phrase.style)) {
+    if (!phrase || !hasPhraseGame(phrase.style) || !this.getSupportsGames()) {
       this.state = { ...initialState }
       this.emit()
       return

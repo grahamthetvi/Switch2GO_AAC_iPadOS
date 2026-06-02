@@ -1472,6 +1472,19 @@ button.settings-hub-row {
   opacity: 0.85;
 }
 
+.game-unsupported-banner {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 180;
+  max-width: min(92vw, 520px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
 .error-text {
   color: #f44336;
   font-size: 0.9rem;

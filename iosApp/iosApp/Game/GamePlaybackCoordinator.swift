@@ -13,14 +13,34 @@ final class GamePlaybackCoordinator: ObservableObject {
     @Published private(set) var phase: Phase = .idle
     @Published private(set) var activePhrase: PhraseDisplayModel?
     @Published var showExitControl: Bool = false
+    @Published var unsupportedGameNotice: String?
 
     private var armedPhrase: PhraseDisplayModel?
     private var idleWorkItem: DispatchWorkItem?
+    private var noticeDismissWorkItem: DispatchWorkItem?
     private let settings = AppSettings.shared
+
+    func clearUnsupportedGameNotice() {
+        noticeDismissWorkItem?.cancel()
+        noticeDismissWorkItem = nil
+        unsupportedGameNotice = nil
+    }
 
     func onPhraseSelected(_ phrase: PhraseDisplayModel) {
         idleWorkItem?.cancel()
         idleWorkItem = nil
+
+        if phrase.style?.triggersDelayedGame() == true {
+            guard GameSelectionMode.supportsGames(selectionMode: settings.selectionMode) else {
+                showUnsupportedGameNotice()
+                if phase == .armed {
+                    phase = .idle
+                    armedPhrase = nil
+                }
+                return
+            }
+            clearUnsupportedGameNotice()
+        }
 
         guard phrase.style?.triggersDelayedGame() == true else {
             if phase == .armed {
@@ -62,7 +82,8 @@ final class GamePlaybackCoordinator: ObservableObject {
 
     func beginGame() {
         guard let phrase = armedPhrase,
-              phrase.style?.triggersDelayedGame() == true else {
+              phrase.style?.triggersDelayedGame() == true,
+              GameSelectionMode.supportsGames(selectionMode: settings.selectionMode) else {
             phase = .idle
             return
         }
@@ -85,5 +106,17 @@ final class GamePlaybackCoordinator: ObservableObject {
         activePhrase = nil
         showExitControl = false
         phase = .idle
+    }
+
+    private func showUnsupportedGameNotice() {
+        unsupportedGameNotice = GameSelectionMode.unsupportedMessage(
+            selectionMode: settings.selectionMode
+        )
+        noticeDismissWorkItem?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.unsupportedGameNotice = nil
+        }
+        noticeDismissWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6.0, execute: work)
     }
 }

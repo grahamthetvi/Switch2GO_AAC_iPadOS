@@ -37,6 +37,7 @@ struct ContentView: View {
                 coordinator: gameCoordinator,
                 dwellManager: gazeManager.dwellManager,
                 gazeManager: gazeManager,
+                settings: settings,
                 isTrackingEnabled: appState.isTrackingEnabled
             )
 
@@ -57,6 +58,12 @@ struct ContentView: View {
 
             if settings.selectionMode != "none" && settings.showTrackingErrorBanner && gazeManager.showTrackingError {
                 TrackingLostBanner()
+            }
+
+            if let gameNotice = gameCoordinator.unsupportedGameNotice {
+                GameUnsupportedBanner(message: gameNotice) {
+                    gameCoordinator.clearUnsupportedGameNotice()
+                }
             }
 
             // Orientation mode banner (auto-dismisses)
@@ -195,6 +202,14 @@ struct ContentView: View {
                 // Stop first to ensure a clean pipeline rebuild for the new mode
                 gazeManager.stopTracking()
                 updateTrackingForSelectionMode()
+            }
+            if !GameSelectionMode.supportsGames(selectionMode: newMode) {
+                gameCoordinator.cancelPending()
+                if gameCoordinator.phase == .playing {
+                    gameCoordinator.stopEarly()
+                }
+            } else {
+                gameCoordinator.clearUnsupportedGameNotice()
             }
         }
         .onChange(of: settings.switchControlEnabled) { _, _ in
