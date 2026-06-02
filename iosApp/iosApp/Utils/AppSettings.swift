@@ -24,6 +24,7 @@ class AppSettings: ObservableObject {
         static let enableAutoRecenter = "enableAutoRecenter"
         static let enableRepeatDwell = "enableRepeatDwell"
         static let repeatDwellDelay = "repeatDwellDelay"
+        static let mediaPlaybackDelay = "mediaPlaybackDelay"
         static let headCameraPosition = "headCameraPosition"
         static let headCameraOffsetYaw = "headCameraOffsetYaw"
         static let headCameraOffsetPitch = "headCameraOffsetPitch"
@@ -200,6 +201,13 @@ class AppSettings: ObservableObject {
     @Published var repeatDwellDelay: Double {
         didSet {
             defaults.set(repeatDwellDelay, forKey: Keys.repeatDwellDelay)
+        }
+    }
+
+    /// Seconds to wait after phrase selection before playing attached video/audio (2.0 - 30.0)
+    @Published var mediaPlaybackDelay: Double {
+        didSet {
+            defaults.set(mediaPlaybackDelay, forKey: Keys.mediaPlaybackDelay)
         }
     }
 
@@ -397,6 +405,7 @@ class AppSettings: ObservableObject {
         self.enableAutoRecenter = defaults.object(forKey: Keys.enableAutoRecenter) as? Bool ?? true
         self.enableRepeatDwell = defaults.object(forKey: Keys.enableRepeatDwell) as? Bool ?? false
         self.repeatDwellDelay = defaults.object(forKey: Keys.repeatDwellDelay) as? Double ?? 1.0
+        self.mediaPlaybackDelay = defaults.object(forKey: Keys.mediaPlaybackDelay) as? Double ?? 5.0
         self.headCameraPosition = defaults.string(forKey: Keys.headCameraPosition) ?? "left"
         self.headCameraOffsetYaw = defaults.object(forKey: Keys.headCameraOffsetYaw) as? Double ?? 4.0
         self.headCameraOffsetPitch = defaults.object(forKey: Keys.headCameraOffsetPitch) as? Double ?? 0.0
@@ -449,6 +458,7 @@ class AppSettings: ObservableObject {
         enableAutoRecenter = true
         enableRepeatDwell = false
         repeatDwellDelay = 1.0
+        mediaPlaybackDelay = 5.0
         headCameraPosition = "left"
         headCameraOffsetYaw = 4.0
         headCameraOffsetPitch = 0.0

@@ -11,6 +11,9 @@ struct PhraseStyleData: Codable {
     let borderColor: UInt?
     let borderWidthDp: Float?
     let imageRef: String?
+    let mediaRef: String?
+    let mediaType: String?
+    let gameType: String?
     
     func toPhraseStyle() -> PhraseStyle {
         return PhraseStyle(
@@ -20,7 +23,10 @@ struct PhraseStyleData: Codable {
             isBold: isBold,
             borderColor: borderColor.map { KotlinUInt(value: UInt32($0)) },
             borderWidthDp: borderWidthDp.map { KotlinFloat(value: $0) },
-            imageRef: imageRef
+            imageRef: imageRef,
+            mediaRef: mediaRef,
+            mediaType: mediaType,
+            gameType: gameType
         )
     }
     
@@ -32,7 +38,10 @@ struct PhraseStyleData: Codable {
             isBold: style.isBold,
             borderColor: style.borderColor.map { UInt($0.uint32Value) },
             borderWidthDp: style.borderWidthDp?.floatValue,
-            imageRef: style.imageRef
+            imageRef: style.imageRef,
+            mediaRef: style.mediaRef,
+            mediaType: style.mediaType,
+            gameType: style.gameType
         )
     }
 }

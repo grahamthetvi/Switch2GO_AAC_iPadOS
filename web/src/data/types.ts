@@ -7,6 +7,16 @@ export interface PhraseStyle {
   borderWidth?: number
   borderColor?: number
   imageRef?: string | null
+  mediaRef?: string | null
+  mediaType?: 'video' | 'audio' | 'youtube' | null
+  gameType?: 'cursor_rocket' | null
+}
+
+export interface MediaRow {
+  id: string
+  blob: Blob
+  mime: string
+  created_at: number
 }
 
 export interface ImageRow {

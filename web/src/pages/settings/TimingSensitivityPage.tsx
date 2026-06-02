@@ -47,6 +47,21 @@ export function TimingSensitivityPage() {
         ) : null}
       </SettingsCard>
 
+      <SettingsCard
+        title="Video, audio & game delay"
+        hint="How long to wait after selecting a phrase before playing attached video, audio, or a game, if no other phrase is selected"
+      >
+        <input
+          type="range"
+          min={2}
+          max={30}
+          step={0.5}
+          value={s.mediaPlaybackDelay}
+          onChange={(e) => s.setMediaPlaybackDelay(Number(e.target.value))}
+        />
+        <p className="settings-value">{s.mediaPlaybackDelay.toFixed(1)} seconds</p>
+      </SettingsCard>
+
       <SettingsCard title="Cursor sensitivity" hint="Pointer movement speed">
         <div className="btn-group">
           {(['Low', 'Medium', 'High'] as const).map((label, level) => (

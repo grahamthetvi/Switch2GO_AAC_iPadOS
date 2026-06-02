@@ -27,6 +27,7 @@ export interface SettingsState {
   enableAutoRecenter: boolean
   enableRepeatDwell: boolean
   repeatDwellDelay: number
+  mediaPlaybackDelay: number
   headCameraPosition: string
   headCameraOffsetYaw: number
   headCameraOffsetPitch: number
@@ -56,6 +57,7 @@ export interface SettingsState {
   setEnableAutoRecenter: (v: boolean) => void
   setEnableRepeatDwell: (v: boolean) => void
   setRepeatDwellDelay: (t: number) => void
+  setMediaPlaybackDelay: (t: number) => void
   setHeadCameraPosition: (p: string) => void
   setHeadCameraOffsetYaw: (v: number) => void
   setHeadCameraOffsetPitch: (v: number) => void
@@ -91,6 +93,7 @@ const defaultSettings = {
   enableAutoRecenter: true,
   enableRepeatDwell: false,
   repeatDwellDelay: 1.0,
+  mediaPlaybackDelay: 5.0,
   headCameraPosition: 'left',
   headCameraOffsetYaw: 4.0,
   headCameraOffsetPitch: 0.0,
@@ -126,6 +129,7 @@ export const useSettings = create<SettingsState>()(
       setEnableAutoRecenter: (v) => set({ enableAutoRecenter: v }),
       setEnableRepeatDwell: (v) => set({ enableRepeatDwell: v }),
       setRepeatDwellDelay: (t) => set({ repeatDwellDelay: Math.min(5, Math.max(0.5, t)) }),
+      setMediaPlaybackDelay: (t) => set({ mediaPlaybackDelay: Math.min(30, Math.max(2, t)) }),
       setHeadCameraPosition: (p) => set({ headCameraPosition: p }),
       setHeadCameraOffsetYaw: (v) => set({ headCameraOffsetYaw: v }),
       setHeadCameraOffsetPitch: (v) => set({ headCameraOffsetPitch: v }),

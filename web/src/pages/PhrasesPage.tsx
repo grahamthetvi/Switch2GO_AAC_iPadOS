@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMediaPlayback } from '../media/MediaPlaybackContext'
+import { useGamePlayback } from '../game/GamePlaybackContext'
 import { Link, useParams } from 'react-router-dom'
 import { DwellSelectable } from '../components/DwellSelectable'
 import { PhraseMedia } from '../components/phrases/PhraseMedia'
@@ -19,6 +21,14 @@ export function PhrasesPage() {
   const settings = useSettings()
   const { armRaise, handGesture } = useTrackingState()
   const { subscribeArmRaise, subscribeHandGesture } = useTrackingActions()
+  const { onPhraseSelected, cancelPending, state: mediaState } = useMediaPlayback()
+  const {
+    onPhraseSelected: onGamePhraseSelected,
+    cancelPending: cancelGamePending,
+    state: gameState,
+  } = useGamePlayback()
+
+  const isFullscreenActive = mediaState.phase === 'playing' || gameState.phase === 'playing'
 
   const symbolCount = settings.symbolCount
   const totalPages = Math.max(1, Math.ceil(phrases.length / symbolCount))
@@ -45,11 +55,19 @@ export function PhrasesPage() {
 
   const selectPhrase = useCallback(
     async (phrase: PhraseDisplay) => {
+      if (isFullscreenActive) return
       speak(phrase.text, locale)
       await markPhraseSpoken(phrase.id, phrase.isPreset)
+      onPhraseSelected(phrase)
+      onGamePhraseSelected(phrase)
     },
-    [locale],
+    [locale, onPhraseSelected, onGamePhraseSelected, isFullscreenActive],
   )
+
+  useEffect(() => () => {
+    cancelPending()
+    cancelGamePending()
+  }, [cancelPending, cancelGamePending])
 
   const speakPhrase = useCallback(
     (phrase: PhraseDisplay) => {
@@ -65,17 +83,20 @@ export function PhrasesPage() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (isFullscreenActive) return
       const idx = '1234'.indexOf(e.key)
       if (idx >= 0 && idx < pagePhrases.length) {
         const phrase = pagePhrases[idx]
         prepareSpeech()
         speak(phrase.text, locale)
         void markPhraseSpoken(phrase.id, phrase.isPreset)
+        onPhraseSelected(phrase)
+        onGamePhraseSelected(phrase)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [pagePhrases, locale])
+  }, [pagePhrases, locale, onPhraseSelected, onGamePhraseSelected, isFullscreenActive])
 
   useEffect(() => {
     if (settings.selectionMode !== 'armRaise') return
@@ -178,8 +199,14 @@ export function PhrasesPage() {
                     ...tileStyle,
                     ...(spanFullWidth ? { gridColumn: '1 / -1' } : undefined),
                   }}
-                  onSpeak={() => speakPhrase(phrase)}
-                  onActivate={() => void recordPhrase(phrase)}
+                  onSpeak={() => {
+                    if (isFullscreenActive) return
+                    speakPhrase(phrase)
+                  }}
+                  onActivate={() => {
+                    if (isFullscreenActive) return
+                    void recordPhrase(phrase)
+                  }}
                 >
                   <PhraseMedia imageRef={phrase.style?.imageRef} />
                   <span className="tile-label" style={labelStyle}>

@@ -48,10 +48,30 @@ data class PhraseStyle(
      * - Emoji with prefix (e.g. "emoji:😀")
      * - null for no image
      */
-    val imageRef: String? = null
+    val imageRef: String? = null,
+
+    /**
+     * Media reference for delayed phrase playback. Can be:
+     * - File URI (e.g. "file:///path/to/video.mp4") on iOS
+     * - Blob prefix (e.g. "media:<uuid>") on Web
+     * - null for no media
+     */
+    val mediaRef: String? = null,
+
+    /** Media type: "video", "audio", or "youtube"; null when no media */
+    val mediaType: String? = null,
+
+    /** Game type for delayed phrase games; null when no game */
+    val gameType: String? = null
 ) {
     companion object {
         const val EMOJI_PREFIX = "emoji:"
+        const val MEDIA_BLOB_PREFIX = "media:"
+        const val MEDIA_YOUTUBE_PREFIX = "youtube:"
+        const val MEDIA_TYPE_VIDEO = "video"
+        const val MEDIA_TYPE_AUDIO = "audio"
+        const val MEDIA_TYPE_YOUTUBE = "youtube"
+        const val GAME_TYPE_CURSOR_ROCKET = "cursor_rocket"
         
         // Default values
         const val DEFAULT_TEXT_SIZE_SP = 18f
@@ -128,6 +148,30 @@ data class PhraseStyle(
             if (ref.isNullOrBlank()) return null
             return if (ref.startsWith(EMOJI_PREFIX)) ref.removePrefix(EMOJI_PREFIX) else null
         }
+
+        /** Extract an 11-character YouTube video ID from a stored ref or pasted URL. */
+        fun extractYouTubeVideoId(ref: String?): String? {
+            if (ref.isNullOrBlank()) return null
+            val trimmed = ref.trim()
+            if (trimmed.startsWith(MEDIA_YOUTUBE_PREFIX)) {
+                return trimmed.removePrefix(MEDIA_YOUTUBE_PREFIX).takeIf { it.isNotBlank() }
+            }
+            val patterns = listOf(
+                Regex("(?:youtube\\.com/watch\\?.*[?&]v=|youtube\\.com/embed/|youtube\\.com/shorts/|youtu\\.be/)([\\w-]{11})"),
+                Regex("^([\\w-]{11})$")
+            )
+            for (pattern in patterns) {
+                val match = pattern.find(trimmed) ?: continue
+                return match.groupValues.getOrNull(1)?.takeIf { it.isNotBlank() }
+            }
+            return null
+        }
+
+        /** Normalize a pasted YouTube URL or ID to `youtube:<videoId>`. */
+        fun normalizeYouTubeMediaRef(input: String?): String? {
+            val videoId = extractYouTubeVideoId(input) ?: return null
+            return "$MEDIA_YOUTUBE_PREFIX$videoId"
+        }
     }
     
     /** Returns effective background color (with fallback to default) */
@@ -147,4 +191,21 @@ data class PhraseStyle(
     
     /** Returns true if this style has an image set */
     fun hasImage(): Boolean = !imageRef.isNullOrBlank()
+
+    /** Returns true if this style has video or audio media attached */
+    fun hasMedia(): Boolean = !mediaRef.isNullOrBlank() && !mediaType.isNullOrBlank()
+
+    fun isVideo(): Boolean = hasMedia() && mediaType == MEDIA_TYPE_VIDEO
+
+    fun isAudio(): Boolean = hasMedia() && mediaType == MEDIA_TYPE_AUDIO
+
+    fun isYouTube(): Boolean = hasMedia() && mediaType == MEDIA_TYPE_YOUTUBE
+
+    fun triggersDelayedPlayback(): Boolean = isVideo() || isAudio() || isYouTube()
+
+    fun hasGame(): Boolean = !gameType.isNullOrBlank()
+
+    fun isCursorRocketGame(): Boolean = hasGame() && gameType == GAME_TYPE_CURSOR_ROCKET
+
+    fun triggersDelayedGame(): Boolean = hasGame()
 }

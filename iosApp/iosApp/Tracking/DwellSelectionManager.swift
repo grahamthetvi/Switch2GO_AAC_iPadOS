@@ -31,6 +31,10 @@ class DwellSelectionManager: ObservableObject {
     /// Whether dwell selection is enabled
     var isEnabled: Bool = true
 
+    /// When set, only these button IDs participate in hit-testing and activation.
+    /// Used during fullscreen media playback to ignore phrase tiles behind the overlay.
+    private(set) var allowedButtonIds: Set<String>?
+
     // Registered button frames (id -> frame in screen coordinates)
     private var buttonFrames: [String: CGRect] = [:]
 
@@ -66,11 +70,30 @@ class DwellSelectionManager: ObservableObject {
 
     // MARK: - Button Registration
 
+    /// Restrict hit-testing to a subset of buttons (nil = all registered buttons).
+    func setAllowedButtonIds(_ ids: Set<String>?) {
+        allowedButtonIds = ids
+        if let ids {
+            for id in buttonFrames.keys where !ids.contains(id) {
+                unregisterButton(id: id)
+            }
+        }
+        if let hovered = hoveredButtonId, !isButtonAllowed(hovered) {
+            cancelDwell()
+        }
+    }
+
     /// Register a button's frame for hit-testing.
     /// Call this from a GeometryReader in each button's overlay.
     /// Ignores zero-size frames (layout not yet complete).
     func registerButton(id: String, frame: CGRect) {
         guard frame.width > 1 && frame.height > 1 else { return }
+        guard isButtonAllowed(id) else {
+            if buttonFrames[id] != nil {
+                unregisterButton(id: id)
+            }
+            return
+        }
         let isNew = buttonFrames[id] == nil
         buttonFrames[id] = frame
         if isNew {
@@ -113,8 +136,9 @@ class DwellSelectionManager: ObservableObject {
 
         // Find which button (if any) the gaze is over, using padded frames
         // so gaze noise at button edges doesn't prevent entry.
-        let hitButtonId = buttonFrames.first { _, frame in
-            frame.insetBy(dx: -hitTestPadding, dy: -hitTestPadding).contains(position)
+        let hitButtonId = buttonFrames.first { id, frame in
+            guard isButtonAllowed(id) else { return false }
+            return frame.insetBy(dx: -hitTestPadding, dy: -hitTestPadding).contains(position)
         }?.key
 
         if let hitId = hitButtonId {
@@ -311,7 +335,7 @@ class DwellSelectionManager: ObservableObject {
         let now = CACurrentMediaTime()
         guard now - lastActivationTime >= activationCooldown else { return }
         // Only activate if this button is actually registered on screen
-        guard buttonFrames[buttonId] != nil else {
+        guard buttonFrames[buttonId] != nil, isButtonAllowed(buttonId) else {
             DebugLog.debug("Button \(buttonId) not on screen — ignoring direct activate", tag: "Dwell")
             return
         }
@@ -331,7 +355,7 @@ class DwellSelectionManager: ObservableObject {
     func activateHoveredButton() {
         let now = CACurrentMediaTime()
         guard now - lastActivationTime >= activationCooldown else { return }
-        guard let buttonId = hoveredButtonId else { return }
+        guard let buttonId = hoveredButtonId, isButtonAllowed(buttonId) else { return }
 
         activatedButtonId = buttonId
         lastActivationTime = now
@@ -343,7 +367,15 @@ class DwellSelectionManager: ObservableObject {
 
     /// Get the ordered list of registered button IDs (for scanning mode).
     func getOrderedButtonIds() -> [String] {
+        if let allowedButtonIds {
+            return orderedButtonIds.filter { allowedButtonIds.contains($0) }
+        }
         return orderedButtonIds
+    }
+
+    private func isButtonAllowed(_ id: String) -> Bool {
+        guard let allowedButtonIds else { return true }
+        return allowedButtonIds.contains(id)
     }
 }
 

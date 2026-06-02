@@ -2,6 +2,8 @@ import { GazePointer } from './GazePointer'
 import { TrackingErrorBoundary } from './TrackingErrorBoundary'
 import { TrackingFallbackBanner } from './TrackingFallbackBanner'
 import { TtsStatusBanner } from './TtsStatusBanner'
+import { useMediaPlaybackState } from '../media/MediaPlaybackContext'
+import { useGamePlaybackState } from '../game/GamePlaybackContext'
 import { useSettings } from '../settings/settingsStore'
 import { useTracking, useTrackingActions } from '../tracking/TrackingContext'
 
@@ -18,6 +20,8 @@ function GazeOverlayContent() {
     retryTracking,
   } = useTracking()
   const settings = useSettings()
+  const mediaState = useMediaPlaybackState()
+  const gameState = useGamePlaybackState()
   const isArmRaise = settings.selectionMode === 'armRaise'
   const isHandGesture = settings.selectionMode === 'handGesture'
   const isBodyGesture = isArmRaise || isHandGesture
@@ -26,7 +30,9 @@ function GazeOverlayContent() {
     settings.selectionMode !== 'none' &&
     tracking.isTracking &&
     tracking.isCursorVisible &&
-    tracking.gazePosition
+    tracking.gazePosition &&
+    mediaState.phase !== 'playing' &&
+    gameState.phase !== 'playing'
 
   const blockedMessage =
     trackingBlockedReason ??

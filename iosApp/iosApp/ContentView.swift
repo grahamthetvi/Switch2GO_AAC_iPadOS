@@ -7,6 +7,8 @@ import AVFoundation
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var gazeManager = GazeTrackingManager()
+    @StateObject private var mediaCoordinator = MediaPlaybackCoordinator()
+    @StateObject private var gameCoordinator = GamePlaybackCoordinator()
     @StateObject private var settings = AppSettings.shared
 
     @State private var showSettings = false
@@ -21,9 +23,27 @@ struct ContentView: View {
             // Main AAC Categories interface
             CategoriesView()
                 .environmentObject(gazeManager)
+                .environmentObject(mediaCoordinator)
+                .environmentObject(gameCoordinator)
 
-            // Gaze pointer overlay (only when tracking)
-            if gazeManager.isTracking && gazeManager.isCursorVisible && appState.isTrackingEnabled {
+            MediaPlaybackOverlayView(
+                coordinator: mediaCoordinator,
+                dwellManager: gazeManager.dwellManager,
+                gazeManager: gazeManager,
+                isTrackingEnabled: appState.isTrackingEnabled
+            )
+
+            GameOverlayView(
+                coordinator: gameCoordinator,
+                dwellManager: gazeManager.dwellManager,
+                gazeManager: gazeManager,
+                isTrackingEnabled: appState.isTrackingEnabled
+            )
+
+            // Gaze pointer — hidden during playback (shown inside media/game overlay instead)
+            if gazeManager.isTracking && gazeManager.isCursorVisible && appState.isTrackingEnabled
+                && mediaCoordinator.phase != .playing
+                && gameCoordinator.phase != .playing {
                 GazePointerView(
                     position: gazeManager.gazePosition,
                     dwellProgress: gazeManager.dwellManager.dwellProgress,

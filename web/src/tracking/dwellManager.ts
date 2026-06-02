@@ -10,6 +10,7 @@ export class DwellSelectionManager {
   hoveredButtonId: string | null = null
   dwellProgress = 0
   isEnabled = true
+  allowedButtonIds: Set<string> | null = null
 
   private buttonFrames = new Map<string, DOMRect>()
   private orderedButtonIds: string[] = []
@@ -43,6 +44,10 @@ export class DwellSelectionManager {
 
   registerButton(id: string, frame: DOMRect): void {
     if (frame.width <= 1 || frame.height <= 1) return
+    if (!this.isButtonAllowed(id)) {
+      if (this.buttonFrames.has(id)) this.unregisterButton(id)
+      return
+    }
     const isNew = !this.buttonFrames.has(id)
     this.buttonFrames.set(id, frame)
     if (isNew) this.orderedButtonIds.push(id)
@@ -58,6 +63,18 @@ export class DwellSelectionManager {
     this.buttonFrames.clear()
     this.orderedButtonIds = []
     this.clearHover()
+  }
+
+  setAllowedButtonIds(ids: Set<string> | null): void {
+    this.allowedButtonIds = ids
+    if (ids) {
+      for (const id of [...this.buttonFrames.keys()]) {
+        if (!ids.has(id)) this.unregisterButton(id)
+      }
+    }
+    if (this.hoveredButtonId && !this.isButtonAllowed(this.hoveredButtonId)) {
+      this.clearHover()
+    }
   }
 
   updateGazePosition(point: Point | null): void {
@@ -86,11 +103,19 @@ export class DwellSelectionManager {
   }
 
   activateHoveredButton(): void {
-    if (this.hoveredButtonId) this.activate(this.hoveredButtonId)
+    if (this.hoveredButtonId && this.isButtonAllowed(this.hoveredButtonId)) {
+      this.activate(this.hoveredButtonId)
+    }
+  }
+
+  private isButtonAllowed(id: string): boolean {
+    if (!this.allowedButtonIds) return true
+    return this.allowedButtonIds.has(id)
   }
 
   private hitTest(point: Point): string | null {
     for (const id of this.orderedButtonIds) {
+      if (!this.isButtonAllowed(id)) continue
       const frame = this.buttonFrames.get(id)
       if (!frame) continue
       const padded = new DOMRect(

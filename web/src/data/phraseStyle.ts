@@ -13,11 +13,19 @@ interface RawPhraseStyle {
   borderWidthDp?: number
   borderWidth?: number
   imageRef?: string | null
+  mediaRef?: string | null
+  mediaType?: 'video' | 'audio' | 'youtube' | null
+  gameType?: 'cursor_rocket' | null
   emoji?: string
 }
 
 export const EMOJI_PREFIX = 'emoji:'
 export const BLOB_PREFIX = 'blob:'
+export const MEDIA_BLOB_PREFIX = 'media:'
+export const MEDIA_TYPE_VIDEO = 'video'
+export const MEDIA_TYPE_AUDIO = 'audio'
+export const MEDIA_TYPE_YOUTUBE = 'youtube'
+export const GAME_TYPE_CURSOR_ROCKET = 'cursor_rocket'
 
 export const TEXT_SIZE_OPTIONS: { sp: number; label: string }[] = [
   { sp: 12, label: 'Small' },
@@ -66,6 +74,9 @@ export function parsePhraseStyle(json: string | null): PhraseStyle | null {
       borderColor: raw.borderColor,
       borderWidth: raw.borderWidthDp ?? raw.borderWidth,
       imageRef: imageRef ?? undefined,
+      mediaRef: raw.mediaRef ?? undefined,
+      mediaType: raw.mediaType ?? undefined,
+      gameType: raw.gameType ?? undefined,
     }
   } catch {
     return null
@@ -81,8 +92,27 @@ export function serializePhraseStyle(style: PhraseStyle): string {
     borderColor: style.borderColor,
     borderWidthDp: style.borderWidth,
     imageRef: style.imageRef ?? null,
+    mediaRef: style.mediaRef ?? null,
+    mediaType: style.mediaType ?? null,
+    gameType: style.gameType ?? null,
   }
   return JSON.stringify(payload)
+}
+
+export function hasPhraseMedia(style: PhraseStyle | null | undefined): boolean {
+  return !!(style?.mediaRef && style?.mediaType)
+}
+
+export function hasPhraseGame(style: PhraseStyle | null | undefined): boolean {
+  return !!style?.gameType
+}
+
+export function isYouTubePhraseMedia(style: PhraseStyle | null | undefined): boolean {
+  return style?.mediaType === MEDIA_TYPE_YOUTUBE && !!style.mediaRef
+}
+
+export function isBlobMediaRef(ref: string | null | undefined): boolean {
+  return !!ref && ref.startsWith(MEDIA_BLOB_PREFIX)
 }
 
 export function extractEmojiFromRef(ref: string | null | undefined): string | null {

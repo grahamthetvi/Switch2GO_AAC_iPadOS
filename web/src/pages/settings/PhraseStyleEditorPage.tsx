@@ -7,6 +7,10 @@ import { ImagePickerModal } from '../../components/settings/ImagePickerModal'
 import { SettingsLayout } from '../../components/settings/SettingsLayout'
 import { updatePhraseStyle } from '../../data/crud'
 import { deleteImageByRef } from '../../data/images'
+import { deleteMediaByRef } from '../../data/media'
+import { MediaPickerModal } from '../../components/settings/MediaPickerModal'
+import { GamePickerModal } from '../../components/settings/GamePickerModal'
+import { YouTubePickerModal } from '../../components/settings/YouTubePickerModal'
 import {
   BORDER_WIDTH_OPTIONS,
   EMPTY_PHRASE_STYLE,
@@ -14,9 +18,12 @@ import {
   effectiveFontSize,
   effectiveTextColor,
   extractEmojiFromRef,
+  isYouTubePhraseMedia,
+  GAME_TYPE_CURSOR_ROCKET,
   phraseStyleToTileStyle,
   TEXT_SIZE_OPTIONS,
 } from '../../data/phraseStyle'
+import { isYouTubeMediaRef } from '../../data/youtube'
 import { getPresetPhraseText, loadPhrasesForEdit } from '../../data/repository'
 import type { PhraseDisplay, PhraseStyle } from '../../data/types'
 import { hexToCss } from '../../settings/settingsStore'
@@ -37,6 +44,10 @@ export function PhraseStyleEditorPage() {
   const [showBorderWidth, setShowBorderWidth] = useState(false)
   const [showImagePicker, setShowImagePicker] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [showVideoPicker, setShowVideoPicker] = useState(false)
+  const [showAudioPicker, setShowAudioPicker] = useState(false)
+  const [showYouTubePicker, setShowYouTubePicker] = useState(false)
+  const [showGamePicker, setShowGamePicker] = useState(false)
 
   const backTo = categoryId
     ? `/settings/edit/phrases/${phraseId}?preset=${isPreset ? '1' : '0'}&category=${categoryId}`
@@ -91,9 +102,58 @@ export function PhraseStyleEditorPage() {
     return 'None'
   })()
 
+  const mediaLabel = (type: 'video' | 'audio') => {
+    if (style.mediaType === type && style.mediaRef) {
+      return `${type === 'video' ? 'Video' : 'Audio'}: Attached`
+    }
+    return `${type === 'video' ? 'Video' : 'Audio'}: None`
+  }
+
+  const youtubeLabel = isYouTubePhraseMedia(style)
+    ? `YouTube: ${style.mediaRef}`
+    : 'YouTube: None'
+
+  const gameLabel =
+    style.gameType === GAME_TYPE_CURSOR_ROCKET ? 'Game: Rocket cursor follower' : 'Game: None'
+
+  const clearPreviousMedia = async (nextRef: string | null | undefined) => {
+    if (!style.mediaRef || style.mediaRef === nextRef) return
+    if (!isYouTubeMediaRef(style.mediaRef)) {
+      await deleteMediaByRef(style.mediaRef)
+    }
+  }
+
   const resetStyle = async () => {
     if (style.imageRef) await deleteImageByRef(style.imageRef)
+    if (style.mediaRef) await deleteMediaByRef(style.mediaRef)
     await persist({ bold: false })
+  }
+
+  const attachGame = async (gameType: string | null) => {
+    if (gameType) {
+      await clearPreviousMedia(null)
+      await persist({
+        ...style,
+        gameType: gameType as PhraseStyle['gameType'],
+        mediaRef: undefined,
+        mediaType: undefined,
+      })
+      return
+    }
+    await persist({ ...style, gameType: undefined })
+  }
+
+  const attachMedia = async (
+    mediaRef: string | null | undefined,
+    mediaType: PhraseStyle['mediaType'],
+  ) => {
+    await clearPreviousMedia(mediaRef)
+    await persist({
+      ...style,
+      mediaRef: mediaRef ?? undefined,
+      mediaType: mediaType ?? undefined,
+      gameType: undefined,
+    })
   }
 
   const previewBg = hexToCss(0xff78909c)
@@ -191,6 +251,22 @@ export function PhraseStyleEditorPage() {
           <span>Image / emoji: {imageLabel}</span>
           <span className="picker-chevron">›</span>
         </button>
+        <button type="button" className="picker-row" onClick={() => setShowVideoPicker(true)}>
+          <span>{mediaLabel('video')}</span>
+          <span className="picker-chevron">›</span>
+        </button>
+        <button type="button" className="picker-row" onClick={() => setShowAudioPicker(true)}>
+          <span>{mediaLabel('audio')}</span>
+          <span className="picker-chevron">›</span>
+        </button>
+        <button type="button" className="picker-row" onClick={() => setShowYouTubePicker(true)}>
+          <span>{youtubeLabel}</span>
+          <span className="picker-chevron">›</span>
+        </button>
+        <button type="button" className="picker-row" onClick={() => setShowGamePicker(true)}>
+          <span>{gameLabel}</span>
+          <span className="picker-chevron">›</span>
+        </button>
         <button type="button" className="danger-btn" onClick={() => void resetStyle()}>
           Reset to default
         </button>
@@ -244,6 +320,44 @@ export function PhraseStyleEditorPage() {
             setShowImagePicker(false)
             setShowEmojiPicker(false)
           }}
+        />
+      ) : null}
+      {showVideoPicker ? (
+        <MediaPickerModal
+          mediaType="video"
+          currentMediaRef={style.mediaRef}
+          onSelect={(mediaRef, mediaType) => {
+            void attachMedia(mediaRef, mediaType)
+          }}
+          onClose={() => setShowVideoPicker(false)}
+        />
+      ) : null}
+      {showAudioPicker ? (
+        <MediaPickerModal
+          mediaType="audio"
+          currentMediaRef={style.mediaRef}
+          onSelect={(mediaRef, mediaType) => {
+            void attachMedia(mediaRef, mediaType)
+          }}
+          onClose={() => setShowAudioPicker(false)}
+        />
+      ) : null}
+      {showYouTubePicker ? (
+        <YouTubePickerModal
+          currentMediaRef={style.mediaRef}
+          onSelect={(mediaRef, mediaType) => {
+            void attachMedia(mediaRef, mediaType)
+          }}
+          onClose={() => setShowYouTubePicker(false)}
+        />
+      ) : null}
+      {showGamePicker ? (
+        <GamePickerModal
+          currentGameType={style.gameType}
+          onSelect={(gameType) => {
+            void attachGame(gameType)
+          }}
+          onClose={() => setShowGamePicker(false)}
         />
       ) : null}
     </SettingsLayout>

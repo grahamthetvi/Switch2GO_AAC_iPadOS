@@ -2,6 +2,7 @@ import { db } from './db'
 import type {
   CategoryRow,
   ImageRow,
+  MediaRow,
   PhraseRow,
   PresetCategoryRow,
   PresetPhraseRow,
@@ -17,6 +18,13 @@ export interface BackupImageEntry {
   data: string
 }
 
+export interface BackupMediaEntry {
+  id: string
+  created_at: number
+  mime: string
+  data: string
+}
+
 export interface BackupPayload {
   version: typeof BACKUP_FORMAT_VERSION
   exportedAt: string
@@ -26,6 +34,7 @@ export interface BackupPayload {
   category: CategoryRow[]
   phrase: PhraseRow[]
   images: BackupImageEntry[]
+  media?: BackupMediaEntry[]
 }
 
 function blobToBase64(blob: Blob): Promise<string> {
@@ -53,12 +62,13 @@ function base64ToBlob(data: string, mime: string): Blob {
 }
 
 export async function buildBackupPayload(): Promise<BackupPayload> {
-  const [presetCategory, presetPhrase, category, phrase, images] = await Promise.all([
+  const [presetCategory, presetPhrase, category, phrase, images, media] = await Promise.all([
     db.presetCategory.toArray(),
     db.presetPhrase.toArray(),
     db.category.toArray(),
     db.phrase.toArray(),
     db.images.toArray(),
+    db.media.toArray(),
   ])
 
   const imageEntries: BackupImageEntry[] = await Promise.all(
@@ -66,6 +76,15 @@ export async function buildBackupPayload(): Promise<BackupPayload> {
       id: row.id,
       created_at: row.created_at,
       mime: row.blob.type || 'image/png',
+      data: await blobToBase64(row.blob),
+    })),
+  )
+
+  const mediaEntries: BackupMediaEntry[] = await Promise.all(
+    media.map(async (row) => ({
+      id: row.id,
+      created_at: row.created_at,
+      mime: row.mime || row.blob.type || 'application/octet-stream',
       data: await blobToBase64(row.blob),
     })),
   )
@@ -87,6 +106,7 @@ export async function buildBackupPayload(): Promise<BackupPayload> {
     category,
     phrase,
     images: imageEntries,
+    media: mediaEntries,
   }
 }
 
@@ -121,21 +141,30 @@ export async function importBackupPayload(payload: BackupPayload): Promise<void>
     blob: base64ToBlob(img.data, img.mime),
   }))
 
+  const mediaRows: MediaRow[] = (payload.media ?? []).map((m) => ({
+    id: m.id,
+    created_at: m.created_at,
+    mime: m.mime,
+    blob: base64ToBlob(m.data, m.mime),
+  }))
+
   await db.transaction(
     'rw',
-    [db.presetCategory, db.presetPhrase, db.category, db.phrase, db.images],
+    [db.presetCategory, db.presetPhrase, db.category, db.phrase, db.images, db.media],
     async () => {
       await db.presetCategory.clear()
       await db.presetPhrase.clear()
       await db.category.clear()
       await db.phrase.clear()
       await db.images.clear()
+      await db.media.clear()
 
       if (payload.presetCategory.length) await db.presetCategory.bulkPut(payload.presetCategory)
       if (payload.presetPhrase.length) await db.presetPhrase.bulkPut(payload.presetPhrase)
       if (payload.category.length) await db.category.bulkPut(payload.category)
       if (payload.phrase.length) await db.phrase.bulkPut(payload.phrase)
       if (imageRows.length) await db.images.bulkPut(imageRows)
+      if (mediaRows.length) await db.media.bulkPut(mediaRows)
     },
   )
 

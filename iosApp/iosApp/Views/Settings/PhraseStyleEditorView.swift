@@ -13,6 +13,10 @@ struct PhraseStyleEditorView: View {
     @State private var showingBorderColorPicker = false
     @State private var showingBorderWidthPicker = false
     @State private var showingImagePicker = false
+    @State private var showingVideoPicker = false
+    @State private var showingAudioPicker = false
+    @State private var showingYouTubePicker = false
+    @State private var showingGamePicker = false
     @State private var isBold = false
     
     @Environment(\.dismiss) private var dismiss
@@ -28,7 +32,10 @@ struct PhraseStyleEditorView: View {
             isBold: false,
             borderColor: nil,
             borderWidthDp: nil,
-            imageRef: nil
+            imageRef: nil,
+            mediaRef: nil,
+            mediaType: nil,
+            gameType: nil
         )
         _currentStyle = State(initialValue: PhraseStyle(
             backgroundColor: baseStyle.backgroundColor,
@@ -37,7 +44,10 @@ struct PhraseStyleEditorView: View {
             isBold: baseStyle.isBold,
             borderColor: baseStyle.borderColor,
             borderWidthDp: baseStyle.borderWidthDp,
-            imageRef: baseStyle.imageRef
+            imageRef: baseStyle.imageRef,
+            mediaRef: baseStyle.mediaRef,
+            mediaType: baseStyle.mediaType,
+            gameType: baseStyle.gameType
         ))
         _isBold = State(initialValue: phrase.style?.isBold ?? false)
     }
@@ -91,6 +101,35 @@ struct PhraseStyleEditorView: View {
         .sheet(isPresented: $showingImagePicker) {
             imagePickerSheet
         }
+        .sheet(isPresented: $showingVideoPicker) {
+            mediaPickerSheet(type: PhraseStyle.companion.MEDIA_TYPE_VIDEO)
+        }
+        .sheet(isPresented: $showingAudioPicker) {
+            mediaPickerSheet(type: PhraseStyle.companion.MEDIA_TYPE_AUDIO)
+        }
+        .sheet(isPresented: $showingYouTubePicker) {
+            youtubePickerSheet
+        }
+        .sheet(isPresented: $showingGamePicker) {
+            GamePickerView(
+                currentGameType: currentStyle.gameType,
+                onGameSelected: { gameType in
+                    if let gameType {
+                        clearPreviousLocalMedia(oldRef: currentStyle.mediaRef, newRef: nil)
+                        currentStyle = cloneCurrentStyle(
+                            gameType: gameType,
+                            clearMedia: true,
+                            clearGame: false
+                        )
+                    } else {
+                        currentStyle = cloneCurrentStyle(clearGame: true)
+                    }
+                    saveStyle()
+                    showingGamePicker = false
+                },
+                onCancel: { showingGamePicker = false }
+            )
+        }
         .toolbarBackground(settings.appBorderColor, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
     }
@@ -126,15 +165,7 @@ struct PhraseStyleEditorView: View {
                     .background(Color(UIColor.secondarySystemBackground))
                     .cornerRadius(12)
                     .onChange(of: isBold) { _, newValue in
-                        currentStyle = PhraseStyle(
-                            backgroundColor: currentStyle.backgroundColor,
-                            textColor: currentStyle.textColor,
-                            textSizeSp: currentStyle.textSizeSp,
-                            isBold: newValue,
-                            borderColor: currentStyle.borderColor,
-                            borderWidthDp: currentStyle.borderWidthDp,
-                            imageRef: currentStyle.imageRef
-                        )
+                        currentStyle = cloneCurrentStyle(isBold: newValue)
                         saveStyle()
                     }
                     
@@ -164,6 +195,38 @@ struct PhraseStyleEditorView: View {
                     ) {
                         showingImagePicker = true
                     }
+
+                    styleButton(
+                        title: videoMediaLabel,
+                        icon: "film",
+                        color: .indigo
+                    ) {
+                        showingVideoPicker = true
+                    }
+
+                    styleButton(
+                        title: audioMediaLabel,
+                        icon: "waveform",
+                        color: .teal
+                    ) {
+                        showingAudioPicker = true
+                    }
+
+                    styleButton(
+                        title: youtubeMediaLabel,
+                        icon: "play.rectangle",
+                        color: .red
+                    ) {
+                        showingYouTubePicker = true
+                    }
+
+                    styleButton(
+                        title: gameLabel,
+                        icon: "gamecontroller.fill",
+                        color: .mint
+                    ) {
+                        showingGamePicker = true
+                    }
                     
                     // Reset to Default
                     Button(action: resetToDefault) {
@@ -185,14 +248,8 @@ struct PhraseStyleEditorView: View {
         ColorPickerView(
             selectedColor: textColorForDisplay,
             onColorSelected: { color in
-                currentStyle = PhraseStyle(
-                    backgroundColor: currentStyle.backgroundColor,
-                    textColor: KotlinUInt(value: UInt32(color.toHex())),
-                    textSizeSp: currentStyle.textSizeSp,
-                    isBold: currentStyle.isBold,
-                    borderColor: currentStyle.borderColor,
-                    borderWidthDp: currentStyle.borderWidthDp,
-                    imageRef: currentStyle.imageRef
+                currentStyle = cloneCurrentStyle(
+                    textColor: KotlinUInt(value: UInt32(color.toHex()))
                 )
                 saveStyle()
                 showingTextColorPicker = false
@@ -205,14 +262,9 @@ struct PhraseStyleEditorView: View {
         ColorPickerView(
             selectedColor: borderColorForDisplay,
             onColorSelected: { color in
-                    currentStyle = PhraseStyle(
-                        backgroundColor: currentStyle.backgroundColor,
-                        textColor: currentStyle.textColor,
-                        textSizeSp: currentStyle.textSizeSp,
-                        isBold: currentStyle.isBold,
+                    currentStyle = cloneCurrentStyle(
                         borderColor: KotlinUInt(value: UInt32(color.toHex())),
-                        borderWidthDp: currentStyle.borderWidthDp ?? KotlinFloat(value: 6.0),
-                        imageRef: currentStyle.imageRef
+                        borderWidthDp: currentStyle.borderWidthDp ?? KotlinFloat(value: 6.0)
                     )
                     saveStyle()
                     showingBorderColorPicker = false
@@ -226,15 +278,7 @@ struct PhraseStyleEditorView: View {
         BorderWidthPickerView(
                 selectedWidth: currentStyle.borderWidthDp?.floatValue ?? 0.0,
                 onWidthSelected: { width in
-                    currentStyle = PhraseStyle(
-                        backgroundColor: currentStyle.backgroundColor,
-                        textColor: currentStyle.textColor,
-                        textSizeSp: currentStyle.textSizeSp,
-                        isBold: currentStyle.isBold,
-                        borderColor: currentStyle.borderColor,
-                        borderWidthDp: KotlinFloat(value: width),
-                        imageRef: currentStyle.imageRef
-                    )
+                    currentStyle = cloneCurrentStyle(borderWidthDp: KotlinFloat(value: width))
                     saveStyle()
                     showingBorderWidthPicker = false
                 },
@@ -246,19 +290,90 @@ struct PhraseStyleEditorView: View {
         ImagePickerView(
                 selectedImage: currentStyle.imageRef,
                 onImageSelected: { imageRef in
-                    currentStyle = PhraseStyle(
-                        backgroundColor: currentStyle.backgroundColor,
-                        textColor: currentStyle.textColor,
-                        textSizeSp: currentStyle.textSizeSp,
-                        isBold: currentStyle.isBold,
-                        borderColor: currentStyle.borderColor,
-                        borderWidthDp: currentStyle.borderWidthDp,
-                        imageRef: imageRef
-                    )
+                    currentStyle = cloneCurrentStyle(imageRef: imageRef)
                     saveStyle()
                     showingImagePicker = false
                 },
                 onCancel: { showingImagePicker = false }
+        )
+    }
+
+    private func mediaPickerSheet(type: String) -> some View {
+        MediaPickerView(
+            mediaType: type,
+            currentMediaRef: currentStyle.mediaRef,
+            onMediaSelected: { mediaRef, mediaType in
+                clearPreviousLocalMedia(oldRef: currentStyle.mediaRef, newRef: mediaRef)
+                if mediaRef == nil {
+                    clearPreviousLocalMedia(oldRef: currentStyle.mediaRef, newRef: nil)
+                }
+                currentStyle = cloneCurrentStyle(
+                    mediaRef: mediaRef,
+                    mediaType: mediaType,
+                    clearMedia: mediaRef == nil,
+                    clearGame: mediaRef != nil
+                )
+                saveStyle()
+                showingVideoPicker = false
+                showingAudioPicker = false
+            },
+            onCancel: {
+                showingVideoPicker = false
+                showingAudioPicker = false
+            }
+        )
+    }
+
+    private var youtubePickerSheet: some View {
+        YouTubePickerView(
+            currentMediaRef: currentStyle.mediaRef,
+            onMediaSelected: { mediaRef, mediaType in
+                clearPreviousLocalMedia(oldRef: currentStyle.mediaRef, newRef: mediaRef)
+                currentStyle = cloneCurrentStyle(
+                    mediaRef: mediaRef,
+                    mediaType: mediaType,
+                    clearMedia: mediaRef == nil,
+                    clearGame: mediaRef != nil
+                )
+                saveStyle()
+                showingYouTubePicker = false
+            },
+            onCancel: {
+                showingYouTubePicker = false
+            }
+        )
+    }
+
+    private func clearPreviousLocalMedia(oldRef: String?, newRef: String?) {
+        guard let oldRef, oldRef != newRef, MediaStorage.isLocalMediaRef(oldRef) else { return }
+        MediaStorage.deleteMedia(mediaRef: oldRef)
+    }
+
+    private func cloneCurrentStyle(
+        backgroundColor: KotlinUInt? = nil,
+        textColor: KotlinUInt? = nil,
+        textSizeSp: KotlinFloat? = nil,
+        isBold: Bool? = nil,
+        borderColor: KotlinUInt? = nil,
+        borderWidthDp: KotlinFloat? = nil,
+        imageRef: String? = nil,
+        mediaRef: String? = nil,
+        mediaType: String? = nil,
+        gameType: String? = nil,
+        clearMedia: Bool = false,
+        clearGame: Bool = false
+    ) -> PhraseStyle {
+        PhraseStyle(
+            backgroundColor: backgroundColor ?? currentStyle.backgroundColor,
+            textColor: textColor ?? currentStyle.textColor,
+            textSizeSp: textSizeSp ?? currentStyle.textSizeSp,
+            isBold: isBold ?? currentStyle.isBold,
+            borderColor: borderColor ?? currentStyle.borderColor,
+            borderWidthDp: borderWidthDp ?? currentStyle.borderWidthDp,
+            imageRef: imageRef ?? currentStyle.imageRef,
+            mediaRef: clearMedia ? nil : (mediaRef ?? currentStyle.mediaRef),
+            mediaType: clearMedia ? nil : (mediaType ?? currentStyle.mediaType),
+            gameType: clearGame ? nil : (gameType ?? currentStyle.gameType)
         )
     }
     
@@ -282,14 +397,8 @@ struct PhraseStyleEditorView: View {
     // MARK: - Handlers
     
     private func handleBackgroundColorSelection(_ color: Color) {
-        currentStyle = PhraseStyle(
-            backgroundColor: KotlinUInt(value: UInt32(color.toHex())),
-            textColor: currentStyle.textColor,
-            textSizeSp: currentStyle.textSizeSp,
-            isBold: currentStyle.isBold,
-            borderColor: currentStyle.borderColor,
-            borderWidthDp: currentStyle.borderWidthDp,
-            imageRef: currentStyle.imageRef
+        currentStyle = cloneCurrentStyle(
+            backgroundColor: KotlinUInt(value: UInt32(color.toHex()))
         )
         saveStyle()
         showingBackgroundColorPicker = false
@@ -421,21 +530,37 @@ struct PhraseStyleEditorView: View {
         
         return "Image/Emoji: Symbol"
     }
+
+    private var videoMediaLabel: String {
+        if currentStyle.isVideo() { return "Video: Attached" }
+        return "Video: None"
+    }
+
+    private var audioMediaLabel: String {
+        if currentStyle.isAudio() { return "Audio: Attached" }
+        return "Audio: None"
+    }
+
+    private var youtubeMediaLabel: String {
+        if currentStyle.isYouTube(), let ref = currentStyle.mediaRef {
+            return "YouTube: \(ref)"
+        }
+        return "YouTube: None"
+    }
+
+    private var gameLabel: String {
+        if currentStyle.isCursorRocketGame() {
+            return "Game: Rocket cursor follower"
+        }
+        return "Game: None"
+    }
     
     // MARK: - Actions
     
     private func saveStyle() {
         DispatchQueue.global(qos: .background).async {
             // Serialize style to JSON using PhraseStyle extension
-            let styleToSave = PhraseStyle(
-                backgroundColor: currentStyle.backgroundColor,
-                textColor: currentStyle.textColor,
-                textSizeSp: currentStyle.textSizeSp,
-                isBold: currentStyle.isBold,
-                borderColor: currentStyle.borderColor,
-                borderWidthDp: currentStyle.borderWidthDp,
-                imageRef: currentStyle.imageRef
-            )
+            let styleToSave = cloneCurrentStyle()
             let styleString = styleToSave.toJSONString()
             
             // Update in database
@@ -459,6 +584,7 @@ struct PhraseStyleEditorView: View {
     }
     
     private func resetToDefault() {
+        MediaStorage.deleteMedia(mediaRef: currentStyle.mediaRef)
         currentStyle = PhraseStyle(
             backgroundColor: nil,
             textColor: nil,
@@ -466,7 +592,10 @@ struct PhraseStyleEditorView: View {
             isBold: false,
             borderColor: nil,
             borderWidthDp: nil,
-            imageRef: nil
+            imageRef: nil,
+            mediaRef: nil,
+            mediaType: nil,
+            gameType: nil
         )
         isBold = false
         saveStyle()

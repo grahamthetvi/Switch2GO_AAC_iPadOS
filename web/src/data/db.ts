@@ -2,6 +2,7 @@ import Dexie, { type Table } from 'dexie'
 import type {
   CategoryRow,
   ImageRow,
+  MediaRow,
   PhraseRow,
   PresetCategoryRow,
   PresetPhraseRow,
@@ -13,6 +14,7 @@ export class Switch2GoDatabase extends Dexie {
   category!: Table<CategoryRow, string>
   phrase!: Table<PhraseRow, string>
   images!: Table<ImageRow, string>
+  media!: Table<MediaRow, string>
 
   constructor() {
     super('switch2go')
@@ -28,6 +30,14 @@ export class Switch2GoDatabase extends Dexie {
       category: 'category_id, sort_order',
       phrase: 'phrase_id, parent_category_id, last_spoken_date, sort_order',
       images: 'id',
+    })
+    this.version(3).stores({
+      presetCategory: 'category_id',
+      presetPhrase: 'phrase_id, parent_category_id, last_spoken_date',
+      category: 'category_id, sort_order',
+      phrase: 'phrase_id, parent_category_id, last_spoken_date, sort_order',
+      images: 'id',
+      media: 'id',
     })
   }
 }

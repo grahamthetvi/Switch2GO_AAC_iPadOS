@@ -71,6 +71,29 @@ struct TimingSensitivityView: View {
                 .padding()
                 .background(Color(UIColor.secondarySystemBackground))
                 .cornerRadius(12)
+
+                // Media playback delay
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Video, Audio & Game Delay")
+                        .font(.title2)
+                        .fontWeight(.bold)
+
+                    Text("How long to wait after selecting a phrase before playing attached video, audio, or a game, if no other phrase is selected")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    VStack(spacing: 8) {
+                        Slider(value: $settings.mediaPlaybackDelay, in: 2.0...30.0, step: 0.5)
+                            .accentColor(.blue)
+
+                        Text("\(settings.mediaPlaybackDelay, specifier: "%.1f") seconds")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                    }
+                }
+                .padding()
+                .background(Color(UIColor.secondarySystemBackground))
+                .cornerRadius(12)
                 
                 // Cursor Sensitivity Section
                 VStack(alignment: .leading, spacing: 12) {

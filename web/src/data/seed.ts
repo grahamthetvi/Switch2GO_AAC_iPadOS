@@ -37,13 +37,14 @@ export async function ensureDatabaseSeeded(): Promise<void> {
 export async function resetDatabaseToDefaults(): Promise<void> {
   await db.transaction(
     'rw',
-    [db.category, db.phrase, db.presetCategory, db.presetPhrase, db.images],
+    [db.category, db.phrase, db.presetCategory, db.presetPhrase, db.images, db.media],
     async () => {
       await db.category.clear()
       await db.phrase.clear()
       await db.presetCategory.clear()
       await db.presetPhrase.clear()
       await db.images.clear()
+      await db.media.clear()
     },
   )
   await ensureDatabaseSeeded()

@@ -26,6 +26,8 @@ import { PrivacyPolicyPage } from './pages/settings/PrivacyPolicyPage'
 import { DataBackupPage } from './pages/settings/DataBackupPage'
 import { TroubleshootingPage } from './pages/settings/TroubleshootingPage'
 import { useSettings } from './settings/settingsStore'
+import { MediaPlaybackProvider } from './media/MediaPlaybackContext'
+import { GamePlaybackProvider } from './game/GamePlaybackContext'
 import { TrackingProvider } from './tracking/TrackingContext'
 import { prepareSpeech } from './tts/speak'
 
@@ -78,9 +80,11 @@ export default function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <TrackingProvider>
-        {showOnboarding && <OnboardingOverlay />}
-        <GazeOverlay />
-        <Routes>
+        <MediaPlaybackProvider>
+          <GamePlaybackProvider>
+          {showOnboarding && <OnboardingOverlay />}
+          <GazeOverlay />
+          <Routes>
           <Route path="/" element={<CategoriesPage />} />
           <Route path="/phrases/:categoryId" element={<PhrasesPage />} />
           <Route path="/settings" element={<SettingsPage />} />
@@ -108,7 +112,9 @@ export default function App() {
           <Route path="/settings/edit/phrases/:phraseId" element={<EditPhraseDetailPage />} />
           <Route path="/settings/edit/phrases/:phraseId/style" element={<PhraseStyleEditorPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+          </Routes>
+          </GamePlaybackProvider>
+        </MediaPlaybackProvider>
       </TrackingProvider>
     </BrowserRouter>
   )

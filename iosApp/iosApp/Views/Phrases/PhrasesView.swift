@@ -7,6 +7,8 @@ struct PhrasesView: View {
     let categoryId: String
     
     @EnvironmentObject var gazeManager: GazeTrackingManager
+    @EnvironmentObject var mediaCoordinator: MediaPlaybackCoordinator
+    @EnvironmentObject var gameCoordinator: GamePlaybackCoordinator
     @StateObject private var viewModel: PhrasesViewModel
     @StateObject private var settings = AppSettings.shared
     @StateObject private var ttsManager = TTSManager.shared
@@ -60,6 +62,8 @@ struct PhrasesView: View {
         }
         .onDisappear {
             gazeManager.dwellManager.clearAllButtons()
+            mediaCoordinator.cancelPending()
+            gameCoordinator.cancelPending()
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PhrasesUpdated"))) { _ in
             viewModel.loadPhrases()
@@ -156,11 +160,11 @@ struct PhrasesView: View {
     }
     
     private func handlePhraseSelection(_ phrase: PhraseDisplayModel) {
-        // Mark as spoken
+        guard mediaCoordinator.phase != .playing, gameCoordinator.phase != .playing else { return }
         viewModel.markPhraseAsSpoken(phraseId: phrase.id)
-        
-        // Speak phrase
         ttsManager.speak(phrase.text)
+        mediaCoordinator.onPhraseSelected(phrase)
+        gameCoordinator.onPhraseSelected(phrase)
     }
 }
 

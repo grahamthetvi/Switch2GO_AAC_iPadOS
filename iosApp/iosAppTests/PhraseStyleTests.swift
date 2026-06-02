@@ -15,6 +15,8 @@ class PhraseStyleTests: XCTestCase {
         XCTAssertNil(style.borderColor)
         XCTAssertNil(style.borderWidthDp)
         XCTAssertNil(style.imageRef)
+        XCTAssertNil(style.mediaRef)
+        XCTAssertNil(style.mediaType)
     }
     
     func testEffectiveValues() {
