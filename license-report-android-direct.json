@@ -1,0 +1,23 @@
+{
+  "generated": "2026-06-02",
+  "scope": "android-direct-declared-dependencies",
+  "note": "Transitive tree not resolved: Gradle failed (Java 25 unsupported by Kotlin DSL). Licenses are from upstream project documentation / Maven Central metadata.",
+  "projectLicense": "MIT",
+  "packages": [
+    { "id": "androidx.* (appcompat, core, lifecycle, constraintlayout, activity, fragment, viewpager2, compose, navigation, room, camera, security, test)", "license": "Apache-2.0" },
+    { "id": "com.google.ar:core", "version": "1.50.0", "license": "Apache-2.0" },
+    { "id": "com.google.ar.sceneform.ux:sceneform-ux", "version": "1.17.1", "license": "Apache-2.0" },
+    { "id": "com.google.mediapipe:tasks-vision", "version": "0.10.14", "license": "Apache-2.0" },
+    { "id": "org.jetbrains.kotlinx:kotlinx-coroutines-*", "version": "1.10.2", "license": "Apache-2.0" },
+    { "id": "io.insert-koin:koin-android", "version": "4.1.0", "license": "Apache-2.0" },
+    { "id": "io.github.inflationx:calligraphy3", "version": "3.1.1", "license": "Apache-2.0" },
+    { "id": "io.github.inflationx:viewpump", "version": "2.1.1", "license": "Apache-2.0" },
+    { "id": "com.jakewharton.timber:timber", "version": "5.0.1", "license": "Apache-2.0" },
+    { "id": "com.squareup.moshi:moshi-kotlin", "version": "1.15.2", "license": "Apache-2.0" },
+    { "id": "app.cash.sqldelight:* (shared module)", "version": "2.0.2", "license": "Apache-2.0" },
+    { "id": "org.jetbrains.kotlinx:kotlinx-serialization-json", "version": "1.7.3", "license": "Apache-2.0" },
+    { "id": "io.insert-koin:koin-core", "version": "4.1.0", "license": "Apache-2.0" },
+    { "id": "junit:junit", "version": "4.13.2", "license": "EPL-1.0", "scope": "test" },
+    { "id": "project :shared", "license": "MIT" }
+  ]
+}

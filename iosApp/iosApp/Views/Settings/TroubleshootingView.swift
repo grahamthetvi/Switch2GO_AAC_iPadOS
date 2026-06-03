@@ -58,15 +58,17 @@ struct TroubleshootingView: View {
                     ]
                 )
 
-                // MARK: - Switch Control (Coming Soon)
+                // MARK: - Switch Control
                 troubleshootingSection(
-                    title: "Switch Control (Coming Soon)",
-                    icon: "hammer.fill",
-                    color: .orange,
+                    title: "Switch Control",
+                    icon: "keyboard",
+                    color: .blue,
                     steps: [
-                        "USB Switch Control functionality (including Tapio support) is currently in development.",
-                        "This feature has been temporarily disabled and will be fully available in a future app update.",
-                        "If you previously enabled it, it has been safely turned off to prevent interference with other tracking modes."
+                        "Enable Switch Control under Settings → Selection Mode → Switch Control.",
+                        "Scan & Select: 2 switches (select + next). Switch to Phrase: 2–4 switches matching phrases per page.",
+                        "USB: plug in the switch interface. Bluetooth: pair in iPad Settings → Bluetooth first.",
+                        "Default keys are 1–4; key mapping in Switch Control must match your device firmware.",
+                        "If presses are ignored, open Switch Control and confirm the last-press indicator updates when you press a switch."
                     ]
                 )
             }

@@ -2,10 +2,16 @@ import SwiftUI
 import WebKit
 import Combine
 
-/// Chromeless YouTube playback via the IFrame Player API inside WKWebView.
+/// Chromeless YouTube playback via a static embed iframe + postMessage (WKWebView-safe).
+///
+/// The IFrame Player API creates iframes dynamically; on iOS WKWebView that often omits the
+/// Referer header YouTube now requires, which surfaces as error 152-4 / 153. A static iframe
+/// with `referrerpolicy` and `enablejsapi=1` avoids that path.
 struct YouTubePlayerView: UIViewRepresentable {
     let videoId: String
     @ObservedObject var holder: YouTubePlayerHolder
+
+    private static let embedHost = "https://www.youtube-nocookie.com"
 
     func makeCoordinator() -> Coordinator {
         Coordinator(holder: holder)
@@ -28,7 +34,10 @@ struct YouTubePlayerView: UIViewRepresentable {
         webView.scrollView.isScrollEnabled = false
         webView.isUserInteractionEnabled = false
         holder.attach(webView: webView)
-        webView.loadHTMLString(Self.playerHTML(videoId: videoId), baseURL: URL(string: "https://www.youtube.com"))
+
+        let html = Self.playerHTML(videoId: videoId)
+        let baseURL = URL(string: Self.embedHost)!
+        webView.loadHTMLString(html, baseURL: baseURL)
         return webView
     }
 
@@ -70,7 +79,6 @@ struct YouTubePlayerView: UIViewRepresentable {
             }
         }
 
-        /// Errors where retrying or continuing is pointless (see YouTube IFrame API docs).
         private static func isFatalYouTubeError(_ code: Int) -> Bool {
             switch code {
             case 2, 5, 100, 101, 150, 153:
@@ -82,93 +90,127 @@ struct YouTubePlayerView: UIViewRepresentable {
     }
 
     private static func playerHTML(videoId: String) -> String {
-        """
+        let origin = embedHost
+        let query = [
+            "enablejsapi=1",
+            "origin=\(origin)",
+            "widget_referrer=\(origin)/",
+            "autoplay=1",
+            "mute=1",
+            "playsinline=1",
+            "controls=0",
+            "modestbranding=1",
+            "rel=0",
+            "fs=0",
+            "disablekb=1",
+            "iv_load_policy=3",
+        ].joined(separator: "&")
+        let embedSrc = "\(embedHost)/embed/\(videoId)?\(query)"
+
+        return """
         <!DOCTYPE html>
         <html>
         <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
         <meta name="referrer" content="strict-origin-when-cross-origin">
+        <base href="\(origin)/">
         <style>
         html, body { margin:0; padding:0; background:#000; height:100%; overflow:hidden; }
-        #player { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+        #yt { position:absolute; inset:0; width:100%; height:100%; border:0; }
         </style>
         </head>
         <body>
-        <div id="player"></div>
+        <iframe
+          id="yt"
+          src="\(embedSrc)"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+        ></iframe>
         <script>
         (function() {
-          var ORIGIN = 'https://www.youtube.com';
-          var startMuted = true;
-          var unmuteAttempted = false;
+          var EMBED_ORIGIN = '\(origin)';
+          var audioWakeDone = false;
+          var iframe = document.getElementById('yt');
 
           function post(type, extra) {
             var payload = Object.assign({ type: type }, extra || {});
             window.webkit.messageHandlers.playback.postMessage(payload);
           }
 
-          function tryUnmute(player) {
-            if (unmuteAttempted || !player || !player.unMute) return;
-            unmuteAttempted = true;
-            try { player.unMute(); } catch (e) {}
+          function ytCommand(func, args) {
+            if (!iframe || !iframe.contentWindow) return;
+            var msg = JSON.stringify({ event: 'command', func: func, args: args || '' });
+            iframe.contentWindow.postMessage(msg, EMBED_ORIGIN);
+            iframe.contentWindow.postMessage(msg, 'https://www.youtube.com');
           }
 
-          window.mediaPlayer = null;
-          window.onYouTubeIframeAPIReady = function() {
-            window.mediaPlayer = new YT.Player('player', {
-              height: '100%',
-              width: '100%',
-              videoId: '\(videoId)',
-              playerVars: {
-                autoplay: 0,
-                controls: 0,
-                modestbranding: 1,
-                rel: 0,
-                playsinline: 1,
-                fs: 0,
-                disablekb: 1,
-                iv_load_policy: 3,
-                enablejsapi: 1,
-                origin: ORIGIN,
-                widget_referrer: ORIGIN + '/',
-                mute: 1
-              },
-              events: {
-                onReady: function(event) {
-                  post('debug', { message: 'onReady' });
-                  event.target.playVideo();
-                },
-                onStateChange: function(event) {
-                  if (event.data === YT.PlayerState.PLAYING) {
-                    if (startMuted) {
-                      startMuted = false;
-                      setTimeout(function() { tryUnmute(event.target); }, 250);
-                    }
-                  }
-                  if (event.data === YT.PlayerState.ENDED) {
-                    post('ended');
-                  }
-                },
-                onAutoplayBlocked: function() {
-                  post('debug', { message: 'onAutoplayBlocked — retrying muted' });
-                  var p = window.mediaPlayer;
-                  if (!p) return;
-                  try {
-                    p.mute();
-                    p.playVideo();
-                  } catch (e) {}
-                },
-                onError: function(event) {
-                  post('error', { code: event.data });
-                }
-              }
-            });
+          window.mediaPlayer = {
+            playVideo: function() { ytCommand('playVideo'); },
+            pauseVideo: function() { ytCommand('pauseVideo'); },
+            stopVideo: function() { ytCommand('stopVideo'); },
+            mute: function() { ytCommand('mute'); },
+            unMute: function() { ytCommand('unMute'); },
+            setVolume: function(level) { ytCommand('setVolume', String(level)); },
+            ensureAudible: function() {
+              ytCommand('unMute');
+              ytCommand('setVolume', '100');
+              ytCommand('playVideo');
+            },
+            /** iOS WKWebView keeps autoplay muted; pause then play restores audio. */
+            pauseThenPlay: function() {
+              ytCommand('pauseVideo');
+              setTimeout(function() {
+                ytCommand('unMute');
+                ytCommand('setVolume', '100');
+                ytCommand('playVideo');
+              }, 200);
+            }
           };
 
-          var tag = document.createElement('script');
-          tag.src = 'https://www.youtube.com/iframe_api';
-          var firstScriptTag = document.getElementsByTagName('script')[0];
-          firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+          function wakeAudioOnce() {
+            if (audioWakeDone) return;
+            audioWakeDone = true;
+            window.mediaPlayer.pauseThenPlay();
+          }
+
+          function parseMessage(data) {
+            if (typeof data === 'string') {
+              try { return JSON.parse(data); } catch (e) { return null; }
+            }
+            return data;
+          }
+
+          function isYouTubeOrigin(origin) {
+            return origin && (origin.indexOf('youtube.com') !== -1 || origin.indexOf('youtube-nocookie.com') !== -1);
+          }
+
+          window.addEventListener('message', function(e) {
+            if (!isYouTubeOrigin(e.origin)) return;
+            var data = parseMessage(e.data);
+            if (!data || !data.event) return;
+
+            if (data.event === 'onReady') {
+              post('debug', { message: 'iframe onReady' });
+              ytCommand('playVideo');
+            }
+            if (data.event === 'onStateChange') {
+              if (data.info === 1) {
+                wakeAudioOnce();
+              }
+              if (data.info === 0) {
+                post('ended');
+              }
+            }
+            if (data.event === 'onError') {
+              post('error', { code: data.info });
+            }
+          });
+
+          iframe.addEventListener('load', function() {
+            post('debug', { message: 'iframe loaded' });
+          });
         })();
         </script>
         </body>
@@ -196,18 +238,16 @@ final class YouTubePlayerHolder: ObservableObject {
         if paused {
             webView?.evaluateJavaScript("window.mediaPlayer && window.mediaPlayer.pauseVideo();", completionHandler: nil)
         } else {
-            webView?.evaluateJavaScript(
-                """
-                (function() {
-                  var p = window.mediaPlayer;
-                  if (!p) return;
-                  if (p.unMute) p.unMute();
-                  p.playVideo();
-                })();
-                """,
-                completionHandler: nil
-            )
+            ensureAudible()
         }
+    }
+
+    /// Unmute and resume — matches the gaze pause/play path that restores audio.
+    func ensureAudible() {
+        webView?.evaluateJavaScript(
+            "window.mediaPlayer && window.mediaPlayer.ensureAudible();",
+            completionHandler: nil
+        )
     }
 
     func stop() {

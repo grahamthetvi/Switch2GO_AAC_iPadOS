@@ -50,7 +50,7 @@ class AppSettingsTests: XCTestCase {
     }
 
     func testSelectionModeOptions() {
-        let validSelections = ["face", "eyeGaze", "none"]
+        let validSelections = ["face", "eyeGaze", "armRaise", "handGesture", "none"]
         settings.selectionMode = "none"
         XCTAssertTrue(validSelections.contains(settings.selectionMode))
     }

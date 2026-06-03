@@ -36,6 +36,24 @@ struct SelectionModeView: View {
                     settings.selectionMode = "eyeGaze"
                 }
 
+                SelectionModeButton(
+                    title: "Arm Raise Selection",
+                    description: "Raise your left or right arm to choose the left or right phrase (2-symbol layout)",
+                    icon: "figure.wave",
+                    isSelected: settings.selectionMode == "armRaise"
+                ) {
+                    settings.selectionMode = "armRaise"
+                }
+
+                SelectionModeButton(
+                    title: "Hand Gesture Selection",
+                    description: "Open then close your left or right hand to choose the matching phrase (2-symbol layout)",
+                    icon: "hand.raised",
+                    isSelected: settings.selectionMode == "handGesture"
+                ) {
+                    settings.selectionMode = "handGesture"
+                }
+
                 // No Tracking Option
                 SelectionModeButton(
                     title: "Touch Only",
@@ -55,22 +73,13 @@ struct SelectionModeView: View {
                     HStack(spacing: 12) {
                         Image(systemName: "keyboard")
                             .font(.title2)
-                            .foregroundColor(.gray)
+                            .foregroundColor(.blue)
                             .frame(width: 36)
                         VStack(alignment: .leading, spacing: 2) {
-                            HStack {
-                                Text("USB Switch Control")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                Text("Coming Soon")
-                                    .font(.caption2.bold())
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.orange.opacity(0.2))
-                                    .foregroundColor(.orange)
-                                    .cornerRadius(4)
-                            }
-                            Text("Support for Tapio and compatible USB switches is in development")
+                            Text("Switch Control")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            Text("Scan & select (2 switches) or switch-to-phrase (2–4)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -127,6 +136,8 @@ struct SelectionModeView: View {
     private var currentModeLabel: String {
         switch settings.selectionMode {
         case "face": return "Head Tracking"
+        case "armRaise": return "Arm Raise Selection"
+        case "handGesture": return "Hand Gesture Selection"
         case "none": return "Touch Only"
         default: return "Eye Gaze Tracking"
         }

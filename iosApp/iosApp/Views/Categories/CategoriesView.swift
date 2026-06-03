@@ -43,13 +43,16 @@ struct CategoriesView: View {
             }
             .onAppear {
                 viewModel.loadCategories()
-                gazeManager.dwellManager.clearAllButtons()
+                gazeManager.dwellManager.unregisterButtons(withPrefix: "phrase_")
             }
             .onDisappear {
                 gazeManager.dwellManager.clearAllButtons()
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("CategoriesUpdated"))) { _ in
                 viewModel.loadCategories()
+            }
+            .onReceive(gazeManager.dwellManager.$activationToken) { _ in
+                dispatchDwellCategoryActivation()
             }
         }
         .background(settings.appBorderColor.ignoresSafeArea())
@@ -82,11 +85,9 @@ struct CategoriesView: View {
                         }
                         .dwellSelectable(
                             id: "cat_\(category.id)",
-                            manager: gazeManager.dwellManager
-                        ) {
-                            selectedCategory = category.id
-                            navigateToPhases = true
-                        }
+                            manager: gazeManager.dwellManager,
+                            onActivate: {}
+                        )
                     }
                 }
                 .padding(padding)
@@ -116,6 +117,18 @@ struct CategoriesView: View {
         case "preset_recents": return Color(hex: 0xFFF06292)
         default: return Color(hex: 0xFF00ACC1)  // Teal - no more grey for custom categories
         }
+    }
+
+    private func dispatchDwellCategoryActivation() {
+        guard let buttonId = gazeManager.dwellManager.activatedButtonId,
+              buttonId.hasPrefix("cat_") else { return }
+        let categoryId = String(buttonId.dropFirst("cat_".count))
+        guard viewModel.categories.contains(where: { $0.id == categoryId }) else {
+            DebugLog.warn("Dwell: no category matches \(buttonId)", tag: "Dwell")
+            return
+        }
+        selectedCategory = categoryId
+        navigateToPhases = true
     }
 }
 

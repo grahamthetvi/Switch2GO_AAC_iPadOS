@@ -8,14 +8,28 @@ type Props = {
   onError: () => void
 }
 
+function ensureAudible(player: YT.Player) {
+  player.unMute()
+  player.setVolume(100)
+  player.playVideo()
+}
+
+/** Pause briefly then play with sound (mirrors iOS WKWebView workaround). */
+function pauseThenPlay(player: YT.Player) {
+  player.pauseVideo()
+  window.setTimeout(() => ensureAudible(player), 200)
+}
+
 export function YouTubeChromelessPlayer({ videoId, isPaused, onEnded, onError }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<YT.Player | null>(null)
   const readyRef = useRef(false)
+  const audioWakeDoneRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false
     readyRef.current = false
+    audioWakeDoneRef.current = false
 
     void loadYouTubeIframeApi().then(() => {
       if (cancelled || !hostRef.current || !window.YT?.Player) return
@@ -49,7 +63,11 @@ export function YouTubeChromelessPlayer({ videoId, isPaused, onEnded, onError }:
           },
           onStateChange: (event) => {
             if (event.data === window.YT!.PlayerState.PLAYING) {
-              playerRef.current?.unMute()
+              const player = playerRef.current
+              if (player && !audioWakeDoneRef.current) {
+                audioWakeDoneRef.current = true
+                pauseThenPlay(player)
+              }
             }
             if (event.data === window.YT!.PlayerState.ENDED) onEnded()
           },
@@ -58,6 +76,7 @@ export function YouTubeChromelessPlayer({ videoId, isPaused, onEnded, onError }:
             if (!player) return
             player.mute()
             player.playVideo()
+            window.setTimeout(() => pauseThenPlay(player), 300)
           },
           onError: (event) => {
             console.error('[YouTube] player error', event.data)
@@ -78,7 +97,7 @@ export function YouTubeChromelessPlayer({ videoId, isPaused, onEnded, onError }:
   useEffect(() => {
     if (!readyRef.current || !playerRef.current) return
     if (isPaused) playerRef.current.pauseVideo()
-    else playerRef.current.playVideo()
+    else ensureAudible(playerRef.current)
   }, [isPaused])
 
   return <div ref={hostRef} className="media-playback-youtube" aria-hidden />

@@ -23,6 +23,8 @@
   "showWelcomeGuide": "Afficher le guide de bienvenue",
   "troubleshooting": "Dépannage",
   "privacyPolicy": "Politique de confidentialité",
+  "openSourceLicenses": "Licences open source",
+  "openSourceLicensesUnavailable": "Les notices de licence ne sont pas disponibles hors ligne.",
   "language": "Langue",
   "imageTool": "Outil d'images",
   "getSupport": "Obtenir de l'aide",

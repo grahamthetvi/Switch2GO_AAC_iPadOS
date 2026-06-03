@@ -9,7 +9,7 @@ export interface PhraseStyle {
   imageRef?: string | null
   mediaRef?: string | null
   mediaType?: 'video' | 'audio' | 'youtube' | null
-  gameType?: 'cursor_rocket' | null
+  gameType?: 'cursor_rocket' | 'blocs' | 'pie_crazy' | null
 }
 
 export interface MediaRow {

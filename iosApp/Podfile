@@ -39,4 +39,14 @@ post_install do |installer|
       config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64' if target.name.include?('MediaPipe')
     end
   end
+
+  # Xcode cannot read CocoaPods xcfilelist files when they are generated with 0600 permissions.
+  target_support_files = File.join(installer.sandbox.root, 'Target Support Files')
+  if File.directory?(target_support_files)
+    Dir.glob(File.join(target_support_files, '**', '*')).each do |path|
+      next unless File.file?(path)
+      File.chmod(0o644, path) unless path.end_with?('.sh')
+      File.chmod(0o755, path) if path.end_with?('.sh')
+    end
+  end
 end

@@ -164,12 +164,12 @@ struct WelcomeView: View {
         OnboardingPageView(
             icon: "cable.connector",
             iconColor: .orange,
-            title: "Switch Control (Coming Soon)",
+            title: "Switch Control",
             paragraphs: [
-                "Switch2GO supports USB adaptive switch control (e.g. Tapio switch interface). Connect a switch to your iPad and control the app without needing to touch the screen or use eye tracking.",
-                "In Scanning mode, the app automatically steps through each phrase — press the switch to select the highlighted one. In Direct Mapping mode, each switch maps to a specific phrase position.",
-                "To enable switch control, go to Settings → Switch Control. You can configure the scanning speed, switch mappings, and other options there.",
-                "Touch, eye gaze, and head tracking continue to work alongside switch control, so you can combine input methods."
+                "Switch2GO works with USB or Bluetooth switch interfaces that send keyboard keys (Arduino, ESP32, Tapio, and similar devices).",
+                "Scan & Select uses two switches: one moves a highlight across phrases, one selects. Switch to Phrase uses two to four switches — each switch speaks one phrase on the page.",
+                "Enable switches under Settings → Selection Mode → Switch Control. Match key mapping to your device (default keys 1–4).",
+                "Touch, eye gaze, and head tracking still work when switches are enabled."
             ]
         )
     }

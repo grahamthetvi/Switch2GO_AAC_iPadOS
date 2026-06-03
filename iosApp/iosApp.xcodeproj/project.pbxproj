@@ -17,6 +17,7 @@
 		4A9DC05F0FE1B4D91993E2C4 /* TimingSensitivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE16E773AC8FA0DE7CF723F /* TimingSensitivityView.swift */; };
 		6430199225781A2EC54B8A1C /* DebugLogManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4D64032C0CAC0236050700 /* DebugLogManager.swift */; };
 		6F9D8F677D7A99F4AF9D79CE /* Pods_iosApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DE5735DBAE593FDE41C7FB5 /* Pods_iosApp.framework */; };
+		76518EC051174E2BAFB97DCD /* PerformanceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13A5C1818C74A03B44B1F39 /* PerformanceMonitor.swift */; };
 		881432C90C88FF4CA84F32D6 /* Pods_iosAppUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33081441238DA1F2A748982E /* Pods_iosAppUITests.framework */; };
 		8E25A2176CEFFC9A557016D8 /* CVIDisplaySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75124A4EB46EBC55FCF77509 /* CVIDisplaySettingsView.swift */; };
 		8E81779354046C167FA1C937 /* ImagePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AB2E3DDE32D3CCD57CA523F /* ImagePickerView.swift */; };
@@ -31,6 +32,12 @@
 		BB000001AAAA000100000001 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000002AAAA000100000001 /* WelcomeView.swift */; };
 		BB000001AAAA000100000002 /* TroubleshootingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000002AAAA000100000002 /* TroubleshootingView.swift */; };
 		BB8DD2255E5D649A50D78333 /* CategoriesDisplaySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 260908C7C80788094E37EFFF /* CategoriesDisplaySettingsView.swift */; };
+		BODYARM0022F700001000B97D1 /* ArmRaiseDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BODYARM0012F700001000B97D1 /* ArmRaiseDetector.swift */; };
+		BODYGEST0022F700001000B97D2 /* gesture_recognizer.task in Resources */ = {isa = PBXBuildFile; fileRef = BODYGEST0012F700001000B97D2 /* gesture_recognizer.task */; };
+		BODYGEST0042F700001000B97D4 /* GestureRecognizerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BODYGEST0032F700001000B97D4 /* GestureRecognizerService.swift */; };
+		BODYHAND0022F700001000B97D5 /* HandGestureDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BODYHAND0012F700001000B97D5 /* HandGestureDetector.swift */; };
+		BODYPOSE0022F700001000B97D6 /* pose_landmarker_lite.task in Resources */ = {isa = PBXBuildFile; fileRef = BODYPOSE0012F700001000B97D6 /* pose_landmarker_lite.task */; };
+		BODYPOSE0042F700001000B97D7 /* PoseLandmarkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BODYPOSE0032F700001000B97D7 /* PoseLandmarkService.swift */; };
 		C1599DE7C948E7994E2BCC47 /* MainSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B8B55947CA829740ECED5F /* MainSettingsView.swift */; };
 		C170F61EE1C93BC81B5A6658 /* EditCategoryPhrasesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2F3C4CBAE9E310FC0D0AE8C /* EditCategoryPhrasesView.swift */; };
 		D38C324D59DE51FCECC62DF0 /* Pods_iosAppTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F3E3B42493B9E7A444BC1971 /* Pods_iosAppTests.framework */; };
@@ -38,22 +45,9 @@
 		DCDD8AA52F313DD5000B97D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DCDD8AA42F313DD5000B97D2 /* Assets.xcassets */; };
 		DCDD8AC22F3185E9000B97D2 /* PhraseStyleExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDD8ABE2F3185E9000B97D2 /* PhraseStyleExtensions.swift */; };
 		DCDD8AC32F3185E9000B97D2 /* DatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDD8AC02F3185E9000B97D2 /* DatabaseManager.swift */; };
-		76518EC051174E2BAFB97DCD /* PerformanceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13A5C1818C74A03B44B1F39 /* PerformanceMonitor.swift */; };
 		DCDD8ACC2F3185FF000B97D2 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDD8AC52F3185FF000B97D2 /* AppSettings.swift */; };
 		DCDD8ACD2F3185FF000B97D2 /* TTSManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDD8AC92F3185FF000B97D2 /* TTSManager.swift */; };
 		DCDD8ACE2F3185FF000B97D2 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDD8AC62F3185FF000B97D2 /* ImageCache.swift */; };
-		MEDB0012F6000MED0000001 /* MediaStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0012F6000MED0000001 /* MediaStorage.swift */; };
-		MEDB0022F6000MED0000002 /* MediaPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0022F6000MED0000002 /* MediaPickerView.swift */; };
-		MEDB0032F6000MED0000003 /* MediaPlaybackCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0032F6000MED0000003 /* MediaPlaybackCoordinator.swift */; };
-		MEDB0042F6000MED0000004 /* MediaPlaybackOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0042F6000MED0000004 /* MediaPlaybackOverlayView.swift */; };
-		MEDB0052F6000MED0000005 /* YouTubePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0052F6000MED0000005 /* YouTubePlayerView.swift */; };
-		MEDB0062F6000MED0000006 /* YouTubePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0062F6000MED0000006 /* YouTubePickerView.swift */; };
-		GAMEB0012F6000GAME000001 /* GamePlaybackCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0012F6000GAME000001 /* GamePlaybackCoordinator.swift */; };
-		GAMEB0022F6000GAME000002 /* GameOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0022F6000GAME000002 /* GameOverlayView.swift */; };
-		GAMEB0032F6000GAME000003 /* CursorRocketGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0032F6000GAME000003 /* CursorRocketGameView.swift */; };
-		GAMEB0042F6000GAME000004 /* GamePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0042F6000GAME000004 /* GamePickerView.swift */; };
-		GAMEB0052F6000GAME000005 /* GameSelectionMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0052F6000GAME000005 /* GameSelectionMode.swift */; };
-		GAMEB0062F6000GAME000006 /* GameUnsupportedBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0062F6000GAME000006 /* GameUnsupportedBanner.swift */; };
 		DCDD8ACF2F3185FF000B97D2 /* LocalizationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDD8AC72F3185FF000B97D2 /* LocalizationHelper.swift */; };
 		DCDD8AD02F3185FF000B97D2 /* AccessibilityHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDD8AC42F3185FF000B97D2 /* AccessibilityHelpers.swift */; };
 		DCDD8AD42F318624000B97D2 /* PhrasesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDD8AD22F318624000B97D2 /* PhrasesViewModel.swift */; };
@@ -82,6 +76,22 @@
 		F087E57D83E21E106A9BED80 /* ColorPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B36D02C00EAB90D5E35D77D /* ColorPickerView.swift */; };
 		F087E57E83E21E106A9BED81 /* SymbolPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B36D02D00EAB90D5E35D77E /* SymbolPickerView.swift */; };
 		F548C89AC12E786D3E8293F3 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 719CF8666C62D4EAA61B884A /* libsqlite3.tbd */; };
+		GAMEB0012F6000GAME000001 /* GamePlaybackCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0012F6000GAME000001 /* GamePlaybackCoordinator.swift */; };
+		GAMEB0022F6000GAME000002 /* GameOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0022F6000GAME000002 /* GameOverlayView.swift */; };
+		GAMEB0032F6000GAME000003 /* CursorRocketGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0032F6000GAME000003 /* CursorRocketGameView.swift */; };
+		GAMEB0042F6000GAME000004 /* GamePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0042F6000GAME000004 /* GamePickerView.swift */; };
+		GAMEB0052F6000GAME000005 /* GameSelectionMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0052F6000GAME000005 /* GameSelectionMode.swift */; };
+		GAMEB0062F6000GAME000006 /* GameUnsupportedBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0062F6000GAME000006 /* GameUnsupportedBanner.swift */; };
+		GAMEB0072F6000GAME000007 /* BlocsGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0072F6000GAME000007 /* BlocsGameView.swift */; };
+		GAMEB0082F6000GAME000008 /* PieCrazyGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GAMEF0082F6000GAME000008 /* PieCrazyGameView.swift */; };
+		MEDB0012F6000MED0000001 /* MediaStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0012F6000MED0000001 /* MediaStorage.swift */; };
+		MEDB0022F6000MED0000002 /* MediaPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0022F6000MED0000002 /* MediaPickerView.swift */; };
+		MEDB0032F6000MED0000003 /* MediaPlaybackCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0032F6000MED0000003 /* MediaPlaybackCoordinator.swift */; };
+		MEDB0042F6000MED0000004 /* MediaPlaybackOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0042F6000MED0000004 /* MediaPlaybackOverlayView.swift */; };
+		MEDB0052F6000MED0000005 /* YouTubePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0052F6000MED0000005 /* YouTubePlayerView.swift */; };
+		MEDB0062F6000MED0000006 /* YouTubePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0062F6000MED0000006 /* YouTubePickerView.swift */; };
+		TPN0012F6000TPN00000001 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */; };
+		TPN0022F6000TPN00000002 /* ThirdPartyNoticesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -136,6 +146,12 @@
 		BB000002AAAA000100000001 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		BB000002AAAA000100000002 /* TroubleshootingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TroubleshootingView.swift; sourceTree = "<group>"; };
 		BFE7C269918DF0B28C2AD9ED /* EmojiKeyboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmojiKeyboardView.swift; sourceTree = "<group>"; };
+		BODYARM0012F700001000B97D1 /* ArmRaiseDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArmRaiseDetector.swift; sourceTree = "<group>"; };
+		BODYGEST0012F700001000B97D2 /* gesture_recognizer.task */ = {isa = PBXFileReference; lastKnownFileType = file; path = gesture_recognizer.task; sourceTree = "<group>"; };
+		BODYGEST0032F700001000B97D4 /* GestureRecognizerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GestureRecognizerService.swift; sourceTree = "<group>"; };
+		BODYHAND0012F700001000B97D5 /* HandGestureDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandGestureDetector.swift; sourceTree = "<group>"; };
+		BODYPOSE0012F700001000B97D6 /* pose_landmarker_lite.task */ = {isa = PBXFileReference; lastKnownFileType = file; path = pose_landmarker_lite.task; sourceTree = "<group>"; };
+		BODYPOSE0032F700001000B97D7 /* PoseLandmarkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoseLandmarkService.swift; sourceTree = "<group>"; };
 		D540925C5A19AB37EBCFFF6D /* EditCategoryPhrasesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditCategoryPhrasesView.swift; sourceTree = "<group>"; };
 		DA47FD8AB83BE791598630EE /* Pods-iosAppTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosAppTests.debug.xcconfig"; path = "Target Support Files/Pods-iosAppTests/Pods-iosAppTests.debug.xcconfig"; sourceTree = "<group>"; };
 		DC669A202F30403900AED789 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -148,20 +164,7 @@
 		DCDD8AC42F3185FF000B97D2 /* AccessibilityHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityHelpers.swift; sourceTree = "<group>"; };
 		DCDD8AC52F3185FF000B97D2 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		DCDD8AC62F3185FF000B97D2 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
-		MEDF0012F6000MED0000001 /* MediaStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaStorage.swift; sourceTree = "<group>"; };
-		MEDF0022F6000MED0000002 /* MediaPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPickerView.swift; sourceTree = "<group>"; };
-		MEDF0032F6000MED0000003 /* MediaPlaybackCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlaybackCoordinator.swift; sourceTree = "<group>"; };
-		MEDF0042F6000MED0000004 /* MediaPlaybackOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlaybackOverlayView.swift; sourceTree = "<group>"; };
-		MEDF0052F6000MED0000005 /* YouTubePlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubePlayerView.swift; sourceTree = "<group>"; };
-		MEDF0062F6000MED0000006 /* YouTubePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubePickerView.swift; sourceTree = "<group>"; };
-		GAMEF0012F6000GAME000001 /* GamePlaybackCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamePlaybackCoordinator.swift; sourceTree = "<group>"; };
-		GAMEF0022F6000GAME000002 /* GameOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverlayView.swift; sourceTree = "<group>"; };
-		GAMEF0032F6000GAME000003 /* CursorRocketGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorRocketGameView.swift; sourceTree = "<group>"; };
-		GAMEF0042F6000GAME000004 /* GamePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GamePickerView.swift; path = iosApp/Views/Settings/Components/GamePickerView.swift; sourceTree = "<group>"; };
-		GAMEF0052F6000GAME000005 /* GameSelectionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSelectionMode.swift; sourceTree = "<group>"; };
-		GAMEF0062F6000GAME000006 /* GameUnsupportedBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameUnsupportedBanner.swift; sourceTree = "<group>"; };
 		DCDD8AC72F3185FF000B97D2 /* LocalizationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationHelper.swift; sourceTree = "<group>"; };
-		E13A5C1818C74A03B44B1F39 /* PerformanceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceMonitor.swift; sourceTree = "<group>"; };
 		DCDD8AC92F3185FF000B97D2 /* TTSManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSManager.swift; sourceTree = "<group>"; };
 		DCDD8AD12F318624000B97D2 /* CategoriesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoriesViewModel.swift; sourceTree = "<group>"; };
 		DCDD8AD22F318624000B97D2 /* PhrasesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasesViewModel.swift; sourceTree = "<group>"; };
@@ -241,6 +244,7 @@
 		DCE330AF2F304D5100ED4C53 /* 1_smoothing.knm */ = {isa = PBXFileReference; lastKnownFileType = file; path = 1_smoothing.knm; sourceTree = "<group>"; };
 		DCE330B12F304D5100ED4C53 /* module */ = {isa = PBXFileReference; lastKnownFileType = text; path = module; sourceTree = "<group>"; };
 		DCE330B82F304D5100ED4C53 /* manifest */ = {isa = PBXFileReference; lastKnownFileType = text; path = manifest; sourceTree = "<group>"; };
+		E13A5C1818C74A03B44B1F39 /* PerformanceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceMonitor.swift; sourceTree = "<group>"; };
 		EA86A662996EFBF619D755C3 /* DebugLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLogView.swift; sourceTree = "<group>"; };
 		F13EAACF51C62C13C9C545DD /* ImagePickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ImagePickerView.swift; sourceTree = "<group>"; };
 		F2083FD643D886E0A2C6EAA5 /* EmojiKeyboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = EmojiKeyboardView.swift; path = iosApp/Views/Settings/Components/EmojiKeyboardView.swift; sourceTree = "<group>"; };
@@ -248,6 +252,22 @@
 		FA08BB048AEABF45838E4B73 /* EditPhraseDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = EditPhraseDetailView.swift; path = iosApp/Views/Settings/EditPhrases/EditPhraseDetailView.swift; sourceTree = "<group>"; };
 		FDE16E773AC8FA0DE7CF723F /* TimingSensitivityView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TimingSensitivityView.swift; sourceTree = "<group>"; };
 		FE83199A4DC22BC7FEB77C1C /* Pods-iosAppUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosAppUITests.debug.xcconfig"; path = "Target Support Files/Pods-iosAppUITests/Pods-iosAppUITests.debug.xcconfig"; sourceTree = "<group>"; };
+		GAMEF0012F6000GAME000001 /* GamePlaybackCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamePlaybackCoordinator.swift; sourceTree = "<group>"; };
+		GAMEF0022F6000GAME000002 /* GameOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverlayView.swift; sourceTree = "<group>"; };
+		GAMEF0032F6000GAME000003 /* CursorRocketGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorRocketGameView.swift; sourceTree = "<group>"; };
+		GAMEF0042F6000GAME000004 /* GamePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GamePickerView.swift; path = iosApp/Views/Settings/Components/GamePickerView.swift; sourceTree = "<group>"; };
+		GAMEF0052F6000GAME000005 /* GameSelectionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSelectionMode.swift; sourceTree = "<group>"; };
+		GAMEF0062F6000GAME000006 /* GameUnsupportedBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameUnsupportedBanner.swift; sourceTree = "<group>"; };
+		GAMEF0072F6000GAME000007 /* BlocsGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlocsGameView.swift; sourceTree = "<group>"; };
+		GAMEF0082F6000GAME000008 /* PieCrazyGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PieCrazyGameView.swift; sourceTree = "<group>"; };
+		MEDF0012F6000MED0000001 /* MediaStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaStorage.swift; sourceTree = "<group>"; };
+		MEDF0022F6000MED0000002 /* MediaPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPickerView.swift; sourceTree = "<group>"; };
+		MEDF0032F6000MED0000003 /* MediaPlaybackCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlaybackCoordinator.swift; sourceTree = "<group>"; };
+		MEDF0042F6000MED0000004 /* MediaPlaybackOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlaybackOverlayView.swift; sourceTree = "<group>"; };
+		MEDF0052F6000MED0000005 /* YouTubePlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubePlayerView.swift; sourceTree = "<group>"; };
+		MEDF0062F6000MED0000006 /* YouTubePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubePickerView.swift; sourceTree = "<group>"; };
+		TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
+		TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThirdPartyNoticesView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -363,6 +383,7 @@
 				5B94803BF9E7413378EA3048 /* BorderWidthPickerView.swift */,
 				F2083FD643D886E0A2C6EAA5 /* EmojiKeyboardView.swift */,
 				1AB2E3DDE32D3CCD57CA523F /* ImagePickerView.swift */,
+				GAMEF0042F6000GAME000004 /* GamePickerView.swift */,
 			);
 			name = "Recovered References";
 			sourceTree = "<group>";
@@ -440,8 +461,11 @@
 			isa = PBXGroup;
 			children = (
 				DCDD8AD62F31863A000B97D2 /* face_landmarker.task */,
+				BODYPOSE0012F700001000B97D6 /* pose_landmarker_lite.task */,
+				BODYGEST0012F700001000B97D2 /* gesture_recognizer.task */,
 				DCDD8ADA2F31863A000B97D2 /* Localizable.strings */,
 				DCDD8B012F500001000B97D2 /* PrivacyPolicy.txt */,
+				TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -508,6 +532,8 @@
 			isa = PBXGroup;
 			children = (
 				DCE3303D2F304AC900ED4C53 /* FaceLandmarkService.swift */,
+				BODYPOSE0032F700001000B97D7 /* PoseLandmarkService.swift */,
+				BODYGEST0032F700001000B97D4 /* GestureRecognizerService.swift */,
 			);
 			path = MediaPipe;
 			sourceTree = "<group>";
@@ -526,6 +552,8 @@
 				AA1000002F400AA100000001 /* HeadPoseTracker.swift */,
 				AA1000022F400AA100000002 /* DwellSelectionManager.swift */,
 				AA1000042F400AA100000003 /* SwitchControlManager.swift */,
+				BODYARM0012F700001000B97D1 /* ArmRaiseDetector.swift */,
+				BODYHAND0012F700001000B97D5 /* HandGestureDetector.swift */,
 			);
 			path = Tracking;
 			sourceTree = "<group>";
@@ -560,6 +588,7 @@
 				75124A4EB46EBC55FCF77509 /* CVIDisplaySettingsView.swift */,
 				8FC0C64D726888E3E1BF2306 /* ResetAppView.swift */,
 				B0DE128958687E125695E4FD /* PrivacyPolicyView.swift */,
+				TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */,
 				EA86A662996EFBF619D755C3 /* DebugLogView.swift */,
 				41574EED91B5D3FEAC7209D5 /* PhraseStyleEditorView.swift */,
 				DCDD8B102F500003000B97D2 /* SettingsHomeAction.swift */,
@@ -586,28 +615,6 @@
 				BB000003AAAA000100000001 /* Onboarding */,
 			);
 			path = Views;
-			sourceTree = "<group>";
-		};
-		MEDG0012F6000MED0000001 /* Media */ = {
-			isa = PBXGroup;
-			children = (
-				MEDF0032F6000MED0000003 /* MediaPlaybackCoordinator.swift */,
-				MEDF0042F6000MED0000004 /* MediaPlaybackOverlayView.swift */,
-				MEDF0052F6000MED0000005 /* YouTubePlayerView.swift */,
-			);
-			path = Media;
-			sourceTree = "<group>";
-		};
-		GAMEG0012F6000GAME000001 /* Game */ = {
-			isa = PBXGroup;
-			children = (
-				GAMEF0012F6000GAME000001 /* GamePlaybackCoordinator.swift */,
-				GAMEF0022F6000GAME000002 /* GameOverlayView.swift */,
-				GAMEF0032F6000GAME000003 /* CursorRocketGameView.swift */,
-				GAMEF0052F6000GAME000005 /* GameSelectionMode.swift */,
-				GAMEF0062F6000GAME000006 /* GameUnsupportedBanner.swift */,
-			);
-			path = Game;
 			sourceTree = "<group>";
 		};
 		DCE3304E2F304AC900ED4C53 /* iosApp */ = {
@@ -1079,6 +1086,30 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		GAMEG0012F6000GAME000001 /* Game */ = {
+			isa = PBXGroup;
+			children = (
+				GAMEF0012F6000GAME000001 /* GamePlaybackCoordinator.swift */,
+				GAMEF0022F6000GAME000002 /* GameOverlayView.swift */,
+				GAMEF0032F6000GAME000003 /* CursorRocketGameView.swift */,
+				GAMEF0052F6000GAME000005 /* GameSelectionMode.swift */,
+				GAMEF0062F6000GAME000006 /* GameUnsupportedBanner.swift */,
+				GAMEF0072F6000GAME000007 /* BlocsGameView.swift */,
+				GAMEF0082F6000GAME000008 /* PieCrazyGameView.swift */,
+			);
+			path = Game;
+			sourceTree = "<group>";
+		};
+		MEDG0012F6000MED0000001 /* Media */ = {
+			isa = PBXGroup;
+			children = (
+				MEDF0032F6000MED0000003 /* MediaPlaybackCoordinator.swift */,
+				MEDF0042F6000MED0000004 /* MediaPlaybackOverlayView.swift */,
+				MEDF0052F6000MED0000005 /* YouTubePlayerView.swift */,
+			);
+			path = Media;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1197,9 +1228,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				DCDD8ADC2F31863A000B97D2 /* face_landmarker.task in Resources */,
+				BODYPOSE0022F700001000B97D6 /* pose_landmarker_lite.task in Resources */,
+				BODYGEST0022F700001000B97D2 /* gesture_recognizer.task in Resources */,
 				DCDD8ADD2F31863A000B97D2 /* Localizable.strings in Resources */,
 				DCDD8AA52F313DD5000B97D2 /* Assets.xcassets in Resources */,
 				DCDD8B022F500001000B97D2 /* PrivacyPolicy.txt in Resources */,
+				TPN0012F6000TPN00000001 /* ThirdPartyNotices.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1314,6 +1348,10 @@
 			files = (
 				DCE3304F2F304AC900ED4C53 /* CameraManager.swift in Sources */,
 				DCE330502F304AC900ED4C53 /* FaceLandmarkService.swift in Sources */,
+				BODYPOSE0042F700001000B97D7 /* PoseLandmarkService.swift in Sources */,
+				BODYGEST0042F700001000B97D4 /* GestureRecognizerService.swift in Sources */,
+				BODYARM0022F700001000B97D1 /* ArmRaiseDetector.swift in Sources */,
+				BODYHAND0022F700001000B97D5 /* HandGestureDetector.swift in Sources */,
 				76518EC051174E2BAFB97DCD /* PerformanceMonitor.swift in Sources */,
 				DCDD8ACC2F3185FF000B97D2 /* AppSettings.swift in Sources */,
 				DCDD8ACD2F3185FF000B97D2 /* TTSManager.swift in Sources */,
@@ -1332,6 +1370,8 @@
 				GAMEB0042F6000GAME000004 /* GamePickerView.swift in Sources */,
 				GAMEB0052F6000GAME000005 /* GameSelectionMode.swift in Sources */,
 				GAMEB0062F6000GAME000006 /* GameUnsupportedBanner.swift in Sources */,
+				GAMEB0072F6000GAME000007 /* BlocsGameView.swift in Sources */,
+				GAMEB0082F6000GAME000008 /* PieCrazyGameView.swift in Sources */,
 				DCDD8ACF2F3185FF000B97D2 /* LocalizationHelper.swift in Sources */,
 				DCDD8AEC2F318A60000B97D2 /* NumberPadView.swift in Sources */,
 				DCDD8AE92F318A37000B97D2 /* KeyboardView.swift in Sources */,
@@ -1374,6 +1414,7 @@
 				8E25A2176CEFFC9A557016D8 /* CVIDisplaySettingsView.swift in Sources */,
 				015C1838C817F693F14FF56F /* ResetAppView.swift in Sources */,
 				060C0384C10555522A11527A /* PrivacyPolicyView.swift in Sources */,
+				TPN0022F6000TPN00000002 /* ThirdPartyNoticesView.swift in Sources */,
 				AF0CCF10A90A6DDD79F8DB20 /* PhraseStyleEditorView.swift in Sources */,
 				DCDD8B112F500003000B97D2 /* SettingsHomeAction.swift in Sources */,
 				BB000001AAAA000100000001 /* WelcomeView.swift in Sources */,

@@ -1,81 +1,44 @@
 import SwiftUI
 
-/// Settings view for configuring USB HID switch control.
-///
-/// Allows the user to:
-/// - Enable/disable switch control
-/// - See USB keyboard connection status
-/// - Configure which key each switch sends
-/// - Configure which action each physical switch performs
-/// - Choose between direct mode (switch + tracking) and scanning mode
+/// Settings for USB / Bluetooth HID adaptive switches (keyboard keys 1–4).
 struct SwitchControlSettingsView: View {
     @EnvironmentObject var gazeManager: GazeTrackingManager
     @StateObject private var settings = AppSettings.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
 
+    private var mode: SwitchControlMode {
+        SwitchControlMode.migrated(from: settings.switchControlMode)
+    }
+
+    private var phraseSlotCount: Int {
+        min(max(settings.symbolCount, 2), 4)
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-
-                // MARK: - Coming Soon Banner
-                VStack(spacing: 12) {
-                    Image(systemName: "hammer.fill")
-                        .font(.system(size: 40))
-                        .foregroundColor(.orange)
-                    Text("Coming Soon")
-                        .font(.title2.bold())
-                    Text("USB Switch Control is currently in development and will be available in a future update.")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.orange.opacity(0.1))
-                .cornerRadius(12)
-                .padding(.horizontal)
-
-                // MARK: - Enable Toggle
                 enableSection
 
                 if settings.switchControlEnabled {
-                    // MARK: - Connection Status
                     connectionStatusSection
-
                     Divider().padding(.horizontal)
-
-                    // MARK: - How It Works
-                    howItWorksSection
-
-                    Divider().padding(.horizontal)
-
-                    // MARK: - Key Mapping
-                    keyMappingSection
-
-                    Divider().padding(.horizontal)
-
-                    // MARK: - Control Mode
                     controlModeSection
-
                     Divider().padding(.horizontal)
 
-                    // MARK: - Switch Action Mapping (not shown in directMapping mode)
-                    if settings.switchControlMode != "directMapping" {
-                        switchMappingSection
+                    if mode == .scanning {
+                        scanningModeSection
                     } else {
-                        directMappingInfoSection
+                        directPhraseModeSection
                     }
 
-                    // MARK: - Scanning Mode Options
-                    if settings.switchControlMode == "scanning" {
-                        scanningOptionsSection
-                    }
+                    Divider().padding(.horizontal)
+                    keyMappingSection
+                    Divider().padding(.horizontal)
+                    howItWorksSection
                 }
             }
             .padding(.vertical)
-            .disabled(true)
-            .opacity(0.7)
         }
         .scrollContentBackground(.hidden)
         .background(settings.appBorderColor)
@@ -84,9 +47,7 @@ struct SwitchControlSettingsView: View {
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {
-                    settingsHomeAction?() ?? dismiss()
-                }) {
+                Button(action: { settingsHomeAction?() ?? dismiss() }) {
                     Label("Home", systemImage: "house.fill")
                 }
             }
@@ -105,91 +66,75 @@ struct SwitchControlSettingsView: View {
         .onChange(of: settings.switchScanInterval) { _, _ in
             gazeManager.applySwitchSettings(settings)
         }
-        .onChange(of: settings.switchKey1) { _, _ in
+        .onChange(of: settings.symbolCount) { _, _ in
             gazeManager.applySwitchSettings(settings)
         }
-        .onChange(of: settings.switchKey2) { _, _ in
-            gazeManager.applySwitchSettings(settings)
-        }
-        .onChange(of: settings.switchKey3) { _, _ in
-            gazeManager.applySwitchSettings(settings)
-        }
-        .onChange(of: settings.switchKey4) { _, _ in
-            gazeManager.applySwitchSettings(settings)
-        }
+        .onChange(of: settings.switchKey1) { _, _ in gazeManager.applySwitchSettings(settings) }
+        .onChange(of: settings.switchKey2) { _, _ in gazeManager.applySwitchSettings(settings) }
+        .onChange(of: settings.switchKey3) { _, _ in gazeManager.applySwitchSettings(settings) }
+        .onChange(of: settings.switchKey4) { _, _ in gazeManager.applySwitchSettings(settings) }
     }
 
-    // MARK: - Enable Section
+    // MARK: - Enable
 
     private var enableSection: some View {
-        VStack(spacing: 12) {
-            Toggle(isOn: $settings.switchControlEnabled) {
-                HStack(spacing: 12) {
-                    Image(systemName: "keyboard")
-                        .font(.title2)
-                        .foregroundColor(.blue)
-                        .frame(width: 40)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("USB Switch Control")
-                            .font(.headline)
-                        Text("Use Tapio or a compatible USB HID switch interface")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
+        Toggle(isOn: $settings.switchControlEnabled) {
+            HStack(spacing: 12) {
+                Image(systemName: "keyboard")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+                    .frame(width: 40)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("External Switches")
+                        .font(.headline)
+                    Text("USB or Bluetooth keyboard-style switch interfaces")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
             }
-            .padding()
-            .background(Color(UIColor.secondarySystemBackground))
-            .cornerRadius(12)
         }
+        .padding()
+        .background(Color(UIColor.secondarySystemBackground))
+        .cornerRadius(12)
         .padding(.horizontal)
     }
 
-    // MARK: - Connection Status
+    // MARK: - Connection
 
     private var connectionStatusSection: some View {
         let mgr = gazeManager.switchManager
 
         return VStack(spacing: 12) {
             HStack(spacing: 16) {
-                // Status icon
                 ZStack {
                     Circle()
                         .fill(mgr.isConnected ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
                         .frame(width: 60, height: 60)
-                    Image(systemName: mgr.isConnected ? "checkmark.circle.fill" : "cable.connector")
+                    Image(systemName: mgr.isConnected ? "checkmark.circle.fill" : "keyboard")
                         .font(.title)
                         .foregroundColor(mgr.isConnected ? .green : .orange)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(mgr.isConnected ? "Connected" : "Not Connected")
+                    Text(mgr.isConnected ? "Receiving input" : "Waiting for switch")
                         .font(.title3.bold())
                         .foregroundColor(mgr.isConnected ? .green : .secondary)
 
-                    if let name = mgr.connectedDeviceName {
-                        Text(name)
-                            .font(.subheadline)
-                            .foregroundColor(.primary)
-                    } else {
-                        Text("Connect Tapio via USB")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
+                    Text(connectionHint)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
-
                 Spacer()
             }
             .padding()
             .background(Color(UIColor.secondarySystemBackground))
             .cornerRadius(12)
 
-            // Last switch event feedback
             if let event = mgr.lastSwitchEvent, event.isPress {
                 HStack(spacing: 8) {
                     Image(systemName: "bolt.fill")
                         .foregroundColor(.yellow)
-                    Text("Last press: Switch \(event.switchIndex + 1)")
+                    Text(mgr.lastEventDescription(for: event))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -201,69 +146,14 @@ struct SwitchControlSettingsView: View {
         .padding(.horizontal)
     }
 
-    // MARK: - How It Works
-
-    private var howItWorksSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("How It Works")
-                .font(.headline)
-                .padding(.horizontal)
-
-            VStack(alignment: .leading, spacing: 16) {
-                SetupStepRow(
-                    number: 1,
-                    icon: "cpu",
-                    text: "Tapio is a USB switch interface that connects to your iPad via USB cable. An open-source Arduino-based alternative is also in development."
-                )
-
-                SetupStepRow(
-                    number: 2,
-                    icon: "power.circle",
-                    text: "Connect your adaptive switches to Tapio using standard 3.5mm jacks. When pressed, Tapio sends a keypress over USB to the app."
-                )
-
-                SetupStepRow(
-                    number: 3,
-                    icon: "app.badge",
-                    text: "This app listens for those keypresses. In Direct Switch-to-Phrase mode, Switch 1 → Phrase 1, Switch 2 → Phrase 2, etc."
-                )
-            }
-            .padding()
-            .background(Color(UIColor.secondarySystemBackground))
-            .cornerRadius(12)
-            .padding(.horizontal)
-
-            Text("No Bluetooth pairing needed — just plug in the USB cable and go.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.horizontal)
+    private var connectionHint: String {
+        if gazeManager.switchManager.isConnected {
+            return "Press a switch to test. Keys must match mapping below."
         }
+        return "Connect via USB, or pair a BLE keyboard in Settings → Bluetooth, then press a switch."
     }
 
-    // MARK: - Key Mapping
-
-    private var keyMappingSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Key Mapping")
-                .font(.headline)
-                .padding(.horizontal)
-
-            Text("Configure which keyboard key each switch sends. Default: keys 1, 2, 3, 4. Must match your Tapio or switch device configuration.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.horizontal)
-
-            VStack(spacing: 8) {
-                SwitchKeyPicker(label: "Switch 1", selection: $settings.switchKey1)
-                SwitchKeyPicker(label: "Switch 2", selection: $settings.switchKey2)
-                SwitchKeyPicker(label: "Switch 3", selection: $settings.switchKey3)
-                SwitchKeyPicker(label: "Switch 4", selection: $settings.switchKey4)
-            }
-            .padding(.horizontal)
-        }
-    }
-
-    // MARK: - Control Mode
+    // MARK: - Mode picker
 
     private var controlModeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -271,85 +161,102 @@ struct SwitchControlSettingsView: View {
                 .font(.headline)
                 .padding(.horizontal)
 
-            VStack(spacing: 8) {
+            ForEach(SwitchControlMode.allCases) { item in
                 SwitchModeButton(
-                    title: "Direct Switch-to-Phrase",
-                    description: "Each switch activates a specific phrase tile by position: Switch 1 → Phrase 1 (top-left), Switch 2 → Phrase 2, etc.",
-                    icon: "square.grid.2x2",
-                    isSelected: settings.switchControlMode == "directMapping"
+                    title: item.displayName,
+                    description: item.detail,
+                    icon: item.systemImage,
+                    isSelected: mode == item
                 ) {
-                    settings.switchControlMode = "directMapping"
-                }
-
-                SwitchModeButton(
-                    title: "Direct (with Tracking)",
-                    description: "Eye or head tracking moves the cursor. Switch press activates the highlighted button.",
-                    icon: "eye.fill",
-                    isSelected: settings.switchControlMode == "direct"
-                ) {
-                    settings.switchControlMode = "direct"
-                }
-
-                SwitchModeButton(
-                    title: "Auto-Scan",
-                    description: "Buttons are highlighted automatically in sequence. Switch press selects the current one.",
-                    icon: "arrow.right.arrow.left",
-                    isSelected: settings.switchControlMode == "scanning"
-                ) {
-                    settings.switchControlMode = "scanning"
+                    settings.switchControlMode = item.rawValue
                 }
             }
             .padding(.horizontal)
         }
     }
 
-    // MARK: - Switch Mapping
+    // MARK: - Scanning (2 switches)
 
-    private var switchMappingSection: some View {
+    private var scanningModeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Switch Actions")
+            Text("Scan & Select (2 switches)")
                 .font(.headline)
                 .padding(.horizontal)
 
-            Text("Assign what each physical switch does when pressed.")
+            VStack(spacing: 8) {
+                roleRow(title: "Switch 1", role: "Select", detail: "Activates the highlighted phrase")
+                roleRow(title: "Switch 2", role: "Next", detail: "Moves highlight to the next phrase")
+            }
+            .padding(.horizontal)
+
+            Text("Scanning speed")
+                .font(.headline)
+                .padding(.horizontal)
+                .padding(.top, 8)
+
+            VStack(spacing: 8) {
+                HStack {
+                    Text("Auto-highlight interval")
+                        .font(.subheadline)
+                    Spacer()
+                    Text(String(format: "%.1fs", settings.switchScanInterval))
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundColor(.blue)
+                }
+                Slider(value: $settings.switchScanInterval, in: 0.5...5.0, step: 0.25)
+                    .tint(.blue)
+            }
+            .padding()
+            .background(Color(UIColor.secondarySystemBackground))
+            .cornerRadius(12)
+            .padding(.horizontal)
+        }
+    }
+
+    private func roleRow(title: String, role: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text(title)
+                .font(.subheadline.bold())
+                .frame(width: 72, alignment: .leading)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(role)
+                    .font(.subheadline.bold())
+                    .foregroundColor(.blue)
+                Text(detail)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+        }
+        .padding()
+        .background(Color(UIColor.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+
+    // MARK: - Direct phrase (2–4 switches)
+
+    private var directPhraseModeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Switch to Phrase (\(phraseSlotCount) switches)")
+                .font(.headline)
+                .padding(.horizontal)
+
+            Text("Uses \(phraseSlotCount) phrases per page from Display settings. Each switch speaks one tile (left-to-right, top-to-bottom).")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
 
             VStack(spacing: 8) {
-                SwitchActionPicker(label: "Switch 1", selection: $settings.switchAction1)
-                SwitchActionPicker(label: "Switch 2", selection: $settings.switchAction2)
-                SwitchActionPicker(label: "Switch 3", selection: $settings.switchAction3)
-                SwitchActionPicker(label: "Switch 4", selection: $settings.switchAction4)
-            }
-            .padding(.horizontal)
-            .onChange(of: settings.switchAction1) { _, _ in gazeManager.applySwitchSettings(settings) }
-            .onChange(of: settings.switchAction2) { _, _ in gazeManager.applySwitchSettings(settings) }
-            .onChange(of: settings.switchAction3) { _, _ in gazeManager.applySwitchSettings(settings) }
-            .onChange(of: settings.switchAction4) { _, _ in gazeManager.applySwitchSettings(settings) }
-        }
-    }
-
-    // MARK: - Direct Mapping Info
-
-    private var directMappingInfoSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Switch-to-Phrase Mapping")
-                .font(.headline)
-                .padding(.horizontal)
-
-            VStack(spacing: 8) {
-                ForEach(1...4, id: \.self) { switchNum in
+                ForEach(1...phraseSlotCount, id: \.self) { slot in
                     HStack(spacing: 12) {
-                        Image(systemName: "\(switchNum).circle.fill")
+                        Image(systemName: "\(slot).circle.fill")
                             .font(.title2)
                             .foregroundColor(.blue)
-                            .frame(width: 36)
-                        Text("Switch \(switchNum)")
+                        Text("Switch \(slot)")
                             .font(.subheadline.bold())
                         Image(systemName: "arrow.right")
                             .foregroundColor(.secondary)
-                        Text("Phrase \(switchNum) (\(positionName(switchNum)))")
+                        Text("Phrase \(slot) (\(positionName(slot)))")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         Spacer()
@@ -360,11 +267,6 @@ struct SwitchControlSettingsView: View {
                 }
             }
             .padding(.horizontal)
-
-            Text("Set the number of phrases per page (Settings → Edit Categories) to match the number of switches you want to use.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.horizontal)
         }
     }
 
@@ -378,36 +280,78 @@ struct SwitchControlSettingsView: View {
         }
     }
 
-    // MARK: - Scanning Options
+    // MARK: - Key mapping
 
-    private var scanningOptionsSection: some View {
+    private var keyMappingSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Divider().padding(.horizontal)
-
-            Text("Scanning Speed")
+            Text("Key Mapping")
                 .font(.headline)
                 .padding(.horizontal)
 
+            Text(keyMappingFooter)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.horizontal)
+
             VStack(spacing: 8) {
-                HStack {
-                    Text("Auto-step interval")
-                        .font(.subheadline)
-                    Spacer()
-                    Text(String(format: "%.1fs", settings.switchScanInterval))
-                        .font(.subheadline.monospacedDigit())
-                        .foregroundColor(.blue)
+                if mode == .scanning {
+                    SwitchKeyPicker(label: "Select switch", selection: $settings.switchKey1)
+                    SwitchKeyPicker(label: "Next switch", selection: $settings.switchKey2)
+                } else {
+                    ForEach(1...phraseSlotCount, id: \.self) { slot in
+                        SwitchKeyPicker(
+                            label: "Switch \(slot)",
+                            selection: keyBinding(for: slot)
+                        )
+                    }
                 }
-                Slider(value: $settings.switchScanInterval, in: 0.5...5.0, step: 0.25)
-                    .tint(.blue)
-                HStack {
-                    Text("Fast")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Text("Slow")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    private var keyMappingFooter: String {
+        if mode == .scanning {
+            return "Default: keys 1 and 2. Must match your switch device firmware."
+        }
+        return "Default: keys 1–\(phraseSlotCount). Must match your switch device firmware."
+    }
+
+    private func keyBinding(for slot: Int) -> Binding<Int> {
+        switch slot {
+        case 1: return $settings.switchKey1
+        case 2: return $settings.switchKey2
+        case 3: return $settings.switchKey3
+        default: return $settings.switchKey4
+        }
+    }
+
+    // MARK: - How it works
+
+    private var howItWorksSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Setup")
+                .font(.headline)
+                .padding(.horizontal)
+
+            VStack(alignment: .leading, spacing: 16) {
+                SetupStepRow(
+                    number: 1,
+                    icon: "cable.connector",
+                    text: "Wire switches to a USB HID or BLE keyboard device (Arduino, ESP32, Tapio, etc.)."
+                )
+                SetupStepRow(
+                    number: 2,
+                    icon: "keyboard",
+                    text: "USB: plug into the iPad. Bluetooth: pair once in iPad Settings → Bluetooth."
+                )
+                SetupStepRow(
+                    number: 3,
+                    icon: "hand.tap",
+                    text: mode == .scanning
+                        ? "Use two switches to scan and select phrases."
+                        : "Use one switch per phrase on screen (\(phraseSlotCount) total)."
+                )
             }
             .padding()
             .background(Color(UIColor.secondarySystemBackground))
@@ -417,7 +361,7 @@ struct SwitchControlSettingsView: View {
     }
 }
 
-// MARK: - Supporting Views
+// MARK: - Supporting views
 
 private struct SetupStepRow: View {
     let number: Int
@@ -432,12 +376,9 @@ private struct SetupStepRow: View {
                     .frame(width: 36, height: 36)
                 Image(systemName: icon)
                     .foregroundColor(.blue)
-                    .font(.body)
             }
-
             Text(text)
                 .font(.subheadline)
-                .foregroundColor(.primary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -457,7 +398,6 @@ private struct SwitchModeButton: View {
                     .font(.title3)
                     .foregroundColor(isSelected ? .white : .blue)
                     .frame(width: 36)
-
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.subheadline.bold())
@@ -467,9 +407,7 @@ private struct SwitchModeButton: View {
                         .foregroundColor(isSelected ? .white.opacity(0.85) : .secondary)
                         .multilineTextAlignment(.leading)
                 }
-
                 Spacer()
-
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.white)
@@ -482,41 +420,6 @@ private struct SwitchModeButton: View {
     }
 }
 
-private struct SwitchActionPicker: View {
-    let label: String
-    @Binding var selection: String
-
-    var body: some View {
-        HStack {
-            Text(label)
-                .font(.subheadline.bold())
-                .frame(width: 80, alignment: .leading)
-
-            Picker(label, selection: $selection) {
-                ForEach(SwitchAction.allCases) { action in
-                    Label(action.displayName, systemImage: action.systemImage)
-                        .tag(action.rawValue)
-                }
-            }
-            .pickerStyle(.menu)
-            .tint(.blue)
-
-            Spacer()
-
-            Image(systemName: currentActionIcon)
-                .foregroundColor(.blue)
-                .frame(width: 24)
-        }
-        .padding()
-        .background(Color(UIColor.secondarySystemBackground))
-        .cornerRadius(12)
-    }
-
-    private var currentActionIcon: String {
-        (SwitchAction(rawValue: selection) ?? .select).systemImage
-    }
-}
-
 private struct SwitchKeyPicker: View {
     let label: String
     @Binding var selection: Int
@@ -525,23 +428,18 @@ private struct SwitchKeyPicker: View {
         HStack {
             Text(label)
                 .font(.subheadline.bold())
-                .frame(width: 80, alignment: .leading)
-
+                .frame(minWidth: 100, alignment: .leading)
             Picker(label, selection: $selection) {
                 ForEach(SwitchKeyMapping.allMappings) { mapping in
-                    Text(mapping.displayName)
-                        .tag(mapping.hidUsageCode)
+                    Text(mapping.displayName).tag(mapping.hidUsageCode)
                 }
             }
             .pickerStyle(.menu)
             .tint(.blue)
-
             Spacer()
-
             Text(SwitchKeyMapping.displayName(for: selection))
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .frame(minWidth: 60, alignment: .trailing)
         }
         .padding()
         .background(Color(UIColor.secondarySystemBackground))

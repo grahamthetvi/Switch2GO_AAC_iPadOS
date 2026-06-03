@@ -69,6 +69,12 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
             }
         }
 
+        binding.thirdPartyNoticesButton.action = {
+            if (findNavController().currentDestination?.id == R.id.settingsFragment) {
+                findNavController().navigate(R.id.action_settingsFragment_to_thirdPartyNoticesFragment)
+            }
+        }
+
         binding.imageToolButton.action = {
             showLeavingAppDialog {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(IMAGE_TOOL_URL)))
@@ -141,6 +147,7 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding>() {
         binding.apply {
             settingsCloseButton.isEnabled = enable
             privacyPolicyButton.isEnabled = enable
+            thirdPartyNoticesButton.isEnabled = enable
             imageToolButton.isEnabled = enable
             contactDevsButton.isEnabled = enable
             settingsOptionsContainer.categoriesDisplayButton.isEnabled = enable

@@ -35,6 +35,44 @@ struct GamePickerView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+
+                    Button {
+                        onGameSelected(PhraseGameTypeId.blocs)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Blocs")
+                                    .font(.headline)
+                                Spacer()
+                                if currentGameType == PhraseGameTypeId.blocs {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            Text("Dwell on bright blocks to break them and reveal your phrase. Eye-gaze training with particles and confetti.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    Button {
+                        onGameSelected(PhraseGameTypeId.pieCrazy)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Pie Crazy")
+                                    .font(.headline)
+                                Spacer()
+                                if currentGameType == PhraseGameTypeId.pieCrazy {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            Text("Huge bullseye targets in five screen positions. Dwell to splat a cream pie with synthesized reward sound.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
 
                 if currentGameType != nil {

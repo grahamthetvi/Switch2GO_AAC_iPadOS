@@ -17,7 +17,7 @@
 | Persistence | Room (`com.switch2connect.aac.room.VocableDatabase`) | SQLDelight via `:shared` (`com.vocable.data.createDatabase`) |
 | Eye gaze | `MediaPipeIrisGazeTracker` (production) | KMP `GazeTracker` via `GazeTrackingManager.swift` |
 | Head tracking | ARCore + Sceneform (`FaceTrackFragment`) | MediaPipe `HeadPoseTracker.swift` |
-| USB HID switch (Arduino) | not implemented today | `SwitchControlManager.swift` (Game Controller framework) |
+| USB / BLE HID switch | not implemented today | `SwitchControlManager.swift` (scan 2-switch, direct phrase 2–4) |
 | Web | IndexedDB (Dexie) | SQLDelight via `:shared` |
 | Web input | Keyboard 1–4, touch, MediaPipe gaze/head | Same + USB HID (Arduino) on iOS |
 
@@ -58,10 +58,13 @@ For users with more mobility, the app can be operated by touch.
 ### Saved Phrases
 Use a list of common phrases, or create and save your own custom phrases with customizable appearance settings.
 
-### USB Switch Control (Arduino Micro/Tapio)
-Use an Arduino Micro (or Leonardo) as a USB HID keyboard. Wire physical switches to the Arduino; when pressed, they send key presses (1, 2, 3, 4) that map directly to phrase tiles. No Bluetooth pairing—just plug in the USB cable. This feature will be further explained in future updates.
+### Switch Control (USB / Bluetooth HID)
+Use a USB or BLE keyboard-style switch interface (Arduino, ESP32, Tapio, etc.). The app supports two modes:
 
-**Setup:** Settings → Switch Control → Enable USB Switch Control → Mode: "Direct Switch-to-Phrase". See `ArduinoMicro/Switch2GO_USB_Switch/` for the sketch.
+- **Switch to Phrase** (2–4 switches): each switch activates one phrase tile (keys `1`–`4` by default).
+- **Scan & Select** (2 switches): one switch moves a highlight, one selects (keys `1` = select, `2` = next).
+
+**Setup:** Settings → Selection Mode → Switch Control. USB: plug in. Bluetooth: pair in iPad Settings → Bluetooth. See `ArduinoMicro/Switch2GO_USB_Switch/` for a wired reference sketch.
 
 ## Getting Started
 
@@ -164,13 +167,15 @@ Open the project in Android Studio (or any IDE with Gradle support); no extra st
   - Customized interface and features for CVI accessibility
 
 ### Original Vocable AAC Development
-Switch2Go is based on Vocable AAC, originally developed by:
-- Matt Kubota, Kyle Ohanian, Duncan Lewis, Ameir Al-Zoubi, and many more from [WillowTree](https://www.vocable.app/) 💙
+Switch2Go is based on Vocable AAC for Android, originally developed by:
+- Matt Kubota, Kyle Ohanian, Duncan Lewis, Ameir Al-Zoubi, and many more from [WillowTree LLC](https://www.vocable.app/) 💙
 
 We are grateful to the original Vocable team for creating this excellent foundation for accessible communication.
 
 ## License
 Switch2Go is released under the MIT license. See [LICENSE](LICENSE) for details.
+
+Third-party components (including **MediaPipe**, Apache 2.0) are documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). In-app: **Settings → Open-Source Licenses**.
 
 ## Original Project
 This project is a fork of [Vocable AAC for Android](https://github.com/grahamthetvi/Switch2GO_AAC_iPadOS), originally developed by WillowTree, LLC.

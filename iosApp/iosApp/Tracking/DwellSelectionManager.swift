@@ -1,6 +1,11 @@
 import SwiftUI
 import Combine
 
+/// Shared SwiftUI coordinate space for gaze cursor rendering and dwell hit-testing.
+enum GazeCoordinateSpace {
+    static let name = "gaze"
+}
+
 /// Manages dwell-based selection: when the gaze cursor stays on a button
 /// long enough, that button is activated.
 ///
@@ -25,6 +30,10 @@ class DwellSelectionManager: ObservableObject {
     /// Fires when a button is activated by dwell or switch press
     @Published var activatedButtonId: String?
 
+    /// Increments on every activation so observers reliably receive events even when
+    /// `activatedButtonId` repeats or LazyVGrid/TabView recycles child views.
+    @Published private(set) var activationToken: UInt64 = 0
+
     /// The button highlighted in scanning mode (nil if not scanning)
     @Published var scanHighlightedButtonId: String?
 
@@ -35,7 +44,7 @@ class DwellSelectionManager: ObservableObject {
     /// Used during fullscreen media playback to ignore phrase tiles behind the overlay.
     private(set) var allowedButtonIds: Set<String>?
 
-    // Registered button frames (id -> frame in screen coordinates)
+    // Registered button frames (id -> frame in GazeCoordinateSpace)
     private var buttonFrames: [String: CGRect] = [:]
 
     // Ordered list of button IDs (for scanning mode)
@@ -110,10 +119,23 @@ class DwellSelectionManager: ObservableObject {
         }
     }
 
-    /// Clear all registered buttons (e.g., on page change).
+    /// Clear all registered buttons (e.g., when leaving a screen).
     func clearAllButtons() {
         buttonFrames.removeAll()
         orderedButtonIds.removeAll()
+        cancelDwell()
+    }
+
+    /// Remove buttons whose IDs start with the given prefix (e.g. "cat_" when opening phrases).
+    func unregisterButtons(withPrefix prefix: String) {
+        for id in buttonFrames.keys where id.hasPrefix(prefix) {
+            unregisterButton(id: id)
+        }
+    }
+
+    /// Reset in-progress dwell after orientation changes without clearing registered frames.
+    /// Frames update in place via each button's GeometryReader as SwiftUI relayouts.
+    func cancelDwellForLayoutChange() {
         cancelDwell()
     }
 
@@ -129,17 +151,14 @@ class DwellSelectionManager: ObservableObject {
 
         let now = CACurrentMediaTime()
 
-        // Cooldown after activation
-        if now - lastActivationTime < activationCooldown {
-            return
-        }
+        // Cooldown after activation — only block re-activation, not hover tracking.
+        let inActivationCooldown = now - lastActivationTime < activationCooldown
 
-        // Find which button (if any) the gaze is over, using padded frames
-        // so gaze noise at button edges doesn't prevent entry.
-        let hitButtonId = buttonFrames.first { id, frame in
-            guard isButtonAllowed(id) else { return false }
+        // Walk registration order (matches web) so overlapping padded regions pick predictably.
+        let hitButtonId = orderedButtonIds.first { id in
+            guard isButtonAllowed(id), let frame = buttonFrames[id] else { return false }
             return frame.insetBy(dx: -hitTestPadding, dy: -hitTestPadding).contains(position)
-        }?.key
+        }
 
         if let hitId = hitButtonId {
             // Cursor is on a button — cancel any pending exit grace timer
@@ -148,7 +167,9 @@ class DwellSelectionManager: ObservableObject {
 
             if hitId == hoveredButtonId {
                 // Still on the same button — update progress
-                updateDwellProgress(now: now)
+                if !inActivationCooldown || !hasActivatedCurrentDwell {
+                    updateDwellProgress(now: now)
+                }
             } else {
                 // Moved to a different button
                 DebugLog.debug("Dwell: entered \(hitId)", tag: "Dwell")
@@ -162,7 +183,9 @@ class DwellSelectionManager: ObservableObject {
                 let expandedFrame = frame.insetBy(dx: -exitMargin, dy: -exitMargin)
                 if expandedFrame.contains(position) {
                     // Still within exit margin — keep dwelling, don't reset
-                    updateDwellProgress(now: now)
+                    if !inActivationCooldown || !hasActivatedCurrentDwell {
+                        updateDwellProgress(now: now)
+                    }
                 } else if exitGraceTimer == nil {
                     // Just exited — start grace period before cancelling.
                     // This prevents jitter-caused resets: if the cursor returns
@@ -232,17 +255,23 @@ class DwellSelectionManager: ObservableObject {
     private func activateCurrentButton() {
         guard let buttonId = hoveredButtonId else { return }
 
+        let now = CACurrentMediaTime()
+        guard now - lastActivationTime >= activationCooldown else { return }
+
+        publishActivation(buttonId: buttonId, hapticStyle: .medium)
+    }
+
+    /// Record an activation and notify observers (haptic optional).
+    private func publishActivation(buttonId: String, hapticStyle: UIImpactFeedbackGenerator.FeedbackStyle?) {
         DebugLog.debug("Dwell: activated \(buttonId)", tag: "Dwell")
         activatedButtonId = buttonId
+        activationToken &+= 1
         lastActivationTime = CACurrentMediaTime()
 
-        // Haptic feedback
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.impactOccurred()
-
-        // We no longer cancel dwell here. This keeps the cursor "locked" on the button
-        // and prevents it from re-triggering (since hasActivatedCurrentDwell is now true).
-        // The dwell state will be cancelled naturally when the user looks away.
+        if let hapticStyle {
+            let generator = UIImpactFeedbackGenerator(style: hapticStyle)
+            generator.impactOccurred()
+        }
     }
 
     private func cancelDwell() {
@@ -263,15 +292,12 @@ class DwellSelectionManager: ObservableObject {
     }
 
     // MARK: - Switch Control Integration
-
-    /// Bind this dwell manager to a SwitchControlManager.
-    /// In direct mode, switch "select" instantly activates the hovered button.
-    /// In scanning mode, it activates the scan-highlighted button.
-    /// In directMapping mode, each switch activates a specific phrase by position.
+    /// Scanning mode: select switch activates the scan-highlighted phrase.
+    /// Direct phrase mode: each switch activates a phrase by grid position.
     func bindSwitchControl(_ switchManager: SwitchControlManager) {
         switchCancellables.removeAll()
 
-        // Select action → instant activation (direct + scanning modes)
+        // Scanning mode: select switch activates highlighted phrase
         switchManager.selectAction
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in
@@ -307,27 +333,14 @@ class DwellSelectionManager: ObservableObject {
         let now = CACurrentMediaTime()
         guard now - lastActivationTime >= activationCooldown else { return }
 
-        let buttonId: String?
-        if switchManager.controlMode == .scanning {
-            // In scanning mode, activate the scan-highlighted button
-            buttonId = scanHighlightedButtonId
-        } else {
-            // In direct mode, activate whatever button the gaze is hovering
-            buttonId = hoveredButtonId
-        }
+        guard switchManager.controlMode == .scanning,
+              let id = scanHighlightedButtonId else { return }
 
-        guard let id = buttonId else { return }
-
-        activatedButtonId = id
-        lastActivationTime = now
+        publishActivation(buttonId: id, hapticStyle: .heavy)
         
         if id == hoveredButtonId {
             hasActivatedCurrentDwell = true
         }
-
-        // Haptic feedback
-        let generator = UIImpactFeedbackGenerator(style: .heavy)
-        generator.impactOccurred()
     }
 
     /// Instantly activate a specific button by ID (for direct mapping mode).
@@ -340,15 +353,11 @@ class DwellSelectionManager: ObservableObject {
             return
         }
 
-        activatedButtonId = buttonId
-        lastActivationTime = now
+        publishActivation(buttonId: buttonId, hapticStyle: .heavy)
         
         if buttonId == hoveredButtonId {
             hasActivatedCurrentDwell = true
         }
-
-        let generator = UIImpactFeedbackGenerator(style: .heavy)
-        generator.impactOccurred()
     }
 
     /// Instantly activate the currently hovered button (for external callers).
@@ -357,12 +366,8 @@ class DwellSelectionManager: ObservableObject {
         guard now - lastActivationTime >= activationCooldown else { return }
         guard let buttonId = hoveredButtonId, isButtonAllowed(buttonId) else { return }
 
-        activatedButtonId = buttonId
-        lastActivationTime = now
+        publishActivation(buttonId: buttonId, hapticStyle: .heavy)
         hasActivatedCurrentDwell = true
-
-        let generator = UIImpactFeedbackGenerator(style: .heavy)
-        generator.impactOccurred()
     }
 
     /// Get the ordered list of registered button IDs (for scanning mode).
@@ -389,8 +394,8 @@ class DwellSelectionManager: ObservableObject {
 struct DwellSelectableModifier: ViewModifier {
     let id: String
     @ObservedObject var dwellManager: DwellSelectionManager
+    var isActive: Bool = true
     let onActivate: () -> Void
-    @State private var hasValidFrame = false
 
     private var isHovered: Bool { dwellManager.hoveredButtonId == id }
     private var isScanHighlighted: Bool { dwellManager.scanHighlightedButtonId == id }
@@ -403,17 +408,22 @@ struct DwellSelectableModifier: ViewModifier {
                         .onAppear {
                             registerIfValid(geo: geo)
                         }
-                        .onChange(of: geo.frame(in: .global)) { _, newFrame in
+                        .onChange(of: geo.frame(in: .named(GazeCoordinateSpace.name))) { _, newFrame in
+                            guard isActive else { return }
                             dwellManager.registerButton(id: id, frame: newFrame)
-                            if newFrame.width > 1 && newFrame.height > 1 {
-                                hasValidFrame = true
+                        }
+                        .onChange(of: isActive) { _, active in
+                            if active {
+                                registerIfValid(geo: geo)
+                            } else {
+                                dwellManager.unregisterButton(id: id)
                             }
                         }
                         .onReceive(
-                            Timer.publish(every: 0.15, on: .main, in: .common)
+                            Timer.publish(every: 0.1, on: .main, in: .common)
                                 .autoconnect()
                         ) { _ in
-                            if !hasValidFrame {
+                            if isActive {
                                 registerIfValid(geo: geo)
                             }
                         }
@@ -440,8 +450,8 @@ struct DwellSelectableModifier: ViewModifier {
             )
             .scaleEffect((isHovered || isScanHighlighted) ? 1.03 : 1.0)
             .animation(.easeInOut(duration: 0.15), value: isHovered || isScanHighlighted)
-            .onChange(of: dwellManager.activatedButtonId) { _, newValue in
-                if newValue == id {
+            .onChange(of: dwellManager.activationToken) { _, _ in
+                if dwellManager.activatedButtonId == id {
                     onActivate()
                 }
             }
@@ -451,10 +461,10 @@ struct DwellSelectableModifier: ViewModifier {
     }
 
     private func registerIfValid(geo: GeometryProxy) {
-        let frame = geo.frame(in: .global)
+        guard isActive else { return }
+        let frame = geo.frame(in: .named(GazeCoordinateSpace.name))
         if frame.width > 1 && frame.height > 1 {
             dwellManager.registerButton(id: id, frame: frame)
-            hasValidFrame = true
         }
     }
 }
@@ -464,8 +474,16 @@ extension View {
     func dwellSelectable(
         id: String,
         manager: DwellSelectionManager,
+        isActive: Bool = true,
         onActivate: @escaping () -> Void
     ) -> some View {
-        modifier(DwellSelectableModifier(id: id, dwellManager: manager, onActivate: onActivate))
+        modifier(
+            DwellSelectableModifier(
+                id: id,
+                dwellManager: manager,
+                isActive: isActive,
+                onActivate: onActivate
+            )
+        )
     }
 }

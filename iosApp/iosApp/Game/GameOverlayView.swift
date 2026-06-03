@@ -42,9 +42,15 @@ struct GameOverlayView: View {
             }
             .contentShape(Rectangle())
             .zIndex(50)
-            .gesture(
+            .simultaneousGesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { touchTarget = $0.location }
+            )
+            .simultaneousGesture(
+                SpatialTapGesture()
+                    .onEnded { value in
+                        touchTarget = value.location
+                    }
             )
             .onAppear {
                 dwellManager.setAllowedButtonIds(gameAllowedButtons)
@@ -76,6 +82,12 @@ struct GameOverlayView: View {
 
             if phrase.style?.isCursorRocketGame() == true {
                 CursorRocketGameView(target: target)
+            } else if phrase.style?.isBlocsGameType() == true {
+                let emoji = PhraseStyle.companion.extractEmoji(ref: phrase.style?.imageRef)
+                let reward = (emoji?.isEmpty == false ? emoji : nil) ?? phrase.text
+                BlocsGameView(target: target, rewardText: reward)
+            } else if phrase.style?.isPieCrazyGameType() == true {
+                PieCrazyGameView(target: target)
             } else {
                 Text("Game unavailable")
                     .foregroundColor(.white)
@@ -140,8 +152,8 @@ private struct GameGazeZoneRegistrar: View {
             .onChange(of: dwellManager.hoveredButtonId) { _, hovered in
                 coordinator.showExitControl = hovered == id
             }
-            .onChange(of: dwellManager.activatedButtonId) { _, activated in
-                guard activated == id else { return }
+            .onChange(of: dwellManager.activationToken) { _, _ in
+                guard dwellManager.activatedButtonId == id else { return }
                 coordinator.stopEarly()
             }
             .onDisappear {

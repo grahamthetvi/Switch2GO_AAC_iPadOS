@@ -83,25 +83,33 @@ fi
 
 # Check for MediaPipe model
 echo ""
-echo "📥 Checking MediaPipe model..."
+echo "📥 Checking MediaPipe models..."
 echo "-------------------------------"
 
-MODEL_PATH="iosApp/iosApp/Resources/face_landmarker.task"
-if [ ! -f "$MODEL_PATH" ]; then
-    echo "⚠️  MediaPipe model not found. Downloading..."
-    mkdir -p iosApp/iosApp/Resources
-    curl -L "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task" \
-        -o "$MODEL_PATH"
-    
-    if [ -f "$MODEL_PATH" ]; then
-        echo "✓ MediaPipe model downloaded"
+MODEL_DIR="iosApp/Resources"
+mkdir -p "$MODEL_DIR"
+
+download_model() {
+    local name="$1"
+    local url="$2"
+    local path="$MODEL_DIR/${name}.task"
+    if [ ! -f "$path" ]; then
+        echo "⚠️  ${name}.task not found. Downloading..."
+        curl -L "$url" -o "$path"
+        if [ -f "$path" ]; then
+            echo "✓ ${name}.task downloaded"
+        else
+            echo "❌ Failed to download ${name}.task"
+            exit 1
+        fi
     else
-        echo "❌ Failed to download MediaPipe model"
-        exit 1
+        echo "✓ ${name}.task exists"
     fi
-else
-    echo "✓ MediaPipe model exists"
-fi
+}
+
+download_model "face_landmarker" "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
+download_model "pose_landmarker_lite" "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task"
+download_model "gesture_recognizer" "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task"
 
 # Summary
 echo ""

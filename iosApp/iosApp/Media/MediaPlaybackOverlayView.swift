@@ -31,7 +31,10 @@ struct MediaPlaybackOverlayView: View {
 
                 mediaGazeZones
 
-                if isTrackingEnabled && gazeManager.isTracking && gazeManager.isCursorVisible {
+                if isTrackingEnabled
+                    && !GazeTrackingManager.isBodyGestureMode(AppSettings.shared.selectionMode)
+                    && gazeManager.isTracking
+                    && gazeManager.isCursorVisible {
                     GazePointerView(
                         position: gazeManager.gazePosition,
                         dwellProgress: dwellManager.dwellProgress,
@@ -217,8 +220,8 @@ private struct MediaGazeZoneRegistrar: View {
                     coordinator.showExitControl = hovered == id
                 }
             }
-            .onChange(of: dwellManager.activatedButtonId) { _, activated in
-                guard activated == id else { return }
+            .onChange(of: dwellManager.activationToken) { _, _ in
+                guard dwellManager.activatedButtonId == id else { return }
                 switch controlKind {
                 case .center:
                     coordinator.togglePlayPause()

@@ -1,10 +1,22 @@
-import { GAME_TYPE_CURSOR_ROCKET } from '../../data/phraseStyle'
+import { GAME_TYPE_BLOCS, GAME_TYPE_CURSOR_ROCKET, GAME_TYPE_PIE_CRAZY } from '../../data/phraseStyle'
 
 const GAME_OPTIONS = [
   {
     id: GAME_TYPE_CURSOR_ROCKET,
     title: 'Rocket cursor follower',
     description: 'A rocket follows your gaze; flames when you move, quiet when still.',
+  },
+  {
+    id: GAME_TYPE_BLOCS,
+    title: 'Blocs',
+    description:
+      'Dwell on bright blocks to break them and reveal your phrase. Eye-gaze training with particles and confetti.',
+  },
+  {
+    id: GAME_TYPE_PIE_CRAZY,
+    title: 'Pie Crazy',
+    description:
+      'Huge bullseye targets spawn in five corners of the screen. Dwell to splat a cream pie and hear a reward sound.',
   },
 ] as const
 

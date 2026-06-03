@@ -119,6 +119,14 @@ struct MainSettingsView: View {
                             )
                         }
 
+                        NavigationLink(destination: ThirdPartyNoticesView()) {
+                            settingsRow(
+                                title: "Open-Source Licenses",
+                                icon: "doc.text.fill",
+                                color: .gray
+                            )
+                        }
+
                         Button(action: openImageTool) {
                             settingsRow(
                                 title: "Image Tool",

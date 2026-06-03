@@ -552,6 +552,12 @@ struct PhraseStyleEditorView: View {
         if currentStyle.isCursorRocketGame() {
             return "Game: Rocket cursor follower"
         }
+        if currentStyle.isBlocsGameType() {
+            return "Game: Blocs"
+        }
+        if currentStyle.isPieCrazyGameType() {
+            return "Game: Pie Crazy"
+        }
         return "Game: None"
     }
     

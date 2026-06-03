@@ -14,11 +14,11 @@
  * - Other side of each switch → Digital pin (see SWITCH_PINS below)
  * - Uses internal pull-up: pin reads HIGH when open, LOW when pressed
  *
- * APP SETUP:
- * - Settings → Switch Control → Enable USB Switch Control
- * - Mode: "Direct Switch-to-Phrase"
- * - Key mapping: Switch 1='1', Switch 2='2', Switch 3='3', Switch 4='4'
- * - Set phrases per page to match your switch count
+ * APP SETUP (Switch2GO):
+ * - Settings → Switch Control → Enable External Switches
+ * - Mode "Switch to Phrase": wire 2–4 switches; keys 1–4 → phrases 1–4
+ * - Mode "Scan & Select": wire 2 switches only; key 1 = Select, key 2 = Next
+ * - Key mapping in the app must match SWITCH_KEYS below (default 1–4)
  *
  * NOTE: iPad may show "This accessory is not supported" on connect — dismiss it,
  * the keyboard HID still works fine.

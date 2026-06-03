@@ -78,11 +78,15 @@ jobs:
           cd iosApp
           pod install --repo-update
 
-      - name: Download MediaPipe Model
+      - name: Download MediaPipe Models
         run: |
-          mkdir -p iosApp/iosApp/Resources
+          mkdir -p iosApp/Resources
           curl -L "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task" \
-            -o iosApp/iosApp/Resources/face_landmarker.task
+            -o iosApp/Resources/face_landmarker.task
+          curl -L "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task" \
+            -o iosApp/Resources/pose_landmarker_lite.task
+          curl -L "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task" \
+            -o iosApp/Resources/gesture_recognizer.task
 
       - name: Build iOS App (Simulator)
         run: |

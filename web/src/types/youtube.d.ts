@@ -27,6 +27,7 @@ declare namespace YT {
     stopVideo(): void
     mute(): void
     unMute(): void
+    setVolume(volume: number): void
     destroy(): void
   }
 }

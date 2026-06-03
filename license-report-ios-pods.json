@@ -1,0 +1,10 @@
+{
+  "generated": "2026-06-02",
+  "scope": "ios-cocoapods-direct",
+  "projectLicense": "MIT",
+  "packages": [
+    { "name": "MediaPipeTasksVision", "version": "0.10.21", "license": "Apache-2.0" },
+    { "name": "MediaPipeTasksCommon", "version": "0.10.21", "license": "Apache-2.0" },
+    { "name": "VocableShared (KMP framework)", "license": "MIT" }
+  ]
+}

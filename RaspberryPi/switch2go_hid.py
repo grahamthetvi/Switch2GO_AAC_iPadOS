@@ -94,14 +94,9 @@ AUTO-START (systemd service):
     sudo systemctl enable switch2go.service
     sudo reboot
 
-KEY MAPPING (must match the Switch2GO iPad app):
-  Switch 1 → Key "1"  (HID usage code 0x1E = 30)
-  Switch 2 → Key "2"  (HID usage code 0x1F = 31)
-  Switch 3 → Key "3"  (HID usage code 0x20 = 32)
-  Switch 4 → Key "4"  (HID usage code 0x21 = 33)
-
-  The iPad app defaults match these codes. If you change the keys here,
-  update the Key Mapping in the app: Settings → Switch Control → Key Mapping.
+KEY MAPPING (must match Switch2GO → Settings → Switch Control):
+  Switch to Phrase (2–4 switches): keys "1"–"4" (HID 30–33)
+  Scan & Select (2 switches): key "1" = Select, key "2" = Next
 """
 
 from gpiozero import Button

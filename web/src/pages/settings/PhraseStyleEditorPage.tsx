@@ -19,7 +19,9 @@ import {
   effectiveTextColor,
   extractEmojiFromRef,
   isYouTubePhraseMedia,
+  GAME_TYPE_BLOCS,
   GAME_TYPE_CURSOR_ROCKET,
+  GAME_TYPE_PIE_CRAZY,
   phraseStyleToTileStyle,
   TEXT_SIZE_OPTIONS,
 } from '../../data/phraseStyle'
@@ -119,7 +121,11 @@ export function PhraseStyleEditorPage() {
   const gameLabel =
     style.gameType === GAME_TYPE_CURSOR_ROCKET
       ? 'Game: Rocket cursor follower'
-      : gamesSupported
+      : style.gameType === GAME_TYPE_BLOCS
+        ? 'Game: Blocs'
+        : style.gameType === GAME_TYPE_PIE_CRAZY
+          ? 'Game: Pie Crazy'
+          : gamesSupported
         ? 'Game: None'
         : 'Game: None (eye / head / touch only)'
 

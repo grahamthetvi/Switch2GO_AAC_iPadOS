@@ -41,8 +41,9 @@ struct ContentView: View {
                 isTrackingEnabled: appState.isTrackingEnabled
             )
 
-            // Gaze pointer — hidden during playback (shown inside media/game overlay instead)
-            if gazeManager.isTracking && gazeManager.isCursorVisible && appState.isTrackingEnabled
+            // Gaze pointer — hidden during playback and in body-gesture modes
+            if !GazeTrackingManager.isBodyGestureMode(settings.selectionMode)
+                && gazeManager.isTracking && gazeManager.isCursorVisible && appState.isTrackingEnabled
                 && mediaCoordinator.phase != .playing
                 && gameCoordinator.phase != .playing {
                 GazePointerView(
@@ -52,12 +53,22 @@ struct ContentView: View {
                 )
             }
 
-            if settings.selectionMode != "none" && settings.enableOutOfBoundsHiding && gazeManager.isGazeOutOfBounds {
+            if settings.selectionMode != "none"
+                && !GazeTrackingManager.isBodyGestureMode(settings.selectionMode)
+                && settings.enableOutOfBoundsHiding
+                && gazeManager.isGazeOutOfBounds {
                 GazeOutOfBoundsBanner()
             }
 
-            if settings.selectionMode != "none" && settings.showTrackingErrorBanner && gazeManager.showTrackingError {
-                TrackingLostBanner()
+            if settings.selectionMode != "none"
+                && settings.showTrackingErrorBanner
+                && gazeManager.showTrackingError {
+                if GazeTrackingManager.isBodyGestureMode(settings.selectionMode),
+                   let message = gazeManager.bodyTrackingErrorMessage {
+                    TrackingLostBanner(message: message)
+                } else if !GazeTrackingManager.isBodyGestureMode(settings.selectionMode) {
+                    TrackingLostBanner()
+                }
             }
 
             if let gameNotice = gameCoordinator.unsupportedGameNotice {
@@ -129,6 +140,8 @@ struct ContentView: View {
                 Spacer()
             }
         }
+        .coordinateSpace(name: GazeCoordinateSpace.name)
+        .ignoresSafeArea()
         .background(settings.appBorderColor.ignoresSafeArea())
         .background(
             // Invisible UIKit key press interceptor for USB HID switch input.
@@ -235,18 +248,23 @@ struct ContentView: View {
             // Allow the screen to turn off again when the app is no longer active
             UIApplication.shared.isIdleTimerDisabled = false
         }
-        // Re-sync button IDs for directMapping/scanning when buttons re-register
+        .onChange(of: settings.switchControlMode) { _, _ in
+            updateSwitchScanningMode()
+            gazeManager.applySwitchSettings(settings)
+        }
+        .onChange(of: settings.symbolCount) { _, _ in
+            gazeManager.applySwitchSettings(settings)
+            updateSwitchScanningMode()
+        }
+        // Re-sync phrase button IDs when the grid changes
         .onReceive(
             Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
         ) { _ in
-            if settings.switchControlEnabled &&
-               (settings.switchControlMode == "directMapping" || settings.switchControlMode == "scanning") {
-                let ids = gazeManager.dwellManager.getOrderedButtonIds()
-                let mgr = gazeManager.switchManager
-                // Only update if the list actually changed
-                if ids != mgr.currentScanButtonIds {
-                    mgr.setScanButtons(ids)
-                }
+            guard settings.switchControlEnabled else { return }
+            let ids = gazeManager.dwellManager.getOrderedButtonIds()
+            let mgr = gazeManager.switchManager
+            if ids != mgr.currentScanButtonIds {
+                mgr.setPhraseButtons(ids)
             }
         }
     }
@@ -312,16 +330,19 @@ struct ContentView: View {
     private func updateSwitchScanningMode() {
         let switchMgr = gazeManager.switchManager
         let buttonIds = gazeManager.dwellManager.getOrderedButtonIds()
+        gazeManager.applySwitchSettings(settings)
 
-        if settings.switchControlEnabled && settings.switchControlMode == "scanning" {
-            switchMgr.setScanButtons(buttonIds)
-            switchMgr.startScanningMode()
-        } else if settings.switchControlEnabled && settings.switchControlMode == "directMapping" {
-            // Direct mapping needs the button list so switch N can map to phrase N
-            switchMgr.setScanButtons(buttonIds)
-            switchMgr.stopScanningMode() // No auto-stepping in direct mapping
+        guard settings.switchControlEnabled else {
+            switchMgr.stopScanning()
+            return
+        }
+
+        switchMgr.setPhraseButtons(buttonIds)
+
+        if settings.switchControlMode == SwitchControlMode.scanning.rawValue {
+            switchMgr.startScanning()
         } else {
-            switchMgr.stopScanningMode()
+            switchMgr.stopScanning()
         }
     }
     
@@ -379,19 +400,21 @@ struct GazeOutOfBoundsBanner: View {
     }
 }
 
-/// Banner shown when face/eye tracking is not detected.
+/// Banner shown when face/eye or body tracking is not detected.
 struct TrackingLostBanner: View {
+    var message: String = "Make sure your face is in view and well lit"
+
     var body: some View {
         VStack {
             HStack(spacing: 12) {
-                Image(systemName: "face.dashed")
+                Image(systemName: "exclamationmark.triangle.fill")
                     .font(.title3)
                     .foregroundColor(.white)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Tracking lost")
                         .font(.headline)
                         .foregroundColor(.white)
-                    Text("Make sure your face is in view and well lit")
+                    Text(message)
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.9))
                 }
@@ -450,7 +473,7 @@ struct GazePointerView: View {
     }
 }
 
-/// Small badge showing USB switch control connection state.
+/// Small badge showing external switch device connection state.
 struct SwitchControlStatusBadge: View {
     @ObservedObject var switchManager: SwitchControlManager
 
@@ -472,8 +495,8 @@ struct SwitchControlStatusBadge: View {
         )
         .accessibilityLabel(
             switchManager.isConnected
-                ? "USB switch connected"
-                : "USB switch disconnected"
+                ? "Switch device connected"
+                : "Switch device not detected"
         )
     }
 }

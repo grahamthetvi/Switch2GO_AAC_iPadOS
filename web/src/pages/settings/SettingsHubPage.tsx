@@ -114,6 +114,12 @@ export function SettingsHubPage() {
           icon="🛡"
           iconClass="icon-gray"
         />
+        <SettingsHubRow
+          to="/settings/licenses"
+          title={t('openSourceLicenses')}
+          icon="📄"
+          iconClass="icon-gray"
+        />
 
         <a
           href="https://switch2goaac.org/index.html#image-tool"

@@ -15,7 +15,7 @@ interface RawPhraseStyle {
   imageRef?: string | null
   mediaRef?: string | null
   mediaType?: 'video' | 'audio' | 'youtube' | null
-  gameType?: 'cursor_rocket' | null
+  gameType?: 'cursor_rocket' | 'blocs' | 'pie_crazy' | null
   emoji?: string
 }
 
@@ -26,6 +26,8 @@ export const MEDIA_TYPE_VIDEO = 'video'
 export const MEDIA_TYPE_AUDIO = 'audio'
 export const MEDIA_TYPE_YOUTUBE = 'youtube'
 export const GAME_TYPE_CURSOR_ROCKET = 'cursor_rocket'
+export const GAME_TYPE_BLOCS = 'blocs'
+export const GAME_TYPE_PIE_CRAZY = 'pie_crazy'
 
 export const TEXT_SIZE_OPTIONS: { sp: number; label: string }[] = [
   { sp: 12, label: 'Small' },

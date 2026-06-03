@@ -72,6 +72,8 @@ data class PhraseStyle(
         const val MEDIA_TYPE_AUDIO = "audio"
         const val MEDIA_TYPE_YOUTUBE = "youtube"
         const val GAME_TYPE_CURSOR_ROCKET = "cursor_rocket"
+        const val GAME_TYPE_BLOCS = "blocs"
+        const val GAME_TYPE_PIE_CRAZY = "pie_crazy"
         
         // Default values
         const val DEFAULT_TEXT_SIZE_SP = 18f
@@ -206,6 +208,10 @@ data class PhraseStyle(
     fun hasGame(): Boolean = !gameType.isNullOrBlank()
 
     fun isCursorRocketGame(): Boolean = hasGame() && gameType == GAME_TYPE_CURSOR_ROCKET
+
+    fun isBlocsGame(): Boolean = hasGame() && gameType == GAME_TYPE_BLOCS
+
+    fun isPieCrazyGame(): Boolean = hasGame() && gameType == GAME_TYPE_PIE_CRAZY
 
     fun triggersDelayedGame(): Boolean = hasGame()
 }

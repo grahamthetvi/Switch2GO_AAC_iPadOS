@@ -112,6 +112,17 @@ Rebuild the framework: `./gradlew :shared:linkDebugFrameworkIosSimulatorArm64`
 ### "No such module 'MediaPipeTasksVision'"
 Run `pod install` and open the `.xcworkspace` file.
 
+### "Unable to load contents of file list ... MediaPipeTasksVision-xcframeworks-output-files.xcfilelist"
+This means CocoaPods support files are missing or unreadable. `iosApp/Pods/` is gitignored, so you must regenerate it after every clone:
+
+```bash
+export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+cd iosApp
+pod install
+```
+
+Then quit Xcode, open `iosApp.xcworkspace` (not `.xcodeproj`), and choose Product > Clean Build Folder before building again.
+
 ### Camera not working in Simulator
 The iOS Simulator doesn't support camera. Test on a real device.
 

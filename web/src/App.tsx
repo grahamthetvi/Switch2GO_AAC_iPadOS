@@ -23,6 +23,7 @@ import { SwitchControlPage } from './pages/settings/SwitchControlPage'
 import { TimingSensitivityPage } from './pages/settings/TimingSensitivityPage'
 import { LanguagePage } from './pages/settings/LanguagePage'
 import { PrivacyPolicyPage } from './pages/settings/PrivacyPolicyPage'
+import { ThirdPartyNoticesPage } from './pages/settings/ThirdPartyNoticesPage'
 import { DataBackupPage } from './pages/settings/DataBackupPage'
 import { TroubleshootingPage } from './pages/settings/TroubleshootingPage'
 import { useSettings } from './settings/settingsStore'
@@ -100,6 +101,7 @@ export default function App() {
           <Route path="/settings/backup" element={<DataBackupPage />} />
           <Route path="/settings/troubleshooting" element={<TroubleshootingPage />} />
           <Route path="/settings/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/settings/licenses" element={<ThirdPartyNoticesPage />} />
           <Route path="/settings/reset" element={<ResetAppPage />} />
           <Route path="/settings/general" element={<Navigate to="/settings/timing" replace />} />
           <Route path="/settings/edit/categories" element={<EditCategoriesListPage />} />

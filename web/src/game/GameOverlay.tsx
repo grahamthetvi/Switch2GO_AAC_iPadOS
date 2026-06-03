@@ -1,13 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { GazePointer } from '../components/GazePointer'
-import { GAME_TYPE_CURSOR_ROCKET } from '../data/phraseStyle'
+import {
+  extractEmojiFromRef,
+  GAME_TYPE_BLOCS,
+  GAME_TYPE_CURSOR_ROCKET,
+  GAME_TYPE_PIE_CRAZY,
+} from '../data/phraseStyle'
 import {
   selectionModeUsesGazeForGames,
   selectionModeUsesTouchForGames,
 } from '../settings/selectionModeGames'
 import { hexToCss, useSettings } from '../settings/settingsStore'
 import { useTrackingActions, useDwellStatus, useTrackingState } from '../tracking/TrackingContext'
+import { BlocsGame } from './BlocsGame'
 import { CursorRocketGame } from './CursorRocketGame'
+import { PieCrazyGame } from './PieCrazyGame'
 import type { GamePlaybackCoordinator, GamePlaybackState } from './gamePlaybackCoordinator'
 
 const gameExitButtonId = 'game_exit'
@@ -80,6 +87,9 @@ export function GameOverlay({ coordinator, state }: Props) {
   const targetX = useGaze ? tracking.gazePosition!.x : pointer.x
   const targetY = useGaze ? tracking.gazePosition!.y : pointer.y
 
+  const emoji = extractEmojiFromRef(phrase.style?.imageRef)
+  const blocsReward = emoji ?? phrase.text
+
   const showPointer = useGaze && tracking.gazePosition
   const showTouchExit = useTouch
 
@@ -93,6 +103,10 @@ export function GameOverlay({ coordinator, state }: Props) {
     >
       {gameType === GAME_TYPE_CURSOR_ROCKET ? (
         <CursorRocketGame targetX={targetX} targetY={targetY} />
+      ) : gameType === GAME_TYPE_BLOCS ? (
+        <BlocsGame targetX={targetX} targetY={targetY} rewardText={blocsReward} />
+      ) : gameType === GAME_TYPE_PIE_CRAZY ? (
+        <PieCrazyGame targetX={targetX} targetY={targetY} />
       ) : (
         <div className="game-playback-fallback" style={{ color: hexToCss(0xffffffff) }}>
           <p>{phrase.text}</p>

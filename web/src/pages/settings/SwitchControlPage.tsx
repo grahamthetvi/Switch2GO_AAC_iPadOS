@@ -6,27 +6,23 @@ export function SwitchControlPage() {
     <SettingsLayout title="Switch Control">
       <SettingsCard>
         <p>
-          The iPad app supports USB switches (e.g. Tapio). <strong>Web browsers cannot access USB
-          HID switches</strong> the same way.
+          The iPad app supports <strong>USB and Bluetooth</strong> switch interfaces that send
+          keyboard keys. This web app uses your <strong>keyboard</strong> instead.
         </p>
-        <p className="hint">On this web app you can use the keyboard instead:</p>
-        <ul className="reset-list">
-          <li>
-            <strong>1</strong> — first phrase on the page
-          </li>
-          <li>
-            <strong>2</strong> — second phrase
-          </li>
-          <li>
-            <strong>3</strong> — third phrase
-          </li>
-          <li>
-            <strong>4</strong> — fourth phrase
-          </li>
-        </ul>
+      </SettingsCard>
+
+      <SettingsCard title="Switch to Phrase (2–4 keys)">
         <p className="hint">
-          Open a category, then press the number key matching the tile position. Works with the
-          on-screen phrase grid layout (1–4 symbols per page).
+          On the phrases screen, press <strong>1</strong>–<strong>4</strong> to speak the phrase in
+          that grid position (matches symbols per page).
+        </p>
+      </SettingsCard>
+
+      <SettingsCard title="Scan &amp; Select (iPad only)">
+        <p className="hint">
+          On iPad, enable <strong>Scan &amp; Select</strong> in Switch Control settings: switch 1
+          selects the highlighted phrase, switch 2 moves to the next. Requires a two-switch HID
+          device.
         </p>
       </SettingsCard>
     </SettingsLayout>

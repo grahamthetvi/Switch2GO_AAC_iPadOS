@@ -58,7 +58,7 @@ struct PhrasesView: View {
         .toolbarBackground(.visible, for: .navigationBar)
         .tint(.blue)
         .onAppear {
-            gazeManager.dwellManager.clearAllButtons()
+            gazeManager.dwellManager.unregisterButtons(withPrefix: "cat_")
         }
         .onDisappear {
             gazeManager.dwellManager.clearAllButtons()
@@ -68,6 +68,49 @@ struct PhrasesView: View {
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PhrasesUpdated"))) { _ in
             viewModel.loadPhrases()
         }
+        .onReceive(gazeManager.dwellManager.$activationToken) { _ in
+            dispatchDwellPhraseActivation()
+        }
+        .onReceive(gazeManager.armRaiseActivation) { side in
+            guard settings.selectionMode == "armRaise" else { return }
+            selectPhraseBySide(side, onPage: currentPage)
+        }
+        .onReceive(gazeManager.handGestureActivation) { side in
+            guard settings.selectionMode == "handGesture" else { return }
+            selectPhraseBySide(side, onPage: currentPage)
+        }
+    }
+
+    private var armRaiseActive: Bool { settings.selectionMode == "armRaise" }
+    private var handGestureActive: Bool { settings.selectionMode == "handGesture" }
+    private var binarySelectionActive: Bool { armRaiseActive || handGestureActive }
+
+    private func pagePhrases(for page: Int) -> [PhraseDisplayModel] {
+        viewModel.phrasesForPage(page: page, symbolCount: settings.symbolCount)
+    }
+
+    private func binarySelectionReady(for page: Int) -> Bool {
+        binarySelectionActive && settings.symbolCount == 2 && pagePhrases(for: page).count == 2
+    }
+
+    private func selectPhraseBySide(_ side: ArmSide, onPage page: Int) {
+        guard binarySelectionReady(for: page) else { return }
+        let phrases = pagePhrases(for: page)
+        let index = side == .left ? 0 : 1
+        handlePhraseSelection(phrases[index])
+    }
+
+    private func gestureHighlighted(for index: Int, page: Int) -> Bool {
+        guard binarySelectionReady(for: page) else { return false }
+        if armRaiseActive {
+            return (index == 0 && gazeManager.armState.leftRaised)
+                || (index == 1 && gazeManager.armState.rightRaised)
+        }
+        if handGestureActive {
+            return (index == 0 && gazeManager.handState.leftPose != nil)
+                || (index == 1 && gazeManager.handState.rightPose != nil)
+        }
+        return false
     }
     
     private var phrasesContent: some View {
@@ -116,27 +159,58 @@ struct PhrasesView: View {
         let availableHeight = geometry.size.height - totalSpacing - (padding * 2)
         let itemHeight = max(120, availableHeight / CGFloat(rowCount))
         
-        return ScrollView {
-            LazyVGrid(columns: columns, spacing: spacing) {
-                ForEach(Array(phrases.enumerated()), id: \.element.id) { index, phrase in
-                    let position = (page * settings.symbolCount) + index + 1
-                    PhraseButton(
-                        phrase: phrase,
-                        color: settings.getSymbolColor(position: position),
-                        position: position,
-                        height: itemHeight
-                    ) {
-                        handlePhraseSelection(phrase)
-                    }
-                    .dwellSelectable(
-                        id: "phrase_\(phrase.id)",
-                        manager: gazeManager.dwellManager
-                    ) {
-                        handlePhraseSelection(phrase)
+        return VStack(spacing: 8) {
+            if binarySelectionActive && !binarySelectionReady(for: page) {
+                Text(armRaiseActive
+                    ? "Arm raise selection works with 2 phrases per page (left and right). Change layout in Settings → CVI Display."
+                    : "Hand gesture selection works with 2 phrases per page (left and right). Change layout in Settings → CVI Display.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, padding)
+            } else if armRaiseActive && binarySelectionReady(for: page) {
+                Text("Raise your left arm for the left phrase, or your right arm for the right phrase.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, padding)
+            } else if handGestureActive && binarySelectionReady(for: page) {
+                Text("Open then close your left hand (or close then open) for the left phrase. Use your right hand for the right phrase.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, padding)
+            }
+
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: spacing) {
+                    ForEach(Array(phrases.enumerated()), id: \.element.id) { index, phrase in
+                        let position = (page * settings.symbolCount) + index + 1
+                        let phraseButton = PhraseButton(
+                            phrase: phrase,
+                            color: settings.getSymbolColor(position: position),
+                            position: position,
+                            height: itemHeight,
+                            isGestureHighlighted: gestureHighlighted(for: index, page: page)
+                        ) {
+                            handlePhraseSelection(phrase)
+                        }
+
+                        if binarySelectionActive {
+                            phraseButton
+                        } else {
+                            phraseButton
+                                .dwellSelectable(
+                                    id: "phrase_\(phrase.id)",
+                                    manager: gazeManager.dwellManager,
+                                    isActive: currentPage == page,
+                                    onActivate: {}
+                                )
+                        }
                     }
                 }
+                .padding(padding)
             }
-            .padding(padding)
         }
     }
     
@@ -160,11 +234,28 @@ struct PhrasesView: View {
     }
     
     private func handlePhraseSelection(_ phrase: PhraseDisplayModel) {
-        guard mediaCoordinator.phase != .playing, gameCoordinator.phase != .playing else { return }
+        guard mediaCoordinator.phase != .playing, gameCoordinator.phase != .playing else {
+            DebugLog.debug(
+                "Phrase selection blocked — media=\(mediaCoordinator.phase) game=\(gameCoordinator.phase)",
+                tag: "Dwell"
+            )
+            return
+        }
         viewModel.markPhraseAsSpoken(phraseId: phrase.id)
         ttsManager.speak(phrase.text)
         mediaCoordinator.onPhraseSelected(phrase)
         gameCoordinator.onPhraseSelected(phrase)
+    }
+
+    private func dispatchDwellPhraseActivation() {
+        guard let buttonId = gazeManager.dwellManager.activatedButtonId,
+              buttonId.hasPrefix("phrase_") else { return }
+        let phraseId = String(buttonId.dropFirst("phrase_".count))
+        guard let phrase = viewModel.phrases.first(where: { $0.id == phraseId }) else {
+            DebugLog.warn("Dwell: no phrase matches \(buttonId)", tag: "Dwell")
+            return
+        }
+        handlePhraseSelection(phrase)
     }
 }
 
@@ -174,6 +265,7 @@ struct PhraseButton: View {
     let color: Color
     let position: Int
     let height: CGFloat
+    var isGestureHighlighted: Bool = false
     let action: () -> Void
     
     var body: some View {
@@ -207,6 +299,10 @@ struct PhraseButton: View {
             .padding(6)
             .background(backgroundColor)
             .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(isGestureHighlighted ? Color.yellow : Color.clear, lineWidth: 4)
+            )
             .shadow(radius: 4)
         }
         .buttonStyle(.plain)

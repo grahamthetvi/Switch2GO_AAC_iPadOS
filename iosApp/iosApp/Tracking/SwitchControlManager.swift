@@ -3,84 +3,98 @@ import GameController
 import Combine
 import UIKit
 
-// MARK: - Switch Event Model
+// MARK: - Models
 
-/// A single switch press or release event from the USB HID device.
-struct SwitchEvent {
-    /// Which switch fired (0-3 maps to Switch 1-4)
+/// A normalized switch press from USB or Bluetooth HID keyboard input.
+struct SwitchEvent: Equatable {
+    /// Zero-based index (scanning: 0 = select, 1 = next; direct phrase: phrase slot).
     let switchIndex: Int
-
-    /// True = pressed, false = released
     let isPress: Bool
-
-    /// Timestamp of the event
     let timestamp: TimeInterval
 }
 
-/// Configurable action assigned to each physical switch.
-enum SwitchAction: String, CaseIterable, Identifiable {
-    case select   = "select"     // Activate hovered button
-    case next     = "next"       // Move to next item (scanning)
-    case previous = "previous"   // Move to previous item (scanning)
-    case back     = "back"       // Go back / cancel
+/// How external switches interact with the phrase grid.
+enum SwitchControlMode: String, CaseIterable, Identifiable {
+    /// Two switches: one advances the highlight, one selects (optional auto-scan).
+    case scanning = "scanning"
+    /// Two to four switches: each switch activates one phrase tile by position.
+    case directPhrase = "directPhrase"
 
     var id: String { rawValue }
 
     var displayName: String {
         switch self {
-        case .select:   return "Select"
-        case .next:     return "Next"
-        case .previous: return "Previous"
-        case .back:     return "Back"
+        case .scanning: return "Scan & Select"
+        case .directPhrase: return "Switch to Phrase"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .scanning:
+            return "Use 2 switches to move a highlight across phrases, then select. Works with or without auto-scan."
+        case .directPhrase:
+            return "Use 2–4 switches; each switch speaks the phrase in that grid position."
         }
     }
 
     var systemImage: String {
         switch self {
-        case .select:   return "hand.tap"
-        case .next:     return "arrow.right"
-        case .previous: return "arrow.left"
-        case .back:     return "arrow.uturn.backward"
+        case .scanning: return "arrow.right.arrow.left"
+        case .directPhrase: return "square.grid.2x2"
+        }
+    }
+
+    /// Migrates legacy persisted mode strings.
+    static func migrated(from raw: String?) -> SwitchControlMode {
+        switch raw {
+        case "scanning": return .scanning
+        case "directPhrase", "directMapping": return .directPhrase
+        case "direct": return .scanning
+        default: return .directPhrase
         }
     }
 }
 
-/// The mode in which switch control operates.
-enum SwitchControlMode: String, CaseIterable, Identifiable {
-    /// Switches work alongside eye/head tracking.
-    /// Tracking moves the cursor, switch press activates the hovered button.
-    case direct = "direct"
+/// Runtime configuration pushed from `AppSettings`.
+struct SwitchControlConfiguration: Equatable {
+    var mode: SwitchControlMode = .directPhrase
+    var scanInterval: TimeInterval = 1.5
+    /// Phrases on screen (2–4); limits active switches in direct phrase mode.
+    var phraseSlotCount: Int = 2
+    /// Scanning: HID code for the select switch (default key "1").
+    var scanSelectKeyHID: Int = 30
+    /// Scanning: HID code for the next switch (default key "2").
+    var scanNextKeyHID: Int = 31
+    /// Direct phrase: HID codes for slots 1–4 (default keys "1"–"4").
+    var phraseKeyHIDs: [Int] = [30, 31, 32, 33]
 
-    /// Auto-step scanning: buttons are highlighted in sequence.
-    /// Switch press selects the currently highlighted button.
-    case scanning = "scanning"
+    static let minPhraseSlots = 2
+    static let maxPhraseSlots = 4
+    static let scanningSwitchCount = 2
 
-    /// Direct mapping: each physical switch activates a specific phrase tile by position.
-    /// Switch 1 → phrase 1 (top-left), Switch 2 → phrase 2, etc.
-    case directMapping = "directMapping"
+    var clampedPhraseSlotCount: Int {
+        min(max(phraseSlotCount, Self.minPhraseSlots), Self.maxPhraseSlots)
+    }
 
-    var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .direct:        return "Direct (with tracking)"
-        case .scanning:      return "Auto-Scan"
-        case .directMapping: return "Direct Switch-to-Phrase"
+    /// HID codes the app listens for in the current mode.
+    var activeKeyHIDs: [Int] {
+        switch mode {
+        case .scanning:
+            return [scanSelectKeyHID, scanNextKeyHID]
+        case .directPhrase:
+            return Array(phraseKeyHIDs.prefix(clampedPhraseSlotCount))
         }
     }
 }
 
-// MARK: - Key Mapping
-
-/// Represents a keyboard key that can be mapped to a switch input.
-/// Uses HID usage codes which map directly to GCKeyCode.rawValue.
+/// Keyboard key mapping for settings UI (HID usage → label).
 struct SwitchKeyMapping: Equatable, Identifiable {
     let hidUsageCode: Int
     let displayName: String
 
     var id: Int { hidUsageCode }
 
-    // Common keys for switch input
     static let space      = SwitchKeyMapping(hidUsageCode: 44, displayName: "Space")
     static let returnKey  = SwitchKeyMapping(hidUsageCode: 40, displayName: "Return")
     static let escape     = SwitchKeyMapping(hidUsageCode: 41, displayName: "Escape")
@@ -98,7 +112,6 @@ struct SwitchKeyMapping: Equatable, Identifiable {
     static let f3         = SwitchKeyMapping(hidUsageCode: 60, displayName: "F3")
     static let f4         = SwitchKeyMapping(hidUsageCode: 61, displayName: "F4")
 
-    /// All available key mappings for the UI picker
     static let allMappings: [SwitchKeyMapping] = [
         .space, .returnKey, .escape, .tab,
         .rightArrow, .leftArrow, .upArrow, .downArrow,
@@ -106,12 +119,10 @@ struct SwitchKeyMapping: Equatable, Identifiable {
         .f1, .f2, .f3, .f4
     ]
 
-    /// Find a mapping by HID usage code
     static func from(hidUsageCode: Int) -> SwitchKeyMapping? {
         allMappings.first { $0.hidUsageCode == hidUsageCode }
     }
 
-    /// Display name for a given HID code (with fallback)
     static func displayName(for hidCode: Int) -> String {
         from(hidUsageCode: hidCode)?.displayName ?? "Key \(hidCode)"
     }
@@ -119,121 +130,122 @@ struct SwitchKeyMapping: Equatable, Identifiable {
 
 // MARK: - SwitchControlManager
 
-/// Manages USB HID keyboard input from a Raspberry Pi Zero 2 W (or any USB keyboard)
-/// acting as a switch input device.
+/// Listens for USB / Bluetooth HID keyboard switch input and drives phrase selection.
 ///
-/// The Pi connects via USB and appears as a standard keyboard. When a physical switch
-/// wired to the Pi's GPIO is pressed, the Pi sends a specific keypress. This manager
-/// listens for those keypresses and maps them to switch actions.
-///
-/// Responsibilities:
-/// - Detect USB keyboard connection via GameController framework
-/// - Receive key press/release events
-/// - Map configured keys to switch actions (select, next, previous, back)
-/// - Provide scanning-mode auto-stepping through buttons
-class SwitchControlManager: NSObject, ObservableObject {
+/// Supported modes:
+/// - **Scanning** (2 switches): select + next, with optional auto-scan highlight.
+/// - **Direct phrase** (2–4 switches): switch N activates phrase slot N.
+final class SwitchControlManager: NSObject, ObservableObject {
 
-    // MARK: - Published State
+    // MARK: - Published
 
-    /// Whether a USB keyboard/switch device is connected
-    @Published var isConnected = false
-
-    /// Name of the connected device
-    @Published var connectedDeviceName: String?
-
-    /// Number of switches (always 4 for USB HID mode)
-    @Published var switchCount: Int = 4
-
-    /// Most recent switch event (for UI feedback)
-    @Published var lastSwitchEvent: SwitchEvent?
-
-    /// The currently highlighted button ID in scanning mode
-    @Published var scanHighlightedButtonId: String?
-
-    // MARK: - Action Publishers
-
-    /// Fires when a "select" action is triggered by any switch
-    let selectAction = PassthroughSubject<Void, Never>()
-
-    /// Fires when a "next" action is triggered
-    let nextAction = PassthroughSubject<Void, Never>()
-
-    /// Fires when a "previous" action is triggered
-    let previousAction = PassthroughSubject<Void, Never>()
-
-    /// Fires when a "back" action is triggered
-    let backAction = PassthroughSubject<Void, Never>()
-
-    /// Fires in directMapping mode with the button ID to activate (switch N → phrase N)
-    let directActivateAction = PassthroughSubject<String, Never>()
+    @Published private(set) var isConnected = false
+    @Published private(set) var connectedDeviceName: String?
+    @Published private(set) var lastSwitchEvent: SwitchEvent?
+    @Published private(set) var scanHighlightedButtonId: String?
 
     // MARK: - Configuration
 
-    /// The control mode (direct, scanning, or directMapping)
-    var controlMode: SwitchControlMode = .direct
+    private(set) var configuration = SwitchControlConfiguration()
 
-    /// Action mapping for each switch (index 0-3 → action)
-    var switchActions: [SwitchAction] = [.select, .next, .previous, .back]
+    var controlMode: SwitchControlMode {
+        get { configuration.mode }
+        set { configuration.mode = newValue }
+    }
 
-    /// Kept for API compatibility with existing code
-    var autoReconnect: Bool = true
+    var currentScanButtonIds: [String] { phraseButtonIds }
 
-    /// HID usage codes for each switch key (index 0-3)
-    /// Default: Key "1" (30), Key "2" (31), Key "3" (32), Key "4" (33)
-    /// These match the Raspberry Pi script which sends 0x1E, 0x1F, 0x20, 0x21
-    var switchKeyHIDCodes: [Int] = [30, 31, 32, 33]
+    // MARK: - Outputs
 
-    // MARK: - Scanning Mode State
+    /// Scanning mode: user pressed the select switch.
+    let selectAction = PassthroughSubject<Void, Never>()
 
-    /// Ordered list of button IDs for scanning and direct mapping modes
-    private(set) var scanButtonIds: [String] = []
+    /// Direct phrase mode: activate the phrase button with this ID.
+    let directActivateAction = PassthroughSubject<String, Never>()
 
-    /// Public read-only accessor for comparing button lists
-    var currentScanButtonIds: [String] { scanButtonIds }
+    // MARK: - Scanning state
 
-    /// Current index in the scanning order
-    private var scanIndex: Int = 0
-
-    /// Timer for auto-stepping in scanning mode
+    private var phraseButtonIds: [String] = []
+    private var scanIndex = 0
     private var scanTimer: Timer?
 
-    /// Interval between auto-steps in scanning mode (seconds)
-    var scanInterval: TimeInterval = 1.5
+    // MARK: - Input
 
-    // MARK: - Internal State
+    private var isListening = false
 
-    private var isInitialized = false
+    // MARK: - Lifecycle
 
-    // MARK: - Initialization
+    func apply(configuration newConfig: SwitchControlConfiguration) {
+        let modeChanged = configuration.mode != newConfig.mode
+        let intervalChanged = configuration.scanInterval != newConfig.scanInterval
+        configuration = newConfig
 
-    override init() {
-        super.init()
+        switch configuration.mode {
+        case .scanning:
+            if modeChanged || intervalChanged {
+                restartScanTimerIfNeeded()
+            }
+        case .directPhrase:
+            if modeChanged {
+                stopScanning()
+            }
+        }
     }
 
-    /// Start listening for USB keyboard events.
-    /// Call this when the app wants to enable switch control.
     func initialize() {
-        guard !isInitialized else { return }
-        isInitialized = true
-        DebugLog.info("Switch control initializing — mode=\(controlMode.rawValue), keys=\(switchKeyHIDCodes)", tag: "Switch")
-        setupKeyboardMonitoring()
+        guard !isListening else { return }
+        isListening = true
+        DebugLog.info(
+            "Switch control on — mode=\(configuration.mode.rawValue), keys=\(configuration.activeKeyHIDs)",
+            tag: "Switch"
+        )
+        installKeyboardObservers()
     }
 
-    /// Stop listening for keyboard events.
-    /// Call this when switch control is disabled.
     func shutdown() {
-        stopScanningMode()
-        removeKeyboardMonitoring()
+        stopScanning()
+        removeKeyboardObservers()
+        isListening = false
         DispatchQueue.main.async {
             self.isConnected = false
             self.connectedDeviceName = nil
         }
-        isInitialized = false
     }
 
-    // MARK: - Keyboard Monitoring (GameController Framework)
+    // MARK: - Phrase list (scanning + direct phrase)
 
-    private func setupKeyboardMonitoring() {
+    func setPhraseButtons(_ buttonIds: [String]) {
+        let changed = phraseButtonIds != buttonIds
+        phraseButtonIds = buttonIds
+        scanIndex = min(scanIndex, max(buttonIds.count - 1, 0))
+        updateScanHighlight()
+        if changed, !buttonIds.isEmpty {
+            DebugLog.debug("Phrase buttons updated: \(buttonIds.count)", tag: "Switch")
+        }
+    }
+
+    func startScanning() {
+        guard configuration.mode == .scanning, !phraseButtonIds.isEmpty else { return }
+        scanIndex = 0
+        updateScanHighlight()
+        restartScanTimerIfNeeded()
+        DebugLog.info(
+            "Scanning started: \(phraseButtonIds.count) phrases, interval=\(configuration.scanInterval)s",
+            tag: "Switch"
+        )
+    }
+
+    func stopScanning() {
+        scanTimer?.invalidate()
+        scanTimer = nil
+        DispatchQueue.main.async {
+            self.scanHighlightedButtonId = nil
+        }
+    }
+
+    // MARK: - Keyboard (Game Controller + UIKit fallback)
+
+    private func installKeyboardObservers() {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(keyboardDidConnect(_:)),
@@ -247,41 +259,30 @@ class SwitchControlManager: NSObject, ObservableObject {
             object: nil
         )
 
-        // Check if a keyboard is already connected
         if let keyboard = GCKeyboard.coalesced {
             bindKeyboard(keyboard)
-            DispatchQueue.main.async {
-                self.isConnected = true
-                self.connectedDeviceName = "USB Switch Device"
-            }
-            DebugLog.info("USB keyboard already connected (GCKeyboard)", tag: "Switch")
-        } else {
-            DebugLog.info("No USB keyboard via GCKeyboard — waiting for connection. UIKit fallback will catch key events if device appears as keyboard.", tag: "Switch")
+            markConnected()
         }
-        DebugLog.info("Switch key HID codes: \(switchKeyHIDCodes) (1=30, 2=31, 3=32, 4=33)", tag: "Switch")
+
+        DebugLog.info("Listening for HID keys: \(configuration.activeKeyHIDs)", tag: "Switch")
     }
 
-    private func removeKeyboardMonitoring() {
+    private func removeKeyboardObservers() {
         NotificationCenter.default.removeObserver(self, name: .GCKeyboardDidConnect, object: nil)
         NotificationCenter.default.removeObserver(self, name: .GCKeyboardDidDisconnect, object: nil)
         GCKeyboard.coalesced?.keyboardInput?.keyChangedHandler = nil
     }
 
     @objc private func keyboardDidConnect(_ notification: Notification) {
-        DebugLog.info("USB keyboard connected (GCKeyboard)", tag: "Switch")
         if let keyboard = GCKeyboard.coalesced {
             bindKeyboard(keyboard)
         }
-        DispatchQueue.main.async {
-            self.isConnected = true
-            self.connectedDeviceName = "USB Switch Device"
-        }
+        markConnected()
     }
 
     @objc private func keyboardDidDisconnect(_ notification: Notification) {
-        DebugLog.info("USB keyboard disconnected (GCKeyboard)", tag: "Switch")
         DispatchQueue.main.async {
-            self.isConnected = (GCKeyboard.coalesced != nil)
+            self.isConnected = GCKeyboard.coalesced != nil
             if !self.isConnected {
                 self.connectedDeviceName = nil
             }
@@ -290,262 +291,176 @@ class SwitchControlManager: NSObject, ObservableObject {
 
     private func bindKeyboard(_ keyboard: GCKeyboard) {
         keyboard.keyboardInput?.keyChangedHandler = { [weak self] _, _, keyCode, pressed in
-            self?.handleKeyEvent(keyCode: keyCode, pressed: pressed)
+            self?.handleHIDKey(Int(keyCode.rawValue), pressed: pressed, source: "GCKeyboard")
         }
     }
 
-    private func handleKeyEvent(keyCode: GCKeyCode, pressed: Bool) {
-        let hidCode = Int(keyCode.rawValue)
+    func handleUIKitKeyPress(hidUsageCode: Int, pressed: Bool) {
+        handleHIDKey(hidUsageCode, pressed: pressed, source: "UIKit")
+    }
 
-        // Only process keys that are configured as switch inputs
-        guard let switchIndex = switchKeyHIDCodes.firstIndex(of: hidCode) else {
-            return
-        }
+    private func handleHIDKey(_ hidCode: Int, pressed: Bool, source: String) {
+        guard let switchIndex = configuration.activeKeyHIDs.firstIndex(of: hidCode) else { return }
 
-        // Log switch key events for debugging
-        let actionName = switchIndex < switchActions.count ? switchActions[switchIndex].displayName : "?"
-        DebugLog.info("GCKeyboard: HID=\(hidCode) switch=\(switchIndex + 1) \(pressed ? "PRESS" : "release") → \(actionName)", tag: "Switch")
-
-        // If we receive a valid switch key, the device is definitely connected.
-        // This serves as a reliable fallback if GCKeyboard notifications didn't fire.
-        if !isConnected {
-            DispatchQueue.main.async {
-                self.isConnected = true
-                self.connectedDeviceName = "USB Switch Device"
-                DebugLog.info("Connection confirmed via GCKeyboard key event", tag: "Switch")
-            }
-        }
+        markConnected()
 
         let event = SwitchEvent(
             switchIndex: switchIndex,
             isPress: pressed,
             timestamp: CACurrentMediaTime()
         )
-        processSwitchEvent(event)
+
+        let role = roleLabel(for: switchIndex)
+        DebugLog.info(
+            "\(source): HID=\(hidCode) \(pressed ? "PRESS" : "release") → \(role)",
+            tag: "Switch"
+        )
+
+        DispatchQueue.main.async {
+            self.lastSwitchEvent = event
+        }
+
+        guard pressed else { return }
+
+        DispatchQueue.main.async {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        }
+
+        dispatchPress(switchIndex: switchIndex)
     }
 
-    // MARK: - Scanning Mode
-
-    /// Set the ordered list of button IDs for scanning mode.
-    func setScanButtons(_ buttonIds: [String]) {
-        let changed = scanButtonIds != buttonIds
-        scanButtonIds = buttonIds
-        scanIndex = 0
-        updateScanHighlight()
-        if changed && !buttonIds.isEmpty {
-            DebugLog.debug("Scan buttons updated: \(buttonIds.count) buttons", tag: "Switch")
+    private func dispatchPress(switchIndex: Int) {
+        switch configuration.mode {
+        case .scanning:
+            handleScanningPress(switchIndex: switchIndex)
+        case .directPhrase:
+            handleDirectPhrasePress(switchIndex: switchIndex)
         }
     }
 
-    /// Start auto-stepping through buttons in scanning mode.
-    func startScanningMode() {
-        guard controlMode == .scanning, !scanButtonIds.isEmpty else { return }
+    private func handleScanningPress(switchIndex: Int) {
+        guard switchIndex < SwitchControlConfiguration.scanningSwitchCount else { return }
 
-        scanIndex = 0
-        updateScanHighlight()
-        DebugLog.info("Scanning started: \(scanButtonIds.count) buttons, interval=\(scanInterval)s", tag: "Switch")
+        if switchIndex == 0 {
+            pauseScanTimerBriefly()
+            DispatchQueue.main.async {
+                self.selectAction.send()
+            }
+        } else if switchIndex == 1 {
+            DispatchQueue.main.async {
+                self.advanceScan()
+            }
+        }
+    }
 
+    private func handleDirectPhrasePress(switchIndex: Int) {
+        guard switchIndex < configuration.clampedPhraseSlotCount,
+              switchIndex < phraseButtonIds.count else {
+            DebugLog.warn(
+                "Direct phrase: slot \(switchIndex + 1) has no phrase (count=\(phraseButtonIds.count))",
+                tag: "Switch"
+            )
+            return
+        }
+        let buttonId = phraseButtonIds[switchIndex]
+        DebugLog.info("Direct phrase: slot \(switchIndex + 1) → \(buttonId)", tag: "Switch")
+        DispatchQueue.main.async {
+            self.directActivateAction.send(buttonId)
+        }
+    }
+
+    // MARK: - Scan timer
+
+    private func restartScanTimerIfNeeded() {
+        guard configuration.mode == .scanning, !phraseButtonIds.isEmpty else { return }
         scanTimer?.invalidate()
-        scanTimer = Timer.scheduledTimer(withTimeInterval: scanInterval, repeats: true) { [weak self] _ in
+        scanTimer = Timer.scheduledTimer(withTimeInterval: configuration.scanInterval, repeats: true) { [weak self] _ in
             self?.advanceScan()
         }
     }
 
-    /// Stop scanning mode.
-    func stopScanningMode() {
+    private func pauseScanTimerBriefly() {
         scanTimer?.invalidate()
-        scanTimer = nil
-        scanHighlightedButtonId = nil
-        DebugLog.debug("Scanning stopped", tag: "Switch")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.restartScanTimerIfNeeded()
+        }
     }
 
     private func advanceScan() {
-        guard !scanButtonIds.isEmpty else { return }
-        scanIndex = (scanIndex + 1) % scanButtonIds.count
+        guard !phraseButtonIds.isEmpty else { return }
+        scanIndex = (scanIndex + 1) % phraseButtonIds.count
         updateScanHighlight()
-    }
-
-    private func retreatScan() {
-        guard !scanButtonIds.isEmpty else { return }
-        scanIndex = (scanIndex - 1 + scanButtonIds.count) % scanButtonIds.count
-        updateScanHighlight()
+        restartScanTimerIfNeeded()
     }
 
     private func updateScanHighlight() {
-        guard scanIndex < scanButtonIds.count else {
-            scanHighlightedButtonId = nil
+        guard configuration.mode == .scanning, scanIndex < phraseButtonIds.count else {
+            DispatchQueue.main.async { self.scanHighlightedButtonId = nil }
             return
         }
-        scanHighlightedButtonId = scanButtonIds[scanIndex]
-    }
-
-    // MARK: - Switch Event Processing
-
-    private func processSwitchEvent(_ event: SwitchEvent) {
-        DispatchQueue.main.async { [weak self] in
-            self?.lastSwitchEvent = event
-        }
-
-        // Only act on press events (ignore release)
-        guard event.isPress else { return }
-
-        // Haptic feedback
         DispatchQueue.main.async {
-            let generator = UIImpactFeedbackGenerator(style: .medium)
-            generator.impactOccurred()
-        }
-
-        // Direct Mapping mode: switch index maps directly to a phrase position
-        if controlMode == .directMapping {
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                if event.switchIndex < self.scanButtonIds.count {
-                    let buttonId = self.scanButtonIds[event.switchIndex]
-                    DebugLog.info("Direct mapping: Switch \(event.switchIndex + 1) → \(buttonId)", tag: "Switch")
-                    self.directActivateAction.send(buttonId)
-                } else {
-                    DebugLog.warn("Direct mapping: Switch \(event.switchIndex + 1) has no mapped phrase (only \(self.scanButtonIds.count) phrases visible)", tag: "Switch")
-                }
-            }
-            return
-        }
-
-        // Standard action-based modes (direct + scanning)
-        guard event.switchIndex < switchActions.count else { return }
-
-        let action = switchActions[event.switchIndex]
-        DebugLog.info("Switch \(event.switchIndex + 1) → \(action.displayName)", tag: "Switch")
-
-        // Dispatch action
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-
-            switch action {
-            case .select:
-                if self.controlMode == .scanning {
-                    // In scanning mode, "select" activates the highlighted button
-                    // Reset the scan timer so the user has time to see the result
-                    self.scanTimer?.invalidate()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                        self?.startScanningMode()
-                    }
-                }
-                self.selectAction.send()
-
-            case .next:
-                if self.controlMode == .scanning {
-                    self.advanceScan()
-                    // Reset auto-step timer
-                    self.scanTimer?.invalidate()
-                    self.scanTimer = Timer.scheduledTimer(
-                        withTimeInterval: self.scanInterval,
-                        repeats: true
-                    ) { [weak self] _ in self?.advanceScan() }
-                }
-                self.nextAction.send()
-
-            case .previous:
-                if self.controlMode == .scanning {
-                    self.retreatScan()
-                    self.scanTimer?.invalidate()
-                    self.scanTimer = Timer.scheduledTimer(
-                        withTimeInterval: self.scanInterval,
-                        repeats: true
-                    ) { [weak self] _ in self?.advanceScan() }
-                }
-                self.previousAction.send()
-
-            case .back:
-                self.backAction.send()
-            }
+            self.scanHighlightedButtonId = self.phraseButtonIds[self.scanIndex]
         }
     }
 
-    // MARK: - UIKit Key Press Fallback
+    // MARK: - Helpers
 
-    /// Called by KeyPressInterceptorViewController when a hardware key is pressed
-    /// through the UIKit responder chain. This is a fallback in case GCKeyboard
-    /// doesn't detect the USB HID device.
-    func handleUIKitKeyPress(hidUsageCode: Int, pressed: Bool) {
-        guard let switchIndex = switchKeyHIDCodes.firstIndex(of: hidUsageCode) else {
-            // Only log for keys that could be from a switch (1-4=30-33, Space=44, etc.)
-            let switchLikeHIDs = [30, 31, 32, 33, 40, 41, 43, 44]
-            if switchLikeHIDs.contains(hidUsageCode) {
-                DebugLog.debug("UIKit: HID=\(hidUsageCode) not in configured list \(switchKeyHIDCodes) — check Settings → Switch Control key mapping", tag: "Switch")
-            }
-            return
+    private func markConnected() {
+        guard !isConnected else { return }
+        DispatchQueue.main.async {
+            self.isConnected = true
+            self.connectedDeviceName = "Switch Device"
         }
+    }
 
-        let actionName = switchIndex < switchActions.count ? switchActions[switchIndex].displayName : "?"
-        DebugLog.info("UIKit fallback: HID=\(hidUsageCode) switch=\(switchIndex + 1) \(pressed ? "PRESS" : "release") → \(actionName)", tag: "Switch")
-
-        // Mark connected on first valid key event
-        if !isConnected {
-            DispatchQueue.main.async {
-                self.isConnected = true
-                self.connectedDeviceName = "USB Switch Device"
-                DebugLog.info("Connection confirmed via UIKit key event (GCKeyboard may not see this device)", tag: "Switch")
-            }
+    func roleLabel(for switchIndex: Int) -> String {
+        switch configuration.mode {
+        case .scanning:
+            return switchIndex == 0 ? "Select" : "Next"
+        case .directPhrase:
+            return "Phrase \(switchIndex + 1)"
         }
+    }
 
-        let event = SwitchEvent(
-            switchIndex: switchIndex,
-            isPress: pressed,
-            timestamp: CACurrentMediaTime()
-        )
-        processSwitchEvent(event)
+    func lastEventDescription(for event: SwitchEvent) -> String {
+        guard event.isPress else { return "" }
+        return "Last press: \(roleLabel(for: event.switchIndex))"
     }
 }
 
-// MARK: - UIKit Key Press Interceptor
+// MARK: - UIKit key interceptor
 
-/// A transparent UIViewController that captures hardware key presses through
-/// the UIKit responder chain. This provides a reliable fallback for USB HID
-/// keyboards that may not be detected by the GameController framework.
-///
-/// Embed this in the SwiftUI view hierarchy using KeyPressInterceptorView.
-class KeyPressInterceptorViewController: UIViewController {
-    /// Map of UIKeyboardHIDUsage raw values to their integer HID usage codes
+final class KeyPressInterceptorViewController: UIViewController {
     weak var switchManager: SwitchControlManager?
 
     override var canBecomeFirstResponder: Bool { true }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        let becameFirst = becomeFirstResponder()
-        DebugLog.debug("KeyPressInterceptor: viewDidAppear, becomeFirstResponder=\(becameFirst)", tag: "Switch")
+        _ = becomeFirstResponder()
     }
 
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-        var handled = false
-        for press in presses {
-            if let key = press.key {
-                let hidCode = Int(key.keyCode.rawValue)
-                if switchManager?.switchKeyHIDCodes.contains(hidCode) == true {
-                    switchManager?.handleUIKitKeyPress(hidUsageCode: hidCode, pressed: true)
-                    handled = true
-                }
-            }
-        }
-        if !handled {
-            super.pressesBegan(presses, with: event)
-        }
+        if handlePresses(presses, pressed: true) { return }
+        super.pressesBegan(presses, with: event)
     }
 
     override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        if handlePresses(presses, pressed: false) { return }
+        super.pressesEnded(presses, with: event)
+    }
+
+    private func handlePresses(_ presses: Set<UIPress>, pressed: Bool) -> Bool {
+        guard let manager = switchManager else { return false }
         var handled = false
         for press in presses {
-            if let key = press.key {
-                let hidCode = Int(key.keyCode.rawValue)
-                if switchManager?.switchKeyHIDCodes.contains(hidCode) == true {
-                    switchManager?.handleUIKitKeyPress(hidUsageCode: hidCode, pressed: false)
-                    handled = true
-                }
+            guard let key = press.key else { continue }
+            let hidCode = Int(key.keyCode.rawValue)
+            if manager.configuration.activeKeyHIDs.contains(hidCode) {
+                manager.handleUIKitKeyPress(hidUsageCode: hidCode, pressed: pressed)
+                handled = true
             }
         }
-        if !handled {
-            super.pressesEnded(presses, with: event)
-        }
+        return handled
     }
 }
-

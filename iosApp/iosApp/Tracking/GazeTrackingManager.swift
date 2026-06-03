@@ -18,11 +18,17 @@ class GazeTrackingManager: ObservableObject {
     @Published var isGazeOutOfBounds = false
     @Published var showTrackingError = false
     @Published var calibrationProgress: Double = 0.0
+    @Published var armState = ArmRaiseState(leftRaised: false, rightRaised: false)
+    @Published var handState = HandGestureState(leftPose: nil, rightPose: nil)
+    @Published var bodyTrackingErrorMessage: String?
+
+    let armRaiseActivation = PassthroughSubject<ArmSide, Never>()
+    let handGestureActivation = PassthroughSubject<HandSide, Never>()
 
     /// Dwell selection manager for gaze-based button activation
     let dwellManager = DwellSelectionManager()
 
-    /// External USB HID switch control manager
+    /// External HID switch control (USB or Bluetooth keyboard)
     let switchManager = SwitchControlManager()
     
     // Raw gaze values for calibration (normalized -1 to 1)
@@ -32,6 +38,10 @@ class GazeTrackingManager: ObservableObject {
     private var gazeTracker: GazeTracker?
     let cameraManager = CameraManager()
     private let faceLandmarkService = FaceLandmarkService()
+    private let poseLandmarkService = PoseLandmarkService()
+    private let gestureRecognizerService = GestureRecognizerService()
+    private let armRaiseDetector = ArmRaiseDetector()
+    private let handGestureDetector = HandGestureDetector()
     private var cancellables = Set<AnyCancellable>()
     private var lastValidPosition: CGPoint?
     private var lastLandmarkTime: TimeInterval = 0
@@ -47,6 +57,12 @@ class GazeTrackingManager: ObservableObject {
     private var lastProcessingStartTime: TimeInterval = 0
     private let processingTimeout: TimeInterval = 3.0  // Recovery timeout
     private let minFrameInterval: TimeInterval = 1.0 / 20.0  // Max 20 FPS for gaze processing
+    private let minBodyFrameInterval: TimeInterval = 1.0 / 15.0  // Max 15 FPS for body gesture modes
+    private let armRaiseMargin: Float = 0.08
+    private let armRaiseCooldownMs: Double = 1200
+    private let handGestureMinScore: Float = 0.55
+    private let handGestureStableFrames = 3
+    private let handGestureCooldownMs: Double = 1200
 
     // Orientation change debounce timer
     private var orientationDebounceTimer: Timer?
@@ -124,6 +140,7 @@ class GazeTrackingManager: ObservableObject {
         self.storage = StorageKt.createStorage()
         self.logger = LoggerKt.createLogger(tag: "GazeTracking")
         setupLandmarkSubscriptions()
+        setupBodyGestureCallbacks()
         setupSwitchControl()
         
         NotificationCenter.default.addObserver(
@@ -131,8 +148,22 @@ class GazeTrackingManager: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.faceLandmarkService.reinitialize()
+            guard let self else { return }
+            let mode = AppSettings.shared.selectionMode
+            if Self.isBodyGestureMode(mode) {
+                if mode == "armRaise" {
+                    self.poseLandmarkService.reinitialize()
+                } else {
+                    self.gestureRecognizerService.reinitialize()
+                }
+            } else {
+                self.faceLandmarkService.reinitialize()
+            }
         }
+    }
+
+    static func isBodyGestureMode(_ mode: String) -> Bool {
+        mode == "armRaise" || mode == "handGesture"
     }
     
     func startTracking() {
@@ -150,47 +181,10 @@ class GazeTrackingManager: ObservableObject {
         isTracking = true
 
         let settings = AppSettings.shared
-        let screenBounds = currentScreenBounds()
-        
-        // Initialize detector and gazeTracker if they don't exist yet
-        if self.detector == nil {
-            let detector = PlatformFaceLandmarkDetector()
-            detector.setSwiftBridge(bridge: faceLandmarkService)
-            faceLandmarkService.attachDetector(detector)
-            self.detector = detector
-        }
-        
-        if self.gazeTracker == nil {
-            self.gazeTracker = GazeTracker(
-                faceLandmarkDetector: self.detector!,
-                screenWidth: Int32(screenBounds.width),
-                screenHeight: Int32(screenBounds.height),
-                storage: storage,
-                logger: logger
-            )
-        } else {
-            self.gazeTracker?.updateScreenDimensions(width: Int32(screenBounds.width), height: Int32(screenBounds.height))
-            self.gazeTracker?.reset()
-        }
-        
-        // Configure based on settings
-        gazeTracker?.eyeSelection = mapEyeSelection(settings.eyeSelection)
-        gazeTracker?.smoothingMode = mapSmoothingMode(settings.smoothingMode)
-        gazeTracker?.trackingMethod = mapTrackingMethod(settings.trackingMode)
-        gazeTracker?.setLerpFactor(factor: mapSensitivityToLerp(settings.sensitivity))
-        applyGazeCameraOffset(settings)
-        _ = gazeTracker?.loadCalibration()
+        let mode = settings.selectionMode
+        applySelectionModeBehavior(settings)
 
-        // Configure head pose tracker from saved settings
-        headPoseTracker.sensitivityX = Float(settings.headSensitivityX)
-        headPoseTracker.sensitivityY = Float(settings.headSensitivityY)
-        headPoseTracker.cameraOffsetYaw = Float(settings.headCameraOffsetYaw)
-        headPoseTracker.cameraOffsetPitch = Float(settings.headCameraOffsetPitch)
-
-        // Initialize MediaPipe via the bridge (KMP -> Swift)
-        let initialized = self.detector!.initialize(useGpu: settings.useGPU)
-        if !initialized {
-            DebugLog.error("Face landmark service failed to initialize", tag: "Tracking")
+        guard initializeTrackingBackend(for: mode, settings: settings) else {
             trackingEpoch += 1
             isTracking = false
             return
@@ -200,8 +194,6 @@ class GazeTrackingManager: ObservableObject {
             self?.handleFrame(sampleBuffer)
         }
 
-        // When the camera detects an orientation change, update the gaze tracker's
-        // screen dimensions so gaze-to-screen mapping stays correct.
         cameraManager.orientationDidChange = { [weak self] in
             self?.handleOrientationChange()
         }
@@ -216,19 +208,106 @@ class GazeTrackingManager: ObservableObject {
 
         frameCountSinceStart = 0
         gazeResultLogCount = 0
-        // Reset eye tracking diagnostics
         eyeFrameCount = 0
         eyeSuccessCount = 0
         eyeNullCount = 0
         eyeErrorCount = 0
         eyeSkippedCount = 0
-        
+
         configureDiagnosticsIfNeeded()
 
-        let mode = settings.selectionMode
+        let screenBounds = currentScreenBounds()
         DebugLog.info("Started — mode=\(mode), screen=\(Int(screenBounds.width))x\(Int(screenBounds.height)), GPU=\(settings.useGPU)", tag: "Tracking")
-        DebugLog.info("gazeTracker=\(gazeTracker != nil), detector=\(self.detector != nil)", tag: "Tracking")
-        logger.info(message: "Gaze tracking started (mode: \(mode))")
+        logger.info(message: "Tracking started (mode: \(mode))")
+    }
+
+    private func initializeTrackingBackend(for mode: String, settings: AppSettings) -> Bool {
+        let screenBounds = currentScreenBounds()
+
+        if Self.isBodyGestureMode(mode) {
+            faceLandmarkService.close()
+            gazeTracker = nil
+            detector = nil
+
+            if mode == "armRaise" {
+                gestureRecognizerService.close()
+                armRaiseDetector.reset()
+                armState = ArmRaiseState(leftRaised: false, rightRaised: false)
+                guard poseLandmarkService.initialize(useGpu: settings.useGPU) else {
+                    DebugLog.error("PoseLandmarker failed to initialize", tag: "Tracking")
+                    return false
+                }
+            } else {
+                poseLandmarkService.close()
+                handGestureDetector.reset()
+                handState = HandGestureState(leftPose: nil, rightPose: nil)
+                guard gestureRecognizerService.initialize(useGpu: settings.useGPU) else {
+                    DebugLog.error("GestureRecognizer failed to initialize", tag: "Tracking")
+                    return false
+                }
+            }
+
+            bodyTrackingErrorMessage = nil
+            showTrackingError = false
+            isCursorVisible = false
+            return true
+        }
+
+        poseLandmarkService.close()
+        gestureRecognizerService.close()
+        armRaiseDetector.reset()
+        handGestureDetector.reset()
+        armState = ArmRaiseState(leftRaised: false, rightRaised: false)
+        handState = HandGestureState(leftPose: nil, rightPose: nil)
+        bodyTrackingErrorMessage = nil
+
+        if detector == nil {
+            let detector = PlatformFaceLandmarkDetector()
+            detector.setSwiftBridge(bridge: faceLandmarkService)
+            faceLandmarkService.attachDetector(detector)
+            self.detector = detector
+        }
+
+        if gazeTracker == nil {
+            gazeTracker = GazeTracker(
+                faceLandmarkDetector: detector!,
+                screenWidth: Int32(screenBounds.width),
+                screenHeight: Int32(screenBounds.height),
+                storage: storage,
+                logger: logger
+            )
+        } else {
+            gazeTracker?.updateScreenDimensions(width: Int32(screenBounds.width), height: Int32(screenBounds.height))
+            gazeTracker?.reset()
+        }
+
+        gazeTracker?.eyeSelection = mapEyeSelection(settings.eyeSelection)
+        gazeTracker?.smoothingMode = mapSmoothingMode(settings.smoothingMode)
+        gazeTracker?.trackingMethod = mapTrackingMethod(settings.trackingMode)
+        gazeTracker?.setLerpFactor(factor: mapSensitivityToLerp(settings.sensitivity))
+        applyGazeCameraOffset(settings)
+        _ = gazeTracker?.loadCalibration()
+
+        headPoseTracker.sensitivityX = Float(settings.headSensitivityX)
+        headPoseTracker.sensitivityY = Float(settings.headSensitivityY)
+        headPoseTracker.cameraOffsetYaw = Float(settings.headCameraOffsetYaw)
+        headPoseTracker.cameraOffsetPitch = Float(settings.headCameraOffsetPitch)
+
+        guard detector!.initialize(useGpu: settings.useGPU) else {
+            DebugLog.error("Face landmark service failed to initialize", tag: "Tracking")
+            return false
+        }
+
+        isCursorVisible = true
+        return true
+    }
+
+    private func applySelectionModeBehavior(_ settings: AppSettings) {
+        let bodyMode = Self.isBodyGestureMode(settings.selectionMode)
+        dwellManager.isEnabled = !bodyMode && settings.selectionMode != "none"
+        if bodyMode {
+            isCursorVisible = false
+        }
     }
     
     func stopTracking() {
@@ -245,9 +324,13 @@ class GazeTrackingManager: ObservableObject {
         processingLock.unlock()
         cameraManager.stop()
         
-        // Reset MediaPipe processing state but keep the landmarker alive
         faceLandmarkService.resetProcessingState()
+        poseLandmarkService.resetProcessingState()
+        gestureRecognizerService.resetProcessingState()
         
+        armState = ArmRaiseState(leftRaised: false, rightRaised: false)
+        handState = HandGestureState(leftPose: nil, rightPose: nil)
+        bodyTrackingErrorMessage = nil
         isCursorVisible = true
         isGazeOutOfBounds = false
         showTrackingError = false
@@ -259,6 +342,121 @@ class GazeTrackingManager: ObservableObject {
         recenterCursor()
     }
     
+    private func setupBodyGestureCallbacks() {
+        poseLandmarkService.onPoseDetected = { [weak self] landmarks in
+            self?.handleArmRaiseLandmarks(landmarks)
+        }
+        poseLandmarkService.onNoPoseDetected = { [weak self] in
+            self?.handleNoBodyDetection(isArmRaise: true)
+        }
+        gestureRecognizerService.onGesturesDetected = { [weak self] hands in
+            self?.handleHandGestures(hands)
+        }
+        gestureRecognizerService.onNoGesturesDetected = { [weak self] in
+            self?.handleNoBodyDetection(isArmRaise: false)
+        }
+    }
+
+    private func handleArmRaiseLandmarks(_ landmarks: [LandmarkPoint]) {
+        let settings = AppSettings.shared
+        guard settings.selectionMode == "armRaise", isTracking else { return }
+
+        let now = CACurrentMediaTime()
+        if now - lastSuccessfulDetectionTime > trackingLossResetThreshold {
+            armRaiseDetector.reset()
+        }
+        lastSuccessfulDetectionTime = now
+
+        let nowMs = now * 1000
+
+        let config = ArmRaiseDetectorConfig(
+            margin: armRaiseMargin,
+            holdMs: settings.dwellTime * 1000,
+            cooldownMs: armRaiseCooldownMs
+        )
+        let result = armRaiseDetector.process(
+            landmarks: landmarks,
+            visibilities: nil,
+            now: nowMs,
+            config: config
+        )
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self, AppSettings.shared.selectionMode == "armRaise" else { return }
+            self.armState = result.state
+            self.bodyTrackingErrorMessage = nil
+            self.showTrackingError = false
+            if let side = result.activation {
+                self.armRaiseActivation.send(side)
+            }
+        }
+    }
+
+    private func handleHandGestures(_ hands: [DetectedHandGesture]) {
+        let settings = AppSettings.shared
+        guard settings.selectionMode == "handGesture", isTracking else { return }
+
+        let now = CACurrentMediaTime()
+        if now - lastSuccessfulDetectionTime > trackingLossResetThreshold {
+            handGestureDetector.reset()
+        }
+        lastSuccessfulDetectionTime = now
+
+        let nowMs = now * 1000
+
+        let config = HandGestureDetectorConfig(
+            minScore: handGestureMinScore,
+            stableFrames: handGestureStableFrames,
+            cooldownMs: handGestureCooldownMs
+        )
+        let result = handGestureDetector.process(
+            hands: hands,
+            now: nowMs,
+            config: config
+        )
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self, AppSettings.shared.selectionMode == "handGesture" else { return }
+            self.handState = result.state
+            self.bodyTrackingErrorMessage = nil
+            self.showTrackingError = false
+            if let side = result.activation {
+                self.handGestureActivation.send(side)
+            }
+        }
+    }
+
+    private func handleNoBodyDetection(isArmRaise: Bool) {
+        let settings = AppSettings.shared
+        let expectedMode = isArmRaise ? "armRaise" : "handGesture"
+        guard settings.selectionMode == expectedMode, isTracking else { return }
+
+        let now = CACurrentMediaTime()
+        let isWarmingUp = (now - trackingStartTime) < warmupDuration
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self, AppSettings.shared.selectionMode == expectedMode else { return }
+            if isArmRaise {
+                self.armState = ArmRaiseState(leftRaised: false, rightRaised: false)
+            } else {
+                self.handState = HandGestureState(leftPose: nil, rightPose: nil)
+            }
+
+            if isWarmingUp {
+                self.bodyTrackingErrorMessage = nil
+                self.showTrackingError = false
+            } else if settings.showTrackingErrorBanner {
+                self.bodyTrackingErrorMessage = isArmRaise
+                    ? "Body not detected — step back so your shoulders are visible"
+                    : "Hands not detected — hold your hands in view of the camera"
+                self.showTrackingError = true
+            } else {
+                self.bodyTrackingErrorMessage = nil
+                self.showTrackingError = false
+            }
+        }
+    }
+
     private func setupLandmarkSubscriptions() {
         faceLandmarkService.$currentLandmarks
             .receive(on: DispatchQueue.main)
@@ -369,10 +567,13 @@ class GazeTrackingManager: ObservableObject {
     }
 
     private func currentScreenBounds() -> CGRect {
-        if let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first {
-            return scene.screen.bounds
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first
+        guard let scene else { return .zero }
+        if let window = scene.windows.first(where: { $0.isKeyWindow }) ?? scene.windows.first {
+            return window.bounds
         }
-        return .zero
+        return scene.screen.bounds
     }
 
     private func currentInterfaceOrientation() -> UIInterfaceOrientation {
@@ -454,14 +655,17 @@ class GazeTrackingManager: ObservableObject {
             diagnosticsInputFrameCount += 1
         }
         
-        // Watchdog timer check: if we haven't seen a face for a while, reinitialize MediaPipe
+        // Watchdog timer check: if we haven't seen a detection for a while, reinitialize MediaPipe
         if (now - lastSuccessfulDetectionTime) > watchdogTimeout {
             reinitializeIfAllowed(reason: "watchdog")
             lastSuccessfulDetectionTime = now
             return
         }
 
-        guard now - lastFrameProcessedTime >= minFrameInterval else {
+        let settings = AppSettings.shared
+        let frameInterval = Self.isBodyGestureMode(settings.selectionMode) ? minBodyFrameInterval : minFrameInterval
+
+        guard now - lastFrameProcessedTime >= frameInterval else {
             if AppSettings.shared.enableTrackingDiagnostics {
                 diagnosticsThrottledFrameCount += 1
             }
@@ -474,10 +678,17 @@ class GazeTrackingManager: ObservableObject {
 
         // Use the camera manager's tracked orientation rather than hardcoding
         let orientation = cameraManager.mediaPipeSampleBufferOrientation
-        faceLandmarkService.updateLatestSampleBuffer(sampleBuffer, orientation: orientation)
 
-        let settings = AppSettings.shared
         applyCurrentSettings(settings)
+        applySelectionModeBehavior(settings)
+
+        if settings.selectionMode == "armRaise" {
+            poseLandmarkService.updateLatestSampleBuffer(sampleBuffer, orientation: orientation)
+        } else if settings.selectionMode == "handGesture" {
+            gestureRecognizerService.updateLatestSampleBuffer(sampleBuffer, orientation: orientation)
+        } else {
+            faceLandmarkService.updateLatestSampleBuffer(sampleBuffer, orientation: orientation)
+        }
 
         frameCountSinceStart += 1
         // Log the first few frames to confirm which path is taken
@@ -489,6 +700,10 @@ class GazeTrackingManager: ObservableObject {
             faceLandmarkService.requestDetection()
         } else if settings.selectionMode == "eyeGaze" {
             processGazeFrame()
+        } else if settings.selectionMode == "armRaise" {
+            poseLandmarkService.requestDetection()
+        } else if settings.selectionMode == "handGesture" {
+            gestureRecognizerService.requestDetection()
         }
         // selectionMode == "none" → don't process (tracking should be stopped anyway)
     }
@@ -730,7 +945,15 @@ class GazeTrackingManager: ObservableObject {
                 diagnosticsOrientationReinitCount += 1
             }
         }
-        faceLandmarkService.reinitialize()
+
+        let mode = AppSettings.shared.selectionMode
+        if mode == "armRaise" {
+            poseLandmarkService.reinitialize()
+        } else if mode == "handGesture" {
+            gestureRecognizerService.reinitialize()
+        } else {
+            faceLandmarkService.reinitialize()
+        }
     }
 
     private func applyOrientationChange() {
@@ -745,13 +968,31 @@ class GazeTrackingManager: ObservableObject {
                 reinitializeIfAllowed(reason: "orientation")
                 lastKnownOrientation = currentOrientation
             }
-            
-            headPoseTracker.reset()
-            lastValidPosition = nil
-            lastRawGazeX = nil
-            lastRawGazeY = nil
-            gazeOffsetX = 0
-            gazeOffsetY = 0
+
+            let screenBounds = currentScreenBounds()
+            if screenBounds.width > 0, screenBounds.height > 0 {
+                gazeTracker?.updateScreenDimensions(
+                    width: Int32(screenBounds.width),
+                    height: Int32(screenBounds.height)
+                )
+                _ = gazeTracker?.loadCalibration()
+            }
+
+            if orientationChanged {
+                dwellManager.cancelDwellForLayoutChange()
+            }
+
+            if !Self.isBodyGestureMode(settings.selectionMode) {
+                headPoseTracker.reset()
+                lastValidPosition = nil
+                lastRawGazeX = nil
+                lastRawGazeY = nil
+                gazeOffsetX = 0
+                gazeOffsetY = 0
+            } else {
+                armRaiseDetector.reset()
+                handGestureDetector.reset()
+            }
             
             if !isTracking || !cameraManager.captureSession.isRunning {
                 startTracking()
@@ -781,41 +1022,14 @@ class GazeTrackingManager: ObservableObject {
         // Apply saved settings to switch manager
         applySwitchSettings(settings)
 
-        // Initialize BLE if switch control is enabled
         if settings.switchControlEnabled {
             switchManager.initialize()
         }
-
-        // Listen for back action to post a notification (views can subscribe)
-        switchManager.backAction
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] in
-                _ = self  // keep reference alive
-                NotificationCenter.default.post(name: .switchBackAction, object: nil)
-            }
-            .store(in: &cancellables)
     }
 
     /// Apply current settings to the switch control manager.
     func applySwitchSettings(_ settings: AppSettings) {
-        switchManager.controlMode = SwitchControlMode(rawValue: settings.switchControlMode) ?? .direct
-        switchManager.scanInterval = settings.switchScanInterval
-        switchManager.autoReconnect = settings.switchAutoReconnect
-
-        // Map switch action strings to enums
-        let action1 = SwitchAction(rawValue: settings.switchAction1) ?? .select
-        let action2 = SwitchAction(rawValue: settings.switchAction2) ?? .next
-        let action3 = SwitchAction(rawValue: settings.switchAction3) ?? .previous
-        let action4 = SwitchAction(rawValue: settings.switchAction4) ?? .back
-        switchManager.switchActions = [action1, action2, action3, action4]
-
-        // Apply USB HID key mappings
-        switchManager.switchKeyHIDCodes = [
-            settings.switchKey1,
-            settings.switchKey2,
-            settings.switchKey3,
-            settings.switchKey4
-        ]
+        switchManager.apply(configuration: settings.switchControlConfiguration())
     }
 
     /// Enable or disable switch control. Call when the setting changes.
@@ -1059,11 +1273,6 @@ private extension Float {
 }
 
 // MARK: - Notification Names
-
-extension Notification.Name {
-    /// Posted when the "back" switch action fires.
-    static let switchBackAction = Notification.Name("SwitchBackAction")
-}
 
 // Helper to wrap errors for Kotlin
 class KotlinError: KotlinThrowable {

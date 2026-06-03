@@ -71,4 +71,19 @@ extension PhraseStyle {
         guard let styleData = try? decoder.decode(PhraseStyleData.self, from: data) else { return nil }
         return styleData.toPhraseStyle()
     }
+
+    /// Blocs game id (mirrors KMP `GAME_TYPE_BLOCS`; use `isBlocsGame()` after rebuilding VocableShared).
+    func isBlocsGameType() -> Bool {
+        gameType == PhraseGameTypeId.blocs
+    }
+
+    func isPieCrazyGameType() -> Bool {
+        gameType == PhraseGameTypeId.pieCrazy
+    }
+}
+
+/// Game type strings stored on phrase styles (local until shared framework includes new constants).
+enum PhraseGameTypeId {
+    static let blocs = "blocs"
+    static let pieCrazy = "pie_crazy"
 }

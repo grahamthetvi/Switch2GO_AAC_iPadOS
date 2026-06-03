@@ -37,14 +37,8 @@ class AppSettings: ObservableObject {
         static let switchControlEnabled = "switchControlEnabled"
         static let switchControlMode = "switchControlMode"
         static let switchScanInterval = "switchScanInterval"
-        static let switchAction1 = "switchAction1"
-        static let switchAction2 = "switchAction2"
-        static let switchAction3 = "switchAction3"
-        static let switchAction4 = "switchAction4"
-        static let switchAutoReconnect = "switchAutoReconnect"
-        static let switchLastDeviceId = "switchLastDeviceId"
         
-        // USB HID Key Mapping (HID usage codes)
+        // HID key mapping (usage codes)
         static let switchKey1 = "switchKey1"
         static let switchKey2 = "switchKey2"
         static let switchKey3 = "switchKey3"
@@ -264,70 +258,28 @@ class AppSettings: ObservableObject {
 
     // MARK: - Switch Control Settings
 
-    /// Whether external BLE switch control is enabled
+    /// Whether external keyboard/BLE switch control is enabled
     @Published var switchControlEnabled: Bool {
         didSet {
             defaults.set(switchControlEnabled, forKey: Keys.switchControlEnabled)
         }
     }
 
-    /// Switch control mode: "direct", "directMapping", or "scanning"
+    /// Switch control mode: "scanning" or "directPhrase"
     @Published var switchControlMode: String {
         didSet {
             defaults.set(switchControlMode, forKey: Keys.switchControlMode)
         }
     }
 
-    /// Auto-scan interval in seconds (for scanning mode)
+    /// Auto-scan interval in seconds (scanning mode)
     @Published var switchScanInterval: Double {
         didSet {
             defaults.set(switchScanInterval, forKey: Keys.switchScanInterval)
         }
     }
 
-    /// Action for switch 1 (default: "select")
-    @Published var switchAction1: String {
-        didSet {
-            defaults.set(switchAction1, forKey: Keys.switchAction1)
-        }
-    }
-
-    /// Action for switch 2 (default: "next")
-    @Published var switchAction2: String {
-        didSet {
-            defaults.set(switchAction2, forKey: Keys.switchAction2)
-        }
-    }
-
-    /// Action for switch 3 (default: "previous")
-    @Published var switchAction3: String {
-        didSet {
-            defaults.set(switchAction3, forKey: Keys.switchAction3)
-        }
-    }
-
-    /// Action for switch 4 (default: "back")
-    @Published var switchAction4: String {
-        didSet {
-            defaults.set(switchAction4, forKey: Keys.switchAction4)
-        }
-    }
-
-    /// Whether to auto-reconnect to the last switch device (legacy, kept for compatibility)
-    @Published var switchAutoReconnect: Bool {
-        didSet {
-            defaults.set(switchAutoReconnect, forKey: Keys.switchAutoReconnect)
-        }
-    }
-
-    /// UUID of the last connected switch device (legacy, kept for compatibility)
-    @Published var switchLastDeviceId: String {
-        didSet {
-            defaults.set(switchLastDeviceId, forKey: Keys.switchLastDeviceId)
-        }
-    }
-
-    /// HID usage code for switch 1 key (default: Key "1" = 30)
+    /// HID usage code for switch 1 / select / phrase 1 (default: Key "1" = 30)
     @Published var switchKey1: Int {
         didSet {
             defaults.set(switchKey1, forKey: Keys.switchKey1)
@@ -415,18 +367,11 @@ class AppSettings: ObservableObject {
         let borderHex = defaults.object(forKey: Keys.appBorderColor) as? UInt32 ?? 0xFF000000
         self.appBorderColor = Color(hex: borderHex)
 
-        // Switch Control (Currently disabled - Coming Soon feature)
-        self.switchControlEnabled = false
-        defaults.set(false, forKey: Keys.switchControlEnabled)
-        
-        self.switchControlMode = defaults.string(forKey: Keys.switchControlMode) ?? "direct"
+        // Switch Control
+        self.switchControlEnabled = defaults.object(forKey: Keys.switchControlEnabled) as? Bool ?? false
+        let savedMode = defaults.string(forKey: Keys.switchControlMode)
+        self.switchControlMode = SwitchControlMode.migrated(from: savedMode).rawValue
         self.switchScanInterval = defaults.object(forKey: Keys.switchScanInterval) as? Double ?? 1.5
-        self.switchAction1 = defaults.string(forKey: Keys.switchAction1) ?? "select"
-        self.switchAction2 = defaults.string(forKey: Keys.switchAction2) ?? "next"
-        self.switchAction3 = defaults.string(forKey: Keys.switchAction3) ?? "previous"
-        self.switchAction4 = defaults.string(forKey: Keys.switchAction4) ?? "back"
-        self.switchAutoReconnect = defaults.object(forKey: Keys.switchAutoReconnect) as? Bool ?? true
-        self.switchLastDeviceId = defaults.string(forKey: Keys.switchLastDeviceId) ?? ""
         self.switchKey1 = defaults.object(forKey: Keys.switchKey1) as? Int ?? 30  // Key "1"
         self.switchKey2 = defaults.object(forKey: Keys.switchKey2) as? Int ?? 31  // Key "2"
         self.switchKey3 = defaults.object(forKey: Keys.switchKey3) as? Int ?? 32  // Key "3"
@@ -467,14 +412,8 @@ class AppSettings: ObservableObject {
         selectionMode = "none"
         appBorderColor = Color(hex: 0xFF000000)
         switchControlEnabled = false
-        switchControlMode = "direct"
+        switchControlMode = SwitchControlMode.directPhrase.rawValue
         switchScanInterval = 1.5
-        switchAction1 = "select"
-        switchAction2 = "next"
-        switchAction3 = "previous"
-        switchAction4 = "back"
-        switchAutoReconnect = true
-        switchLastDeviceId = ""
         switchKey1 = 30  // Key "1"
         switchKey2 = 31  // Key "2"
         switchKey3 = 32  // Key "3"
@@ -484,6 +423,19 @@ class AppSettings: ObservableObject {
         enableTrackingDiagnostics = false
         resetColorsToDefaults()
     }
+
+    /// Builds switch control runtime configuration from current settings.
+    func switchControlConfiguration() -> SwitchControlConfiguration {
+        SwitchControlConfiguration(
+            mode: SwitchControlMode.migrated(from: switchControlMode),
+            scanInterval: switchScanInterval,
+            phraseSlotCount: symbolCount,
+            scanSelectKeyHID: switchKey1,
+            scanNextKeyHID: switchKey2,
+            phraseKeyHIDs: [switchKey1, switchKey2, switchKey3, switchKey4]
+        )
+    }
+
     /// Returns .dark when appBorderColor is dark (low luminance), .light otherwise.
     /// Use this to keep system text colors readable on top of the border background.
     var preferredColorScheme: ColorScheme {
