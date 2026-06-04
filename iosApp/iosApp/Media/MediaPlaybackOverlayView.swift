@@ -15,9 +15,12 @@ struct MediaPlaybackOverlayView: View {
     var isTrackingEnabled: Bool
     @StateObject private var playerHolder = MediaPlayerHolder()
     @StateObject private var youtubeHolder = YouTubePlayerHolder()
+    @State private var touchRevealedCenter = false
+    @State private var touchRevealedExit = false
 
     var body: some View {
         if coordinator.phase == .playing, let phrase = coordinator.activePhrase {
+            GeometryReader { geo in
             ZStack {
                 Color.black.ignoresSafeArea()
 
@@ -43,16 +46,22 @@ struct MediaPlaybackOverlayView: View {
                     .allowsHitTesting(false)
                 }
 
-                if coordinator.showCenterControls {
+                if coordinator.showCenterControls || touchRevealedCenter {
                     centerPlayPauseButton
                 }
 
-                if coordinator.showExitControl {
+                if coordinator.showExitControl || touchRevealedExit {
                     exitButton
                 }
             }
             .contentShape(Rectangle())
             .zIndex(50)
+            .simultaneousGesture(
+                SpatialTapGesture()
+                    .onEnded { value in
+                        applyTouchReveal(at: value.location, in: geo.size, safeTop: geo.safeAreaInsets.top)
+                    }
+            )
             .onAppear {
                 dwellManager.setAllowedButtonIds(mediaPlaybackAllowedButtons)
                 dwellManager.clearAllButtons()
@@ -71,9 +80,25 @@ struct MediaPlaybackOverlayView: View {
             }
             .onChange(of: coordinator.phase) { _, newPhase in
                 if newPhase != .playing {
+                    touchRevealedCenter = false
+                    touchRevealedExit = false
                     teardownPlayback()
                 }
             }
+            }
+        }
+    }
+
+    private func applyTouchReveal(at location: CGPoint, in size: CGSize, safeTop: CGFloat) {
+        if PlaybackOverlayControlZones.containsCenter(location, in: size) {
+            touchRevealedCenter = true
+            touchRevealedExit = false
+        } else if PlaybackOverlayControlZones.containsExit(location, in: size, safeTop: safeTop) {
+            touchRevealedExit = true
+            touchRevealedCenter = false
+        } else {
+            touchRevealedCenter = false
+            touchRevealedExit = false
         }
     }
 

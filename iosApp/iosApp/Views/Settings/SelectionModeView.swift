@@ -91,8 +91,6 @@ struct SelectionModeView: View {
                     .background(Color(UIColor.secondarySystemBackground))
                     .cornerRadius(12)
                 }
-                .disabled(true)
-                .opacity(0.6)
                 
                 // Current Status
                 VStack(spacing: 8) {

@@ -14,13 +14,15 @@ struct GameOverlayView: View {
     var isTrackingEnabled: Bool
 
     @State private var touchTarget: CGPoint?
+    @State private var touchRevealedExit = false
 
     var body: some View {
         if coordinator.phase == .playing, let phrase = coordinator.activePhrase {
+            GeometryReader { geo in
             ZStack {
                 Color.black.ignoresSafeArea()
 
-                gameContent(phrase: phrase)
+                gameContent(phrase: phrase, overlaySize: geo.size)
 
                 gameGazeZones
 
@@ -36,7 +38,7 @@ struct GameOverlayView: View {
                     .allowsHitTesting(false)
                 }
 
-                if GameSelectionMode.usesTouch(selectionMode: settings.selectionMode) || coordinator.showExitControl {
+                if coordinator.showExitControl || touchRevealedExit {
                     exitButton
                 }
             }
@@ -44,12 +46,16 @@ struct GameOverlayView: View {
             .zIndex(50)
             .simultaneousGesture(
                 DragGesture(minimumDistance: 0)
-                    .onChanged { touchTarget = $0.location }
+                    .onChanged { value in
+                        touchTarget = value.location
+                        updateTouchReveal(at: value.location, in: geo.size, safeTop: geo.safeAreaInsets.top)
+                    }
             )
             .simultaneousGesture(
                 SpatialTapGesture()
                     .onEnded { value in
                         touchTarget = value.location
+                        updateTouchReveal(at: value.location, in: geo.size, safeTop: geo.safeAreaInsets.top)
                     }
             )
             .onAppear {
@@ -62,15 +68,25 @@ struct GameOverlayView: View {
             .onChange(of: coordinator.phase) { _, newPhase in
                 if newPhase != .playing {
                     touchTarget = nil
+                    touchRevealedExit = false
                 }
+            }
             }
         }
     }
 
+    private func updateTouchReveal(at location: CGPoint, in size: CGSize, safeTop: CGFloat) {
+        if PlaybackOverlayControlZones.containsExit(location, in: size, safeTop: safeTop) {
+            touchRevealedExit = true
+        } else if !PlaybackOverlayControlZones.containsCenter(location, in: size) {
+            touchRevealedExit = false
+        }
+    }
+
     @ViewBuilder
-    private func gameContent(phrase: PhraseDisplayModel) -> some View {
+    private func gameContent(phrase: PhraseDisplayModel, overlaySize: CGSize) -> some View {
         GeometryReader { geo in
-            let defaultCenter = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
+            let defaultCenter = CGPoint(x: overlaySize.width / 2, y: overlaySize.height / 2)
             let gazeTarget: CGPoint? = {
                 guard GameSelectionMode.usesGaze(selectionMode: settings.selectionMode),
                       isTrackingEnabled,
@@ -78,7 +94,7 @@ struct GameOverlayView: View {
                       gazeManager.isCursorVisible else { return nil }
                 return gazeManager.gazePosition
             }()
-            let target = gazeTarget ?? touchTarget ?? defaultCenter
+            let target = touchTarget ?? gazeTarget ?? defaultCenter
 
             if phrase.style?.isCursorRocketGame() == true {
                 CursorRocketGameView(target: target)
