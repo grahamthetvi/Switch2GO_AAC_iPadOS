@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Settings for USB / Bluetooth HID adaptive switches (keyboard keys 1–4).
+/// Settings for the ESP32 BLE HID switch interface (keyboard keys 1–4).
 struct SwitchControlSettingsView: View {
     @EnvironmentObject var gazeManager: GazeTrackingManager
     @StateObject private var settings = AppSettings.shared
@@ -87,7 +87,7 @@ struct SwitchControlSettingsView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("External Switches")
                         .font(.headline)
-                    Text("USB or Bluetooth keyboard-style switch interfaces")
+                    Text("ESP32 Bluetooth switch interface (Switch2GO-XXXX)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -150,7 +150,7 @@ struct SwitchControlSettingsView: View {
         if gazeManager.switchManager.isConnected {
             return "Press a switch to test. Keys must match mapping below."
         }
-        return "Connect via USB, or pair a BLE keyboard in Settings → Bluetooth, then press a switch."
+        return "Pair Switch2GO-XXXX in iPad Settings → Bluetooth, then press a wired switch (or use BOOT multi-tap)."
     }
 
     // MARK: - Mode picker
@@ -337,13 +337,13 @@ struct SwitchControlSettingsView: View {
             VStack(alignment: .leading, spacing: 16) {
                 SetupStepRow(
                     number: 1,
-                    icon: "cable.connector",
-                    text: "Wire switches to a USB HID or BLE keyboard device (Arduino, ESP32, Tapio, etc.)."
+                    icon: "antenna.radiowaves.left.and.right",
+                    text: "Flash ESP32/Switch2GO_BLE_Switch and wire up to four switches (GPIO 12, 13, 14, 27)."
                 )
                 SetupStepRow(
                     number: 2,
                     icon: "keyboard",
-                    text: "USB: plug into the iPad. Bluetooth: pair once in iPad Settings → Bluetooth."
+                    text: "Pair Switch2GO-XXXX in iPad Settings → Bluetooth (not inside this app)."
                 )
                 SetupStepRow(
                     number: 3,

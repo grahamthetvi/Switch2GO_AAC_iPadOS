@@ -5,7 +5,7 @@ import UIKit
 
 // MARK: - Models
 
-/// A normalized switch press from USB or Bluetooth HID keyboard input.
+/// A normalized switch press from the ESP32 BLE HID keyboard.
 struct SwitchEvent: Equatable {
     /// Zero-based index (scanning: 0 = select, 1 = next; direct phrase: phrase slot).
     let switchIndex: Int
@@ -130,7 +130,7 @@ struct SwitchKeyMapping: Equatable, Identifiable {
 
 // MARK: - SwitchControlManager
 
-/// Listens for USB / Bluetooth HID keyboard switch input and drives phrase selection.
+/// Listens for ESP32 BLE HID keyboard switch input (keys 1–4) and drives phrase selection.
 ///
 /// Supported modes:
 /// - **Scanning** (2 switches): select + next, with optional auto-scan highlight.
@@ -409,7 +409,7 @@ final class SwitchControlManager: NSObject, ObservableObject {
         guard !isConnected else { return }
         DispatchQueue.main.async {
             self.isConnected = true
-            self.connectedDeviceName = "Switch Device"
+            self.connectedDeviceName = "Switch2GO"
         }
     }
 

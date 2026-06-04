@@ -17,9 +17,9 @@
 | Persistence | Room (`com.switch2connect.aac.room.VocableDatabase`) | SQLDelight via `:shared` (`com.vocable.data.createDatabase`) |
 | Eye gaze | `MediaPipeIrisGazeTracker` (production) | KMP `GazeTracker` via `GazeTrackingManager.swift` |
 | Head tracking | ARCore + Sceneform (`FaceTrackFragment`) | MediaPipe `HeadPoseTracker.swift` |
-| USB / BLE HID switch | not implemented today | `SwitchControlManager.swift` (scan 2-switch, direct phrase 2–4) |
+| BLE switch (ESP32) | not implemented today | `SwitchControlManager.swift` + `ESP32/Switch2GO_BLE_Switch/` |
 | Web | IndexedDB (Dexie) | SQLDelight via `:shared` |
-| Web input | Keyboard 1–4, touch, MediaPipe gaze/head | Same + USB HID (Arduino) on iOS |
+| Web input | Keyboard 1–4, touch, MediaPipe gaze/head | Same + BLE HID switch (ESP32) on iOS |
 
 ## About Switch2Go
 
@@ -58,13 +58,86 @@ For users with more mobility, the app can be operated by touch.
 ### Saved Phrases
 Use a list of common phrases, or create and save your own custom phrases with customizable appearance settings.
 
-### Switch Control (USB / Bluetooth HID)
-Use a USB or BLE keyboard-style switch interface (Arduino, ESP32, Tapio, etc.). The app supports two modes:
+### Switch Control (ESP32 Bluetooth HID)
+Physical switches connect to an **ESP32** running the BLE keyboard firmware in [`ESP32/Switch2GO_BLE_Switch/`](ESP32/Switch2GO_BLE_Switch/). The board advertises as `Switch2GO-XXXX` and sends keys `1`–`4` (configurable in the sketch). The iPad app treats it as a standard Bluetooth keyboard.
+
+**App setup:** Settings → Selection Mode → Switch Control → enable External Switches. Two modes:
 
 - **Switch to Phrase** (2–4 switches): each switch activates one phrase tile (keys `1`–`4` by default).
 - **Scan & Select** (2 switches): one switch moves a highlight, one selects (keys `1` = select, `2` = next).
 
-**Setup:** Settings → Selection Mode → Switch Control. USB: plug in. Bluetooth: pair in iPad Settings → Bluetooth. See `ArduinoMicro/Switch2GO_USB_Switch/` for a wired reference sketch.
+**BOOT button:** On the ESP32, multi-tap the built-in BOOT button (1–4 taps within 350 ms) to simulate switch 1–4 when testing without wired switches.
+
+#### Arduino IDE setup (ESP32 firmware)
+
+Use [Arduino IDE 2.x](https://www.arduino.cc/en/software) on a Mac or PC. The sketch targets a standard **ESP32-WROOM** board (e.g. DevKitC / DevKit V1). It does **not** run on ESP32-S2 or ESP32-P4 (no BLE keyboard support in HijelHID for those chips).
+
+**1. Install the ESP32 board package**
+
+1. **File → Preferences** → Additional boards manager URLs, add if missing:
+   ```
+   https://espressif.github.io/arduino-esp32/package_esp32_index.json
+   ```
+2. **Tools → Board → Boards Manager** → search **esp32** → install **esp32** by Espressif (use **3.3.7 or newer**; HijelHID requires ESP32 Arduino Core 3.x).
+3. **Tools → Board** → choose **ESP32 Dev Module** (or your exact DevKit; WROOM-32 is the default for this project).
+
+**2. Install libraries (order matters)**
+
+| Library | How to install | Version |
+|---------|----------------|---------|
+| **NimBLE-Arduino** | **Sketch → Include Library → Manage Libraries** → search `NimBLE-Arduino` | **≥ 2.3.8** |
+| **HijelHID** | Same Library Manager → search `HijelHID` (package name for [HijelHID_BLEKeyboard](https://github.com/HijelHub/HijelHID_BLEKeyboard)) | latest |
+
+If **HijelHID** does not appear in Library Manager:
+
+1. Download [HijelHID_BLEKeyboard.zip](https://github.com/HijelHub/HijelHID_BLEKeyboard/releases/latest/download/HijelHID_BLEKeyboard.zip) from GitHub.
+2. **Sketch → Include Library → Add .ZIP Library** → select the zip.
+
+**3. Open and configure the sketch**
+
+1. Open `ESP32/Switch2GO_BLE_Switch/Switch2GO_BLE_Switch.ino` in Arduino IDE (the parent folder name must match the `.ino` filename).
+2. Optional edits at the top of the file:
+   - `NUM_SWITCHES` — set to `2`, `3`, or `4` if you wire fewer physical switches.
+   - `SWITCH_PINS[]` — default `{12, 13, 14, 27}` for DevKit V1.
+   - `SWITCH_KEYS[]` — default `'1'`–`'4'`; must match Switch Control key mapping in the iPad app.
+
+**4. Upload settings**
+
+| Setting | Value |
+|---------|--------|
+| **Board** | ESP32 Dev Module (or your DevKit) |
+| **Upload Speed** | 921600 (or 115200 if upload fails) |
+| **Port** | USB serial port for the ESP32 (e.g. `/dev/cu.usbserial-*` on Mac) |
+
+Plug in the ESP32 via USB, select the port under **Tools → Port**, then **Sketch → Upload**. If upload fails, hold **BOOT**, press **RESET**, release **RESET**, then release **BOOT** and upload again.
+
+**5. Verify with Serial Monitor**
+
+1. **Tools → Serial Monitor** → baud **115200**.
+2. After reset you should see:
+   - `[SYSTEM] Initializing Switch2GO Firmware...`
+   - `[BLE] Broadcaster Identity: Switch2GO-XXXX`
+   - `[SYSTEM] Setup complete...`
+3. Press a wired switch (or use BOOT multi-tap): lines like `[HID] Switch 1 PRESSED` appear only when the iPad has connected over BLE (`bleKeyboard->isConnected()`).
+
+**6. Wiring (ESP32 DevKit V1)**
+
+| Switch | GPIO | Connection |
+|--------|------|------------|
+| 1 | 12 | One leg to GPIO 12, other leg to **GND** |
+| 2 | 13 | GPIO 13 ↔ GND |
+| 3 | 14 | GPIO 14 ↔ GND |
+| 4 | 27 | GPIO 27 ↔ GND |
+
+Uses internal pull-ups: open = HIGH, pressed = LOW. Status LED is GPIO **2** (onboard LED on most DevKits).
+
+**7. Pair with iPad**
+
+1. Power the ESP32 (USB power bank or USB from a computer for flashing only — BLE works on battery/USB after flash).
+2. **iPad Settings → Bluetooth** → pair **Switch2GO-XXXX** (last four hex digits of the MAC).
+3. Open Switch2GO → **Settings → Selection Mode → Switch Control** → enable **External Switches** → press a switch and confirm “Receiving input”.
+
+Do not pair from inside the Switch2GO app; iOS requires system Bluetooth pairing for HID keyboards.
 
 ## Getting Started
 

@@ -80,7 +80,7 @@ struct WelcomeView: View {
             title: "Welcome to Switch2GO",
             paragraphs: [
                 "Switch2GO is an Augmentative and Alternative Communication (AAC) app designed for people with Cerebral Visual Impairment (CVI) and others who need accessible communication.",
-                "Choose phrases organized into categories, then tap or select them to speak out loud. The app works with touch, eye gaze, head tracking, and USB switch control — use whatever works best.",
+                "Choose phrases organized into categories, then tap or select them to speak out loud. The app works with touch, eye gaze, head tracking, and Bluetooth switch control — use whatever works best.",
                 "The interface uses high-contrast, customizable layouts with fewer symbols per page to reduce visual complexity. Every phrase can be individually styled with custom colors, images, borders, and text sizes."
             ]
         )
@@ -162,13 +162,13 @@ struct WelcomeView: View {
 
     private var switchModePage: some View {
         OnboardingPageView(
-            icon: "cable.connector",
+            icon: "antenna.radiowaves.left.and.right",
             iconColor: .orange,
             title: "Switch Control",
             paragraphs: [
-                "Switch2GO works with USB or Bluetooth switch interfaces that send keyboard keys (Arduino, ESP32, Tapio, and similar devices).",
+                "Switch2GO works with the ESP32 Bluetooth switch interface (firmware in the ESP32 folder). Pair Switch2GO-XXXX in iPad Settings → Bluetooth, then enable Switch Control in the app.",
                 "Scan & Select uses two switches: one moves a highlight across phrases, one selects. Switch to Phrase uses two to four switches — each switch speaks one phrase on the page.",
-                "Enable switches under Settings → Selection Mode → Switch Control. Match key mapping to your device (default keys 1–4).",
+                "Enable switches under Settings → Selection Mode → Switch Control. Default keys 1–4 must match the ESP32 firmware.",
                 "Touch, eye gaze, and head tracking still work when switches are enabled."
             ]
         )

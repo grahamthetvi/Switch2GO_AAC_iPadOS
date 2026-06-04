@@ -77,8 +77,8 @@ export function SelectionModePage() {
       <SettingsCard title="Switch control (web)">
         <p className="hint">
           On the web app, use keyboard keys <strong>1</strong>–<strong>4</strong> to select phrase
-          tiles on the current page (same positions as on iPad). USB switch hardware is not
-          supported in the browser.
+          tiles on the current page (same positions as on iPad). ESP32 Bluetooth switch hardware
+          is not supported in the browser.
         </p>
       </SettingsCard>
     </SettingsLayout>

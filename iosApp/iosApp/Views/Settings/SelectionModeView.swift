@@ -79,7 +79,7 @@ struct SelectionModeView: View {
                             Text("Switch Control")
                                 .font(.headline)
                                 .foregroundColor(.primary)
-                            Text("Scan & select (2 switches) or switch-to-phrase (2–4)")
+                            Text("ESP32 Bluetooth switches — scan or direct phrase")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }

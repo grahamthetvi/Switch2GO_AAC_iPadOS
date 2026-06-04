@@ -66,8 +66,8 @@ struct TroubleshootingView: View {
                     steps: [
                         "Enable Switch Control under Settings → Selection Mode → Switch Control.",
                         "Scan & Select: 2 switches (select + next). Switch to Phrase: 2–4 switches matching phrases per page.",
-                        "USB: plug in the switch interface. Bluetooth: pair in iPad Settings → Bluetooth first.",
-                        "Default keys are 1–4; key mapping in Switch Control must match your device firmware.",
+                        "Pair the ESP32 as Switch2GO-XXXX in iPad Settings → Bluetooth before using the app.",
+                        "Default keys are 1–4; key mapping in Switch Control must match ESP32/Switch2GO_BLE_Switch firmware.",
                         "If presses are ignored, open Switch Control and confirm the last-press indicator updates when you press a switch."
                     ]
                 )

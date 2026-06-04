@@ -144,9 +144,9 @@ struct ContentView: View {
         .ignoresSafeArea()
         .background(settings.appBorderColor.ignoresSafeArea())
         .background(
-            // Invisible UIKit key press interceptor for USB HID switch input.
+            // Invisible UIKit key press interceptor for BLE HID switch input.
             // Catches hardware key events through the responder chain as a
-            // fallback when GCKeyboard doesn't detect the USB device.
+            // fallback when GCKeyboard doesn't detect the ESP32 keyboard.
             KeyPressInterceptorRepresentable(switchManager: gazeManager.switchManager)
                 .allowsHitTesting(false)
         )
@@ -547,7 +547,7 @@ struct OrientationModeBanner: View {
 
 /// SwiftUI wrapper that embeds the key press interceptor into the view hierarchy.
 /// Catches hardware key events through UIKit's responder chain as a fallback
-/// when GCKeyboard doesn't detect the USB HID device.
+/// when GCKeyboard doesn't detect the BLE keyboard.
 struct KeyPressInterceptorRepresentable: UIViewControllerRepresentable {
     let switchManager: SwitchControlManager
 
