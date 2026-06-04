@@ -88,7 +88,6 @@
 		MEDB0022F6000MED0000002 /* MediaPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0022F6000MED0000002 /* MediaPickerView.swift */; };
 		MEDB0032F6000MED0000003 /* MediaPlaybackCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0032F6000MED0000003 /* MediaPlaybackCoordinator.swift */; };
 		MEDB0042F6000MED0000004 /* MediaPlaybackOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0042F6000MED0000004 /* MediaPlaybackOverlayView.swift */; };
-		MEDB0072F6000MED0000007 /* PlaybackOverlayControlZones.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0072F6000MED0000007 /* PlaybackOverlayControlZones.swift */; };
 		MEDB0052F6000MED0000005 /* YouTubePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0052F6000MED0000005 /* YouTubePlayerView.swift */; };
 		MEDB0062F6000MED0000006 /* YouTubePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0062F6000MED0000006 /* YouTubePickerView.swift */; };
 		TPN0012F6000TPN00000001 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */; };
@@ -265,7 +264,6 @@
 		MEDF0022F6000MED0000002 /* MediaPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPickerView.swift; sourceTree = "<group>"; };
 		MEDF0032F6000MED0000003 /* MediaPlaybackCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlaybackCoordinator.swift; sourceTree = "<group>"; };
 		MEDF0042F6000MED0000004 /* MediaPlaybackOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlaybackOverlayView.swift; sourceTree = "<group>"; };
-		MEDF0072F6000MED0000007 /* PlaybackOverlayControlZones.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackOverlayControlZones.swift; sourceTree = "<group>"; };
 		MEDF0052F6000MED0000005 /* YouTubePlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubePlayerView.swift; sourceTree = "<group>"; };
 		MEDF0062F6000MED0000006 /* YouTubePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubePickerView.swift; sourceTree = "<group>"; };
 		TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
@@ -1107,7 +1105,6 @@
 			children = (
 				MEDF0032F6000MED0000003 /* MediaPlaybackCoordinator.swift */,
 				MEDF0042F6000MED0000004 /* MediaPlaybackOverlayView.swift */,
-				MEDF0072F6000MED0000007 /* PlaybackOverlayControlZones.swift */,
 				MEDF0052F6000MED0000005 /* YouTubePlayerView.swift */,
 			);
 			path = Media;
@@ -1365,7 +1362,6 @@
 				MEDB0022F6000MED0000002 /* MediaPickerView.swift in Sources */,
 				MEDB0032F6000MED0000003 /* MediaPlaybackCoordinator.swift in Sources */,
 				MEDB0042F6000MED0000004 /* MediaPlaybackOverlayView.swift in Sources */,
-				MEDB0072F6000MED0000007 /* PlaybackOverlayControlZones.swift in Sources */,
 				MEDB0052F6000MED0000005 /* YouTubePlayerView.swift in Sources */,
 				MEDB0062F6000MED0000006 /* YouTubePickerView.swift in Sources */,
 				GAMEB0012F6000GAME000001 /* GamePlaybackCoordinator.swift in Sources */,
