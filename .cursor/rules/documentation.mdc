@@ -1,0 +1,32 @@
+---
+description: Plain professional tone for markdown docs and contributor-facing text; no emoji.
+globs: "**/*.md"
+alwaysApply: false
+---
+
+# Documentation style
+
+## No emoji in documentation
+
+Do **not** use emoji or decorative Unicode symbols (checkmarks, rockets, warning signs, etc.) in:
+
+- Repository markdown (`README.md`, `TESTING_GUIDE.md`, `Documentation/**`, `iosApp/*.md`)
+- Cursor plans under `.cursor/plans/`
+- GitHub issue and pull request templates under `.github/`
+
+Use plain language instead:
+
+| Avoid | Use |
+|-------|-----|
+| ✅ / ✓ | **Done:** or **OK:** |
+| ❌ | **ERROR:** or **Failed:** |
+| ⏭️ / 🚀 | **Next:** or a numbered list |
+| ⚠️ | **WARNING:** |
+
+## In-app UI is separate
+
+Phrase icons, category symbols, and settings UI may use emoji where it helps AAC users. That does not belong in contributor documentation.
+
+## Build scripts
+
+Scripts referenced from docs (`build_ios.sh`, `setjava.sh`, etc.) should use the same plain **OK:** / **ERROR:** / **WARNING:** prefixes, not emoji in `echo` output.

@@ -137,6 +137,23 @@ Press **Cmd+R** or click the **Run** button.
 
 ## Troubleshooting
 
+### `:build-logic:compileKotlin` / "Unable to parse script-resolver-environment"
+
+Gradle’s Kotlin DSL cache for `build-logic` can get corrupted after a failed or interrupted build. Clean it and rebuild:
+
+```bash
+export JAVA_HOME="$(/usr/libexec/java_home -v 17 2>/dev/null || echo "$HOME/.jdks/jdk-17"*/Contents/Home)"
+./gradlew --stop
+rm -rf build-logic/build build-logic/.gradle
+./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
+```
+
+Then in Xcode: **Product → Clean Build Folder** (Cmd+Shift+K) and build again.
+
+### Gradle fails with only `25.0.1` in the error
+
+Gradle/Kotlin do not support Java 25 yet. Use **Java 17** (the Xcode “Build Kotlin Framework” script enforces this). Install Temurin 17 from [Adoptium](https://adoptium.net/) or `brew install openjdk@17`.
+
 ### "No such module 'VocableShared'"
 
 **Solution**: Rebuild the framework
@@ -185,7 +202,7 @@ rm -rf iosApp/Podfile.lock
 
 ### Java not found
 
-**Solution**: Install Java 17 or later
+**Solution**: Install **Java 17** (not Java 25 — see above)
 ```bash
 # Install via Homebrew
 brew install openjdk@17
@@ -248,12 +265,22 @@ iosApp/
 
 ## Next Steps
 
-1. ✅ Build completes successfully
-2. ✅ App launches in simulator
-3. ⏭️ Test on physical device for camera features
-4. ⏭️ Complete camera integration for real eye tracking
-5. ⏭️ Submit to TestFlight for beta testing
-6. ⏭️ Submit to App Store
+1. **Done:** Build completes successfully
+2. **Done:** App launches in simulator (UI and non-camera flows)
+3. **Next:** Test on a **physical iPad** for eye gaze, head tracking, gestures, and switches — see [TESTING_GUIDE.md](../TESTING_GUIDE.md)
+4. **Next:** TestFlight beta — see [Documentation/IOS_RELEASE_AND_SIGNING.md](../Documentation/IOS_RELEASE_AND_SIGNING.md)
+5. **Next:** App Store submission when ready
+
+---
+
+## Related documentation
+
+| Doc | Purpose |
+|-----|---------|
+| [README.md](../README.md) | Project overview, ESP32, Web app |
+| [TESTING_GUIDE.md](../TESTING_GUIDE.md) | Manual QA checklist |
+| [Documentation/IOS_RELEASE_AND_SIGNING.md](../Documentation/IOS_RELEASE_AND_SIGNING.md) | Signing, TestFlight, cloud Mac |
+| [README.md](README.md) | Short iOS directory index |
 
 ---
 
@@ -261,7 +288,5 @@ iosApp/
 
 For issues or questions:
 - Email: grahamthetvi@icloud.com
-- Check logs in Console app
-- Review TESTING_GUIDE.md for testing procedures
-
-Built with passion for CVI accessibility! 🎉
+- Check logs in Console app (device) or Xcode console
+- [TESTING_GUIDE.md](../TESTING_GUIDE.md) for structured test passes

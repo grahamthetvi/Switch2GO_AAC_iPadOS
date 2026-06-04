@@ -1,3 +1,5 @@
+> **Legacy — Android only (ARCore / Sceneform).** Active head tracking on iOS and Web uses MediaPipe. See [README.md](README.md).
+
 # Head/Face tracking
 
 We use ARCore to do face tracking, and we check if the device supports it or not when the app opens (you can see this in BaseActivity). If the device does not support the app… we show a toast that says, “Sceneform requires OpenGL ES 3.0 later”, which is not great. We should allow users to use the app, but not have head tracking.

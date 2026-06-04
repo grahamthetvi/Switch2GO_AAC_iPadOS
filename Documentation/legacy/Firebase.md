@@ -1,3 +1,5 @@
+> **Legacy — Android Vocable fork notes.** Still accurate: no Firebase in this repo. See [README.md](README.md).
+
 # Firebase in Vocable
 
 ### Status

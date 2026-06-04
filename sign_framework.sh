@@ -30,4 +30,4 @@ echo "Verifying signature..."
 codesign --verify --verbose "$FRAMEWORK_PATH"
 
 echo ""
-echo "✅ Framework signed successfully!"
+echo "OK: Framework signed successfully."

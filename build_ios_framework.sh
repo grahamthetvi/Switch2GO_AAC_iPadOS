@@ -65,7 +65,7 @@ if [ -d "shared/build/bin/iosArm64/releaseFramework/VocableShared.framework" ]; 
 fi
 
 echo ""
-echo "✅ iOS frameworks built and signed successfully!"
+echo "OK: iOS frameworks built and signed successfully."
 echo ""
 echo "Device debug framework: shared/build/bin/iosArm64/debugFramework/"
 echo "Device release framework: shared/build/bin/iosArm64/releaseFramework/"

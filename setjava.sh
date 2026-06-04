@@ -24,7 +24,7 @@ if [ -z "$JAVA_HOME" ]; then
 fi
 
 if [ -z "$JAVA_HOME" ]; then
-    echo "❌ Could not locate a Java 17 install. Try: brew install openjdk@17"
+    echo "ERROR: Could not locate a Java 17 install. Try: brew install openjdk@17"
     if java -version >/dev/null 2>&1; then
         echo "Current default Java: $(java -version 2>&1 | head -1)"
         echo "Gradle/Kotlin do not support Java 25 yet."
@@ -35,7 +35,7 @@ fi
 export JAVA_HOME
 export PATH="$JAVA_HOME/bin:$PATH"
 
-echo "✅ JAVA_HOME set to: $JAVA_HOME"
+echo "OK: JAVA_HOME set to: $JAVA_HOME"
 java -version 2>&1 | head -1
 
 # Print usage

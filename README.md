@@ -1,254 +1,245 @@
-# Switch2Go - Accessible AAC for CVI
+# Switch2Go — Accessible AAC for CVI
 
-![Platform Android](https://img.shields.io/badge/Platform-Android-blue.svg)
 ![Platform iOS](https://img.shields.io/badge/Platform-iOS-lightgrey.svg)
 ![Platform Web](https://img.shields.io/badge/Platform-Web-green.svg)
 ![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-purple.svg)
 ![license MIT](https://img.shields.io/badge/license-MIT-brightgreen.svg)
 
-> An accessible AAC application designed to support students with Cerebral Visual Impairment (CVI)
->
-> **Available on Android, iOS, and Web.** The core AAC experience (categories, phrases, customization, eye gaze / head tracking, dwell selection) is at parity across mobile; the web app is in [`web/`](web/) and deploys to GitHub Pages. Some auxiliary features differ between platforms — see "Platform differences" below.
+> An accessible AAC application for students with Cerebral Visual Impairment (CVI), adapted by **Addison Graham, Teacher of the Visually Impaired**.
 
-### Platform differences
+**Actively maintained:** **iPad/iOS** (primary) and **Web** ([`web/`](web/), GitHub Pages).  
+**Not actively maintained:** the original **Android** app in [`app/`](app/) remains in the tree from the Vocable fork but is not part of current development priorities.
 
-| Area | Android | iOS |
-|---|---|---|
-| Persistence | Room (`com.switch2connect.aac.room.VocableDatabase`) | SQLDelight via `:shared` (`com.vocable.data.createDatabase`) |
-| Eye gaze | `MediaPipeIrisGazeTracker` (production) | KMP `GazeTracker` via `GazeTrackingManager.swift` |
-| Head tracking | ARCore + Sceneform (`FaceTrackFragment`) | MediaPipe `HeadPoseTracker.swift` |
-| BLE switch (ESP32) | not implemented today | `SwitchControlManager.swift` + `ESP32/Switch2GO_BLE_Switch/` |
-| Web | IndexedDB (Dexie) | SQLDelight via `:shared` |
-| Web input | Keyboard 1–4, touch, MediaPipe gaze/head | Same + BLE HID switch (ESP32) on iOS |
+## Contents
+
+- [About](#about-switch2go)
+- [Features](#features)
+- [Platform comparison](#platform-comparison)
+- [ESP32 switch control (iOS)](#esp32-switch-control-ios-only)
+- [Getting started](#getting-started)
+- [Architecture](#architecture)
+- [Device requirements](#device-requirements)
+- [Documentation index](#documentation-index)
+- [Credits & license](#credits)
 
 ## About Switch2Go
 
-Switch2Go is a fork of [Vocable AAC](https://github.com/grahamthetvi/Switch2GO_AAC_iPadOS), originally developed by WillowTree, LLC. This adaptation has been created by **Addison Graham, Teacher of the Visually Impaired**, to provide specialized support for students with Cerebral Visual Impairment (CVI).
+Switch2Go is a fork of [Vocable AAC](https://github.com/willowtreeapps/vocable-android), originally developed by [WillowTree LLC](https://www.vocable.app/). This repo extends that foundation with CVI-focused design:
 
-The app has been customized with CVI-friendly features including:
-- Simplified, high-contrast symbol layouts
-- Customizable symbol colors and sizes
-- Reduced visual complexity
-- Configurable symbol count per page (2-4 symbols)
-- Eye gaze and head tracking support for hands-free operation
+- High-contrast, simplified layouts
+- **1–4 symbols per page** (configurable)
+- Per-position colors and phrase styling
+- Hands-free use via **eye gaze**, **head tracking**, **arm raise**, or **hand gesture** (where supported)
+- **Touch** and **switch** input (iOS: ESP32 BLE keyboard; Web: keyboard keys 1–4)
 
-## Contents
-- [What is Switch2Go?](#what-is-switch2go)
-- [Features](#features)
-- [Requirements](#requirements)
-- [Credits](#credits)
-- [License](#license)
-
-## What is Switch2Go?
-Switch2Go is an Augmentative and Alternative Communication (AAC) application designed specifically for students with Cerebral Visual Impairment. It allows users to communicate using customizable symbol-based interfaces, with support for head tracking and eye gaze technology for hands-free operation.
+Neither iOS nor Web requires a 9-point gaze calibration for normal use. Optional calibration UI exists on iOS for advanced tuning.
 
 ## Features
 
-### CVI-Optimized Interface
-- **Configurable Symbol Layouts**: Choose from 2-4 symbols per page to reduce visual complexity
-- **Customizable Colors**: Set high-contrast colors for each symbol position to improve visibility
-- **Adjustable Text Sizes**: Multiple text size options to accommodate different visual needs
-- **Simplified Design**: Clean, uncluttered interface designed for CVI users
+### CVI-optimized interface
 
-### Multimodal User Interface
-Switch2Go uses ARCore to track the user's head movements and eye gaze technology to understand where the user is looking on the screen. This allows the app to be used completely hands-free: users can look around the screen and make selections by lingering their gaze at a particular element.
+- Configurable symbol layouts (1–4 per page)
+- Custom colors per symbol position
+- Phrase styles (colors, borders, emoji, custom images)
+- Categories and phrases: presets plus full edit/hide/reorder
 
-For users with more mobility, the app can be operated by touch.
+### Multimodal input
 
-### Saved Phrases
-Use a list of common phrases, or create and save your own custom phrases with customizable appearance settings.
+| Mode | iOS | Web |
+|------|-----|-----|
+| Touch | Yes | Yes |
+| Eye gaze (MediaPipe) | Yes | Yes |
+| Head tracking (MediaPipe) | Yes | Yes |
+| Arm raise / hand gesture (2-tile) | Yes | Yes |
+| Dwell selection | Yes | Yes |
+| ESP32 BLE switches | Yes | No (use keyboard 1–4) |
+| Scan & select (2-switch) | Yes | Limited (keyboard only) |
 
-### Switch Control (ESP32 Bluetooth HID)
-Physical switches connect to an **ESP32** running the BLE keyboard firmware in [`ESP32/Switch2GO_BLE_Switch/`](ESP32/Switch2GO_BLE_Switch/). The board advertises as `Switch2GO-XXXX` and sends keys `1`–`4` (configurable in the sketch). The iPad app treats it as a standard Bluetooth keyboard.
+### Phrases, media, and games
 
-**App setup:** Settings → Selection Mode → Switch Control → enable External Switches. Two modes:
+- Preset and custom phrases with TTS (iOS: system speech; Web: native speech + Piper fallback)
+- Optional **video/audio** and **YouTube** attachments on phrases (iOS and Web)
+- Optional **games** after phrase selection (e.g. Blocs, cursor rocket) on iOS and Web
+
+### Privacy
+
+No Firebase or analytics SDKs. Student data stays on device (iOS) or in the browser (Web IndexedDB). See [Documentation/legacy/Firebase.md](Documentation/legacy/Firebase.md) for what was removed from the original Vocable Android app.
+
+## Platform comparison
+
+| Area | iOS | Web |
+|------|-----|-----|
+| **Persistence** | SQLDelight via KMP `:shared` | Dexie / IndexedDB |
+| **Eye gaze** | KMP `GazeTracker` + `GazeTrackingManager.swift` | `gazeTracker.ts` (ported from shared) |
+| **Head tracking** | MediaPipe `HeadPoseTracker.swift` | MediaPipe pose landmarker |
+| **Body gestures** | Arm raise + hand gesture (MediaPipe) | Same |
+| **Switches** | ESP32 BLE HID + keyboard | Keyboard **1**–**4** only |
+| **Custom QWERTY keyboard** | `KeyboardView.swift` | Text field on add-phrase (no full keyboard UI) |
+| **Deploy** | Xcode / TestFlight / App Store | GitHub Pages |
+
+## ESP32 switch control (iOS only)
+
+Physical switches connect to an **ESP32** running BLE keyboard firmware in [`ESP32/Switch2GO_BLE_Switch/`](ESP32/Switch2GO_BLE_Switch/). The board advertises as `Switch2GO-XXXX` and sends keys `1`–`4` (configurable in the sketch). The iPad treats it as a standard Bluetooth keyboard.
+
+**App setup:** Settings → Selection Mode → Switch Control → enable External Switches.
 
 - **Switch to Phrase** (2–4 switches): each switch activates one phrase tile (keys `1`–`4` by default).
-- **Scan & Select** (2 switches): one switch moves a highlight, one selects (keys `1` = select, `2` = next).
+- **Scan & Select** (2 switches): one switch selects, one advances (keys `1` = select, `2` = next).
 
-**BOOT button:** On the ESP32, multi-tap the built-in BOOT button (1–4 taps within 350 ms) to simulate switch 1–4 when testing without wired switches.
+**BOOT button:** Multi-tap BOOT (1–4 taps within 350 ms) to simulate switches when testing without wired inputs.
 
-#### Arduino IDE setup (ESP32 firmware)
+Pair in **iPad Settings → Bluetooth**, not inside Switch2Go (iOS requires system pairing for HID keyboards).
 
-Use [Arduino IDE 2.x](https://www.arduino.cc/en/software) on a Mac or PC. The sketch targets a standard **ESP32-WROOM** board (e.g. DevKitC / DevKit V1). It does **not** run on ESP32-S2 or ESP32-P4 (no BLE keyboard support in HijelHID for those chips).
+### Arduino IDE setup (ESP32 firmware)
 
-**1. Install the ESP32 board package**
+Use [Arduino IDE 2.x](https://www.arduino.cc/en/software). Target **ESP32-WROOM** (e.g. DevKit V1). **Not** ESP32-S2 or ESP32-P4 (no BLE keyboard in HijelHID for those chips).
 
-1. **File → Preferences** → Additional boards manager URLs, add if missing:
+**1. ESP32 board package**
+
+1. **File → Preferences** → Additional boards manager URLs:
    ```
    https://espressif.github.io/arduino-esp32/package_esp32_index.json
    ```
-2. **Tools → Board → Boards Manager** → search **esp32** → install **esp32** by Espressif (use **3.3.7 or newer**; HijelHID requires ESP32 Arduino Core 3.x).
-3. **Tools → Board** → choose **ESP32 Dev Module** (or your exact DevKit; WROOM-32 is the default for this project).
+2. **Tools → Board → Boards Manager** → install **esp32** by Espressif (**3.3.7+**).
+3. **Tools → Board** → **ESP32 Dev Module**.
 
-**2. Install libraries (order matters)**
+**2. Libraries**
 
-| Library | How to install | Version |
-|---------|----------------|---------|
-| **NimBLE-Arduino** | **Sketch → Include Library → Manage Libraries** → search `NimBLE-Arduino` | **≥ 2.3.8** |
-| **HijelHID** | Same Library Manager → search `HijelHID` (package name for [HijelHID_BLEKeyboard](https://github.com/HijelHub/HijelHID_BLEKeyboard)) | latest |
+| Library | Install | Version |
+|---------|---------|---------|
+| **NimBLE-Arduino** | Library Manager | **≥ 2.3.8** |
+| **HijelHID** | Library Manager ([HijelHID_BLEKeyboard](https://github.com/HijelHub/HijelHID_BLEKeyboard)) | latest |
 
-If **HijelHID** does not appear in Library Manager:
+If HijelHID is missing: download [HijelHID_BLEKeyboard.zip](https://github.com/HijelHub/HijelHID_BLEKeyboard/releases/latest/download/HijelHID_BLEKeyboard.zip) → **Add .ZIP Library**.
 
-1. Download [HijelHID_BLEKeyboard.zip](https://github.com/HijelHub/HijelHID_BLEKeyboard/releases/latest/download/HijelHID_BLEKeyboard.zip) from GitHub.
-2. **Sketch → Include Library → Add .ZIP Library** → select the zip.
+**3. Sketch**
 
-**3. Open and configure the sketch**
+Open `ESP32/Switch2GO_BLE_Switch/Switch2GO_BLE_Switch.ino`. Optional: `NUM_SWITCHES`, `SWITCH_PINS[]` (default `{12,13,14,27}`), `SWITCH_KEYS[]` (`'1'`–`'4'`).
 
-1. Open `ESP32/Switch2GO_BLE_Switch/Switch2GO_BLE_Switch.ino` in Arduino IDE (the parent folder name must match the `.ino` filename).
-2. Optional edits at the top of the file:
-   - `NUM_SWITCHES` — set to `2`, `3`, or `4` if you wire fewer physical switches.
-   - `SWITCH_PINS[]` — default `{12, 13, 14, 27}` for DevKit V1.
-   - `SWITCH_KEYS[]` — default `'1'`–`'4'`; must match Switch Control key mapping in the iPad app.
+**4. Upload** — Board: ESP32 Dev Module; Port: USB serial; Upload speed 921600 (or 115200). Hold BOOT + RESET if upload fails.
 
-**4. Upload settings**
+**5. Serial Monitor (115200)** — Expect `[BLE] Broadcaster Identity: Switch2GO-XXXX`. HID lines appear when the iPad is connected.
 
-| Setting | Value |
-|---------|--------|
-| **Board** | ESP32 Dev Module (or your DevKit) |
-| **Upload Speed** | 921600 (or 115200 if upload fails) |
-| **Port** | USB serial port for the ESP32 (e.g. `/dev/cu.usbserial-*` on Mac) |
+**6. Wiring (DevKit V1)** — Switches: GPIO 12, 13, 14, 27 to **GND** (internal pull-ups). LED on GPIO **2**.
 
-Plug in the ESP32 via USB, select the port under **Tools → Port**, then **Sketch → Upload**. If upload fails, hold **BOOT**, press **RESET**, release **RESET**, then release **BOOT** and upload again.
+## Getting started
 
-**5. Verify with Serial Monitor**
+### Prerequisites (iOS and KMP)
 
-1. **Tools → Serial Monitor** → baud **115200**.
-2. After reset you should see:
-   - `[SYSTEM] Initializing Switch2GO Firmware...`
-   - `[BLE] Broadcaster Identity: Switch2GO-XXXX`
-   - `[SYSTEM] Setup complete...`
-3. Press a wired switch (or use BOOT multi-tap): lines like `[HID] Switch 1 PRESSED` appear only when the iPad has connected over BLE (`bleKeyboard->isConnected()`).
+- **JDK 17** — `brew install openjdk@17` or [Adoptium](https://adoptium.net/)
+- Shell: `source setjava.sh` or `/usr/libexec/java_home -v 17` for `JAVA_HOME`
+- **Do not use Java 25** with Gradle/Kotlin in this repo
 
-**6. Wiring (ESP32 DevKit V1)**
+### Large files (iOS MediaPipe)
 
-| Switch | GPIO | Connection |
-|--------|------|------------|
-| 1 | 12 | One leg to GPIO 12, other leg to **GND** |
-| 2 | 13 | GPIO 13 ↔ GND |
-| 3 | 14 | GPIO 14 ↔ GND |
-| 4 | 27 | GPIO 27 ↔ GND |
+Not committed (GitHub size limits). Restored by `pod install`:
 
-Uses internal pull-ups: open = HIGH, pressed = LOW. Status LED is GPIO **2** (onboard LED on most DevKits).
+| Path | Restore |
+|------|---------|
+| `iosApp/Pods/MediaPipeTasks*/frameworks/` (~315 MB) | `cd iosApp && pod install` |
 
-**7. Pair with iPad**
-
-1. Power the ESP32 (USB power bank or USB from a computer for flashing only — BLE works on battery/USB after flash).
-2. **iPad Settings → Bluetooth** → pair **Switch2GO-XXXX** (last four hex digits of the MAC).
-3. Open Switch2GO → **Settings → Selection Mode → Switch Control** → enable **External Switches** → press a switch and confirm “Receiving input”.
-
-Do not pair from inside the Switch2GO app; iOS requires system Bluetooth pairing for HID keyboards.
-
-## Getting Started
-
-### Prerequisites (both platforms)
-
-- **JDK 17** (required by Kotlin 2.2 / Gradle / KMP).
-  - Recommended install: `brew install openjdk@17`
-  - The repo's iOS build scripts auto-discover Java via `/usr/libexec/java_home -v 17`; you can also `source setjava.sh` to set `JAVA_HOME` for the current shell.
-
-### Large Files Not Included in This Repo
-
-The following files exceed GitHub's 100MB limit and are **not** included in the repository. They are restored automatically by running `pod install`:
-
-| File / Directory | Size | How to Restore |
-|---|---|---|
-| `iosApp/Pods/MediaPipeTasksCommon/frameworks/` | ~315MB total | `cd iosApp && pod install` |
-| `iosApp/Pods/MediaPipeTasksVision/frameworks/` | included above | `cd iosApp && pod install` |
-
-MediaPipe frameworks are downloaded from [CocoaPods](https://cocoapods.org) at the versions pinned in `iosApp/Podfile.lock`.
-
-### iOS Setup After Cloning
+### iOS
 
 ```bash
-# 1. Install CocoaPods if you haven't already
-sudo gem install cocoapods
-
-# 2. Install iOS dependencies (downloads MediaPipe frameworks)
-cd iosApp
-pod install
-
-# 3. Open the workspace (not the .xcodeproj)
-open iosApp.xcworkspace
+sudo gem install cocoapods   # if needed
+cd iosApp && pod install
+open iosApp.xcworkspace      # not .xcodeproj
 ```
 
-Then build and run from Xcode. The Xcode project includes a build phase that runs Gradle to produce the KMP `VocableShared.framework` automatically; if you want to build it ahead of time, run `./build_ios.sh` at the repo root.
+Build and run in Xcode (**Cmd+R**). A build phase runs Gradle for `VocableShared.framework`; optionally prebuild:
 
-The `face_landmarker.task` ML model file (~3.6MB) is downloaded to `iosApp/iosApp/Resources/face_landmarker.task` on first build by `build_ios.sh` and by the iOS CI workflow.
+```bash
+./build_ios.sh
+```
+
+Downloads `face_landmarker.task` (~3.6 MB) to `iosApp/iosApp/Resources/` on first run.
+
+**Detailed steps and troubleshooting:** [iosApp/BUILD_AND_RUN.md](iosApp/BUILD_AND_RUN.md)  
+**Testing checklist:** [TESTING_GUIDE.md](TESTING_GUIDE.md)  
+**Signing / TestFlight:** [Documentation/IOS_RELEASE_AND_SIGNING.md](Documentation/IOS_RELEASE_AND_SIGNING.md)
 
 ### Web (GitHub Pages)
 
-The browser app lives in [`web/`](web/). It mirrors the iOS AAC flow: preset categories/phrases, CVI layout (1–4 symbols per page), TTS, touch and keyboard switches (keys 1–4), dwell selection, and MediaPipe eye gaze / head tracking (no calibration step — ready to use like iOS).
-
 ```bash
 cd web
-npm install
-# MediaPipe model (~3.6MB) for local eye/head tracking:
+npm ci
 mkdir -p public/models
 curl -fsSL "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task" \
   -o public/models/face_landmarker.task
-npm run dev          # local dev (Vite base path matches GitHub Pages)
-npm run build        # output in web/dist
+curl -fsSL "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task" \
+  -o public/models/pose_landmarker_lite.task
+curl -fsSL "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task" \
+  -o public/models/gesture_recognizer.task
+npm run dev
+npm run build    # output: web/dist
 ```
 
-Deployed URL (after enabling **GitHub Pages → GitHub Actions** in repo settings):  
-`https://grahamthetvi.github.io/Switch2GO_AAC_iPadOS/`
+**Live site:** https://grahamthetvi.github.io/Switch2GO_AAC_iPadOS/  
+**Backup:** Settings → Backup & Restore (JSON export/import).  
+**CI:** `.github/workflows/web.yml` (PR build); `.github/workflows/pages.yml` (deploy).  
+**iPad Safari:** Settings → Troubleshooting.
 
-**Backup:** Settings → Backup & Restore exports categories, phrases, images, and settings as JSON (device-only). Import replaces local data.
+**Remaining web work:** [.cursor/plans/web_remaining_work.plan.md](.cursor/plans/web_remaining_work.plan.md)
 
-**CI:** Pull requests run `npm run build` in `web/` via `.github/workflows/web.yml`. Pages deploy downloads the face model before build.
-
-**iPad Safari QA:** See Settings → Troubleshooting → iPad Safari checklist (eye gaze, head tracking, dwell, camera denied → touch fallback).
-
-### Android Setup After Cloning
+### Android (legacy, unmaintained)
 
 ```bash
 ./gradlew :app:assembleDebug
 ```
 
-Open the project in Android Studio (or any IDE with Gradle support); no extra steps beyond a working JDK 17 are required.
+See [Documentation/legacy/](Documentation/legacy/) for Play Store and ARCore-era notes.
 
-## Architecture Notes
+## Architecture
 
-- **DI**: Koin across both `:app` and `:shared` (no Hilt).
-- **Persistence**:
-  - Android: Room (`com.switch2connect.aac.room.VocableDatabase`) is canonical. Migrations live in `VocableDatabaseMigrations.kt`; the database does **not** use a blanket `fallbackToDestructiveMigration()`, so future schema bumps without a migration will throw rather than silently wipe user phrases.
-  - iOS: SQLDelight via the `:shared` KMP module (`com.vocable.data.createDatabase`). The Room and SQLDelight schemas are intentionally separate today; keep entity/column names consistent if you change either.
-- **Gaze tracking on Android**: production tracker is `MediaPipeIrisGazeTracker`. `SharedGazeTrackerAdapter` is an experimental bridge to the KMP `GazeTracker` and is not the production path.
-- **Head tracking on Android**: built on Sceneform 1.17.1 (unmaintained); `FaceTrackingManager.checkIsSupportedDevice()` degrades gracefully on devices without ARCore.
+```
+shared/          KMP — gaze math, SQLDelight schema, presets (iOS consumes via VocableShared.framework)
+iosApp/          SwiftUI app — camera, MediaPipe, settings UI, switch control
+web/             React + Vite — Dexie, MediaPipe in browser, GitHub Pages
+app/             Legacy Android (Room, ARCore head tracking) — unmaintained
+```
 
-## Device Requirements
+- **iOS:** SQLDelight through `:shared`; MediaPipe Tasks Vision for face landmarks; Swift UI in `iosApp/iosApp/`
+- **Web:** IndexedDB (Dexie); tracking in `web/src/tracking/` (including `gazeTracker.ts` ported from shared)
+- **Shared algorithms:** `shared/src/commonMain/kotlin/com/vocable/`
 
-### Android
-- Android OS 8.0 (Oreo) or higher
-- Camera for eye/head tracking (optional for touch-only use)
-- Minimum 2GB RAM recommended
+## Device requirements
 
 ### iOS
-- iOS 15.0 or higher
-- iPad (recommended) or iPhone
-- Front-facing camera for eye tracking
-- Devices without TrueDepth sensor supported (uses standard camera)
 
-**Note**: The app is designed to work on a wide range of devices, not just those with specialized IR sensors. This ensures maximum accessibility for all users.
+- **iOS 17.0+** (deployment target in Xcode/Podfile)
+- iPad recommended; iPhone supported
+- Front camera for gaze/head/gesture modes
+- No TrueDepth required (standard camera + MediaPipe)
+
+### Web
+
+- Modern browser; **Safari on iPad** is the primary QA target
+- Camera permission for non-touch selection modes
+- Microphone not required for TTS
+
+## Documentation index
+
+Contributor docs use a plain, professional tone (no emoji). Cursor applies this when editing `*.md` via [`.cursor/rules/documentation.mdc`](.cursor/rules/documentation.mdc).
+
+| Doc | Purpose |
+|-----|---------|
+| [iosApp/BUILD_AND_RUN.md](iosApp/BUILD_AND_RUN.md) | Build, run, troubleshoot iOS |
+| [iosApp/README.md](iosApp/README.md) | Short pointer into iOS docs |
+| [TESTING_GUIDE.md](TESTING_GUIDE.md) | Manual QA for iOS and Web |
+| [Documentation/IOS_RELEASE_AND_SIGNING.md](Documentation/IOS_RELEASE_AND_SIGNING.md) | TestFlight, App Store, cloud Mac |
+| [Documentation/legacy/](Documentation/legacy/) | Android-era and bootstrap archives |
+| [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | Licenses (MediaPipe, etc.) |
 
 ## Credits
 
-### Switch2Go Development
-- **Addison Graham** - Teacher of the Visually Impaired, Fork Maintainer
-  - Adapted Vocable AAC for students with Cerebral Visual Impairment (CVI)
-  - Customized interface and features for CVI accessibility
+### Switch2Go
 
-### Original Vocable AAC Development
-Switch2Go is based on Vocable AAC for Android, originally developed by:
-- Matt Kubota, Kyle Ohanian, Duncan Lewis, Ameir Al-Zoubi, and many more from [WillowTree LLC](https://www.vocable.app/) 💙
+- **Addison Graham** — TVI, fork maintainer; CVI adaptations and iOS/Web development
 
-We are grateful to the original Vocable team for creating this excellent foundation for accessible communication.
+### Original Vocable AAC
+
+Matt Kubota, Kyle Ohanian, Duncan Lewis, Ameir Al-Zoubi, and the [WillowTree](https://www.willowtreeapps.com/) team — [Vocable AAC for Android](https://github.com/willowtreeapps/vocable-android).
 
 ## License
-Switch2Go is released under the MIT license. See [LICENSE](LICENSE) for details.
 
-Third-party components (including **MediaPipe**, Apache 2.0) are documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). In-app: **Settings → Open-Source Licenses**.
-
-## Original Project
-This project is a fork of [Vocable AAC for Android](https://github.com/grahamthetvi/Switch2GO_AAC_iPadOS), originally developed by WillowTree, LLC.
+MIT — see [LICENSE](LICENSE). Third-party notices: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). In-app: **Settings → Open-Source Licenses**.

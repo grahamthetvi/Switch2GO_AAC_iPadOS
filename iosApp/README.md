@@ -1,132 +1,45 @@
 # Switch2Go iOS App
 
-This directory contains the iOS application for Switch2Go AAC.
+Native iPad/iPhone client in `iosApp/iosApp/` (SwiftUI + MediaPipe + KMP `VocableShared`).
 
-## Prerequisites
-
-- macOS with Xcode 15.0+
-- CocoaPods (`sudo gem install cocoapods`)
-- JDK 17 for building the shared KMP framework
-
-## Setup Instructions
-
-### 1. Create Xcode Project
-
-Since Xcode projects can't be versioned effectively, you need to create the project on your Mac:
-
-1. Open Xcode
-2. File > New > Project
-3. Choose "iOS" > "App"
-4. Configure:
-   - Product Name: `iosApp`
-   - Team: Your Apple Developer Team
-   - Organization Identifier: `com.yourname`
-   - Bundle Identifier: `com.yourname.switch2go`
-   - Interface: **SwiftUI**
-   - Language: **Swift**
-5. Save in this `iosApp/` directory
-6. Uncheck "Create Git repository"
-
-### 2. Add Swift Files
-
-After creating the project, add all the Swift files from `iosApp/` subdirectories:
-
-1. In Xcode, right-click the `iosApp` folder
-2. Choose "Add Files to 'iosApp'..."
-3. Select all `.swift` files from:
-   - `iosApp/` (main app files)
-   - `Views/AAC/`
-   - `Views/Calibration/`
-   - `Views/Settings/`
-   - `Camera/`
-   - `Tracking/`
-   - `MediaPipe/`
-
-### 3. Install CocoaPods
+## Quick start
 
 ```bash
-cd iosApp
-pod install
+# From repo root
+./build_ios.sh
+open iosApp/iosApp.xcworkspace
 ```
 
-**Important**: After running `pod install`, always open `iosApp.xcworkspace` (not `.xcodeproj`)
+In Xcode: set your **Team** under Signing, choose a device or simulator, **Cmd+R**.
 
-### 4. Download MediaPipe Model
+Requires **JDK 17**, **CocoaPods**, and **Xcode 15+**. Deployment target: **iOS 17**.
 
-```bash
-mkdir -p iosApp/Resources
-curl -L "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task" \
-  -o iosApp/Resources/face_landmarker.task
-```
+## Docs
 
-Then add `face_landmarker.task` to your Xcode project.
+| Guide | Use for |
+|-------|---------|
+| [BUILD_AND_RUN.md](BUILD_AND_RUN.md) | Full build steps, Gradle/Java fixes, troubleshooting |
+| [../README.md](../README.md) | Project overview, ESP32 switches, Web app |
+| [../TESTING_GUIDE.md](../TESTING_GUIDE.md) | Manual QA on device |
+| [../Documentation/IOS_RELEASE_AND_SIGNING.md](../Documentation/IOS_RELEASE_AND_SIGNING.md) | TestFlight and App Store |
 
-### 5. Build Shared Framework
+## Notes
 
-```bash
-cd ..  # Back to project root
-./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
-```
+- Always open **`iosApp.xcworkspace`**, not `.xcodeproj`.
+- Run `pod install` after every clone (`iosApp/Pods/` is not in git).
+- Camera-based tracking requires a **physical device** (simulator has no camera).
+- The Xcode project is versioned; you do **not** need to create a new Xcode project from scratch.
 
-### 6. Link Shared Framework
-
-1. In Xcode, select the project
-2. Select "iosApp" target > "General"
-3. Under "Frameworks, Libraries, and Embedded Content":
-   - Click "+"
-   - Click "Add Other..." > "Add Files..."
-   - Navigate to `shared/build/bin/iosSimulatorArm64/debugFramework/`
-   - Select `VocableShared.framework`
-   - Set "Embed" to "Embed & Sign"
-
-### 7. Run
-
-1. Select a simulator or connected device
-2. Press Cmd+R to build and run
-
-## Project Structure
+## Layout
 
 ```
 iosApp/
-├── Podfile                 # CocoaPods dependencies
-├── README.md               # This file
+├── iosApp.xcworkspace   ← open this
+├── Podfile
 └── iosApp/
-    ├── Switch2GoApp.swift  # App entry point
-    ├── ContentView.swift   # Main content view
-    ├── Info.plist          # App configuration
-    ├── Views/
-    │   ├── AAC/            # AAC phrase grid views
-    │   ├── Calibration/    # Eye tracking calibration
-    │   └── Settings/       # App settings
-    ├── Camera/             # Camera capture
-    ├── Tracking/           # Gaze tracking manager
-    ├── MediaPipe/          # Face landmark detection
-    └── Resources/          # Model files, assets
+    ├── Switch2GoApp.swift
+    ├── Views/           AAC, Settings, Calibration
+    ├── Tracking/        Gaze, head pose, switches, gestures
+    ├── MediaPipe/
+    └── Resources/       face_landmarker.task, localizations
 ```
-
-## Troubleshooting
-
-### "No such module 'VocableShared'"
-Rebuild the framework: `./gradlew :shared:linkDebugFrameworkIosSimulatorArm64`
-
-### "No such module 'MediaPipeTasksVision'"
-Run `pod install` and open the `.xcworkspace` file.
-
-### "Unable to load contents of file list ... MediaPipeTasksVision-xcframeworks-output-files.xcfilelist"
-This means CocoaPods support files are missing or unreadable. `iosApp/Pods/` is gitignored, so you must regenerate it after every clone:
-
-```bash
-export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
-cd iosApp
-pod install
-```
-
-Then quit Xcode, open `iosApp.xcworkspace` (not `.xcodeproj`), and choose Product > Clean Build Folder before building again.
-
-### Camera not working in Simulator
-The iOS Simulator doesn't support camera. Test on a real device.
-
-## Related Documentation
-
-- [iOS Development Guide](../Documentation/IOS_DEVELOPMENT_GUIDE.md) - Complete setup guide
-- [KMP Migration Progress](../KMP_MIGRATION_PROGRESS.md) - Shared module status

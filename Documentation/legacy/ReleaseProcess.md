@@ -1,3 +1,5 @@
+> **Legacy — Google Play (Android).** iOS release: [IOS_RELEASE_AND_SIGNING.md](../IOS_RELEASE_AND_SIGNING.md). See [README.md](README.md).
+
 # Release Process
 
 The release process for this project is a pretty standard one for Android projects.  We just use incremental build numbers,

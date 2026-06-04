@@ -3,7 +3,7 @@
 
 set -e
 
-echo "🚀 Building Switch2Go iOS App..."
+echo "Building Switch2Go iOS App..."
 echo "=================================="
 
 # Set Java home for Gradle
@@ -26,7 +26,7 @@ if [ -z "$JAVA_HOME" ]; then
 fi
 
 if [ -z "$JAVA_HOME" ]; then
-    echo "❌ Error: Java not found. Please install Java 17 or later."
+    echo "ERROR: Java not found. Please install Java 17 or later."
     echo ""
     echo "Install options:"
     echo "  1. Homebrew: brew install openjdk@17"
@@ -36,12 +36,12 @@ if [ -z "$JAVA_HOME" ]; then
     exit 1
 fi
 
-echo "✓ Java found: $JAVA_HOME"
+echo "OK: Java found: $JAVA_HOME"
 java -version 2>&1 | head -1
 
 # Build shared framework for iOS
 echo ""
-echo "📦 Building shared KMP framework..."
+echo "Building shared KMP framework..."
 echo "-----------------------------------"
 
 # Determine architecture
@@ -56,34 +56,34 @@ echo "Building for architecture: $FRAMEWORK_TARGET"
 
 ./gradlew :shared:linkDebugFramework${FRAMEWORK_TARGET} --no-daemon
 
-echo "📦 Building release framework for archiving (iosArm64)..."
+echo "Building release framework for archiving (iosArm64)..."
 ./gradlew :shared:linkReleaseFrameworkIosArm64 --no-daemon
 
 if [ $? -eq 0 ]; then
-    echo "✓ Shared framework built successfully"
+    echo "OK: Shared framework built successfully"
 else
-    echo "❌ Failed to build shared framework"
+    echo "ERROR: Failed to build shared framework"
     exit 1
 fi
 
 # Check for CocoaPods
 echo ""
-echo "📦 Installing CocoaPods dependencies..."
+echo "Installing CocoaPods dependencies..."
 echo "---------------------------------------"
 
 if ! command -v pod &> /dev/null; then
-    echo "⚠️  CocoaPods not found. Install with: sudo gem install cocoapods"
+    echo "WARNING: CocoaPods not found. Install with: sudo gem install cocoapods"
     echo "Skipping pod install..."
 else
     cd iosApp
     pod install
     cd ..
-    echo "✓ CocoaPods dependencies installed"
+    echo "OK: CocoaPods dependencies installed"
 fi
 
 # Check for MediaPipe model
 echo ""
-echo "📥 Checking MediaPipe models..."
+echo "Checking MediaPipe models..."
 echo "-------------------------------"
 
 MODEL_DIR="iosApp/Resources"
@@ -94,16 +94,16 @@ download_model() {
     local url="$2"
     local path="$MODEL_DIR/${name}.task"
     if [ ! -f "$path" ]; then
-        echo "⚠️  ${name}.task not found. Downloading..."
+        echo "WARNING: ${name}.task not found. Downloading..."
         curl -L "$url" -o "$path"
         if [ -f "$path" ]; then
-            echo "✓ ${name}.task downloaded"
+            echo "OK: ${name}.task downloaded"
         else
-            echo "❌ Failed to download ${name}.task"
+            echo "ERROR: Failed to download ${name}.task"
             exit 1
         fi
     else
-        echo "✓ ${name}.task exists"
+        echo "OK: ${name}.task exists"
     fi
 }
 
@@ -113,7 +113,7 @@ download_model "gesture_recognizer" "https://storage.googleapis.com/mediapipe-mo
 
 # Summary
 echo ""
-echo "✅ Build Complete!"
+echo "Build complete."
 echo "=================="
 echo ""
 echo "Next steps:"

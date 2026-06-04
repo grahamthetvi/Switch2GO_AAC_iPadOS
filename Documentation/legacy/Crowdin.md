@@ -1,3 +1,5 @@
+> **Legacy — Vocable Android Crowdin.** iOS/Web use `Localizable.strings` and `web/src/i18n/`. See [README.md](README.md).
+
 CROWDIN CRASH COURSE
 Dashboard: https://crowdin.com/project/vocable-android
 
