@@ -2,9 +2,23 @@ name: iOS Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
+    paths:
+      - 'iosApp/**'
+      - 'shared/**'
+      - 'gradle/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - '.github/workflows/ios.yml'
   pull_request:
-    branches: [ "**" ]
+    branches: ['**']
+    paths:
+      - 'iosApp/**'
+      - 'shared/**'
+      - 'gradle/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - '.github/workflows/ios.yml'
 
 jobs:
   # Job 1: Build the KMP shared framework for iOS

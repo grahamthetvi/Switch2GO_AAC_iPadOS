@@ -1,10 +1,13 @@
 name: Web Build
 
+# PR gate only — main-branch builds + Pages deploy live in pages.yml.
 on:
-  push:
-    branches: [main, master]
   pull_request:
     branches: ['**']
+    paths:
+      - 'web/**'
+      - '.github/workflows/web.yml'
+      - '.github/workflows/pages.yml'
 
 jobs:
   build:

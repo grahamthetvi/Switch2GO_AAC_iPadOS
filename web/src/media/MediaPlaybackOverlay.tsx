@@ -35,10 +35,10 @@ export function MediaPlaybackOverlay({ coordinator, state }: Props) {
   const playPauseRef = useRef<HTMLDivElement>(null)
   const exitRef = useRef<HTMLDivElement>(null)
 
-  const phrase = state.activePhrase
-  const isPlaying = state.phase === 'playing' && phrase
+  const phrase = state.phase === 'playing' ? state.activePhrase : null
+  const isPlaying = phrase != null
 
-  const isYouTube = isPlaying ? isYouTubePhraseMedia(phrase.style) : false
+  const isYouTube = isPlaying && isYouTubePhraseMedia(phrase.style)
   const isLocalVideo = isPlaying && phrase.style?.mediaType === MEDIA_TYPE_VIDEO
   const youtubeVideoId = isYouTube ? extractYouTubeVideoId(phrase.style?.mediaRef) : null
 

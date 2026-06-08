@@ -4,9 +4,21 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'web/**'
+      - 'iosApp/**'
+      - '.cursor/**'
+      - '**/*.md'
+      - 'Documentation/**'
   pull_request:
     branches:
       - '**'
+    paths-ignore:
+      - 'web/**'
+      - 'iosApp/**'
+      - '.cursor/**'
+      - '**/*.md'
+      - 'Documentation/**'
 
 jobs:
   build:
