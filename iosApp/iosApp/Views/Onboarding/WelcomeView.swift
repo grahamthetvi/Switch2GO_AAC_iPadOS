@@ -25,7 +25,9 @@ struct WelcomeView: View {
                     readyPage.tag(7)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
-                .animation(.easeInOut, value: currentPage)
+                // Page style TabView otherwise expands under sibling chrome.
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
 
                 VStack(spacing: 20) {
                     pageIndicator
@@ -57,6 +59,8 @@ struct WelcomeView: View {
                             Text(currentPage < totalPages - 1 ? "Next" : "I Agree — Get Started")
                                 .font(.headline)
                                 .foregroundColor(.white)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
                                 .frame(maxWidth: .infinity)
                                 .padding()
                                 .background(Color.blue)
@@ -66,7 +70,9 @@ struct WelcomeView: View {
                     }
                     .padding(.horizontal, 32)
                 }
+                .padding(.top, 8)
                 .padding(.bottom, 40)
+                .background(Color(UIColor.systemBackground))
             }
         }
     }
@@ -177,11 +183,10 @@ struct WelcomeView: View {
     private var readyPage: some View {
         ScrollView {
             VStack(spacing: 24) {
-                Spacer(minLength: 20)
-
                 Image(systemName: "lock.shield.fill")
                     .font(.system(size: 70))
                     .foregroundColor(.green)
+                    .padding(.top, 24)
 
                 Text("Your Privacy Is Protected")
                     .font(.largeTitle.bold())
@@ -207,10 +212,13 @@ struct WelcomeView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
 
-                Spacer(minLength: 20)
+                // Extra space so the last lines aren't tucked under the page dots.
+                Color.clear.frame(height: 24)
             }
             .padding()
+            .frame(maxWidth: .infinity)
         }
+        .scrollIndicators(.visible)
     }
 
     private func privacyQuote(_ text: String) -> some View {
@@ -252,11 +260,10 @@ struct OnboardingPageView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                Spacer(minLength: 30)
-
                 Image(systemName: icon)
                     .font(.system(size: 70))
                     .foregroundColor(iconColor)
+                    .padding(.top, 30)
 
                 Text(title)
                     .font(.largeTitle.bold())
@@ -264,7 +271,7 @@ struct OnboardingPageView: View {
                     .padding(.horizontal, 24)
 
                 VStack(spacing: 16) {
-                    ForEach(paragraphs, id: \.self) { paragraph in
+                    ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, paragraph in
                         Text(paragraph)
                             .font(.body)
                             .foregroundColor(.secondary)
@@ -274,10 +281,13 @@ struct OnboardingPageView: View {
                 }
                 .padding(.horizontal, 32)
 
-                Spacer(minLength: 30)
+                // Keep the last paragraph clear of the page indicator chrome.
+                Color.clear.frame(height: 24)
             }
             .padding()
+            .frame(maxWidth: .infinity)
         }
+        .scrollIndicators(.visible)
     }
 }
 

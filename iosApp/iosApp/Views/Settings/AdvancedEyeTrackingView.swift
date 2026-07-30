@@ -254,7 +254,7 @@ struct AdvancedEyeTrackingView: View {
                         resetCalibration()
                     }
                 } message: {
-                    Text("This will clear your current calibration data. You'll need to recalibrate.")
+                    Text("This clears saved calibration math and recenters the gaze cursor (same as a double-blink recenter).")
                 }
             }
             .padding()

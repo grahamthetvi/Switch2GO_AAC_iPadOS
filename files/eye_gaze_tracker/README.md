@@ -1,5 +1,7 @@
 # Eye Gaze Tracker
 
+> **Scope:** Standalone **Python / OpenCV** research toolkit under `files/eye_gaze_tracker/`. This is **not** documentation for the Switch2Go iPad app. The iPad app does **not** require 9-point calibration for normal use (double-blink / Reset Calibration recenters the cursor). Calibration steps below apply only to this desktop prototype.
+
 Implementation of **MediaPipe Iris + Kalman Filters** for robust eye gaze tracking, based on the research paper by Ramesh V et al. (2025).
 
 ## Overview
@@ -55,18 +57,18 @@ This opens a window showing:
 - `Arrow keys` - Adjust gaze offset
 - `0` - Reset offset
 
-### Calibration (Recommended for Accuracy)
+### Calibration (optional, prototype only)
 
 ```bash
 python calibration.py
 ```
 
-This runs a 9-point calibration procedure:
+This runs a 9-point calibration procedure for the **desktop Python tool**:
 1. Look at each dot as it appears
 2. Press SPACE to record your gaze at each point
 3. The system computes a transformation matrix for accurate screen mapping
 
-**Calibration data is saved to `gaze_calibration.npz`** and can be loaded by the assessment tool!
+**Calibration data is saved to `gaze_calibration.npz`** and can be loaded by the assessment tool. Calibration is helpful for this webcam prototype; it is **not** required for the iPad Switch2Go app.
 
 ### Visual Assessment Tool (For CVI/AAC)
 

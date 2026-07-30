@@ -3,7 +3,6 @@ package com.vocable.eyetracking
 import com.vocable.eyetracking.models.EyeSelection
 import com.vocable.eyetracking.models.LandmarkPoint
 import kotlin.math.PI
-import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
@@ -219,19 +218,44 @@ class Eyeball3DGazeCalculator(
         var gazeX = (compensatedYaw / maxGazeAngle) * sensitivityX + offsetX
         var gazeY = (compensatedPitch / maxGazeAngle) * sensitivityY + offsetY
 
-        gazeX = gazeX.coerceIn(-1f, 1f)
-        gazeY = gazeY.coerceIn(-1f, 1f)
+        // Safety bound only: values beyond ±1 are preserved so the caller
+        // can detect the gaze going out of bounds (threshold 1.2).
+        gazeX = gazeX.coerceIn(-IrisGazeCalculator.RAW_GAZE_LIMIT, IrisGazeCalculator.RAW_GAZE_LIMIT)
+        gazeY = gazeY.coerceIn(-IrisGazeCalculator.RAW_GAZE_LIMIT, IrisGazeCalculator.RAW_GAZE_LIMIT)
 
         return Triple(gazeX, gazeY, confidence)
     }
 
-    fun detectBlink(landmarks: List<LandmarkPoint>, eyeTop: Int, eyeBottom: Int): Boolean {
-        if (landmarks.size <= maxOf(eyeTop, eyeBottom)) return false
+    /**
+     * Blink detection using the distance-invariant Eye Aspect Ratio
+     * (eyelid gap / eye width in pixel space). See [IrisGazeCalculator.detectBlink].
+     */
+    fun detectBlink(
+        landmarks: List<LandmarkPoint>,
+        eyeTop: Int,
+        eyeBottom: Int,
+        eyeOuter: Int,
+        eyeInner: Int,
+        frameWidth: Float,
+        frameHeight: Float
+    ): Boolean {
+        if (landmarks.size <= maxOf(eyeTop, eyeBottom, eyeOuter, eyeInner)) return false
         return try {
             val top = landmarks[eyeTop]
             val bottom = landmarks[eyeBottom]
-            val eyeHeight = abs(bottom.y - top.y)
-            eyeHeight < IrisGazeCalculator.BLINK_THRESHOLD
+            val outer = landmarks[eyeOuter]
+            val inner = landmarks[eyeInner]
+
+            val heightDx = (top.x - bottom.x) * frameWidth
+            val heightDy = (top.y - bottom.y) * frameHeight
+            val eyeHeight = sqrt(heightDx * heightDx + heightDy * heightDy)
+
+            val widthDx = (outer.x - inner.x) * frameWidth
+            val widthDy = (outer.y - inner.y) * frameHeight
+            val eyeWidth = sqrt(widthDx * widthDx + widthDy * widthDy)
+
+            if (eyeWidth < 1f) return false
+            (eyeHeight / eyeWidth) < IrisGazeCalculator.BLINK_EAR_THRESHOLD
         } catch (e: Exception) {
             false
         }

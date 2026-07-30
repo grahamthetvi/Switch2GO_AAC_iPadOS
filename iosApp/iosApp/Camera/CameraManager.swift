@@ -14,6 +14,13 @@ class CameraManager: NSObject, ObservableObject {
     /// Consumers can use this to update screen dimensions, etc.
     var orientationDidChange: (() -> Void)?
 
+    /// Capture session was interrupted (background, phone call, etc.).
+    var onCaptureInterrupted: (() -> Void)?
+    /// Interruption ended.
+    var onCaptureResumed: (() -> Void)?
+    /// Runtime error or media-services reset — session needs a full restart.
+    var onCaptureRuntimeError: (() -> Void)?
+
     /// The current image orientation metadata for MediaPipe.
     /// This tells MPImage how pixel rows/columns relate to an upright image given
     /// the connection rotation + mirroring. It is NOT the device orientation.
@@ -48,8 +55,11 @@ class CameraManager: NSObject, ObservableObject {
 
     override init() {
         super.init()
-        checkPermission()
-        
+        // Sync already-decided authorization only. Do not prompt here —
+        // GazeTrackingManager is created at launch, and requesting camera
+        // access in init interrupts first-launch onboarding with a system alert.
+        syncExistingAuthorization()
+
         NotificationCenter.default.addObserver(
             forName: NSNotification.Name("DebugCameraRotationChanged"),
             object: nil,
@@ -57,10 +67,60 @@ class CameraManager: NSObject, ObservableObject {
         ) { [weak self] _ in
             self?.updateRotationAngle()
         }
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(sessionWasInterrupted(_:)),
+            name: AVCaptureSession.wasInterruptedNotification,
+            object: captureSession
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(sessionInterruptionEnded(_:)),
+            name: AVCaptureSession.interruptionEndedNotification,
+            object: captureSession
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(sessionRuntimeError(_:)),
+            name: AVCaptureSession.runtimeErrorNotification,
+            object: captureSession
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(mediaServicesWereReset(_:)),
+            name: AVAudioSession.mediaServicesWereResetNotification,
+            object: nil
+        )
     }
 
     deinit {
         rotationObservation?.invalidate()
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func sessionWasInterrupted(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in
+            self?.onCaptureInterrupted?()
+        }
+    }
+
+    @objc private func sessionInterruptionEnded(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in
+            self?.onCaptureResumed?()
+        }
+    }
+
+    @objc private func sessionRuntimeError(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in
+            self?.onCaptureRuntimeError?()
+        }
+    }
+
+    @objc private func mediaServicesWereReset(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in
+            self?.onCaptureRuntimeError?()
+        }
     }
 
     // MARK: - Orientation Handling
@@ -95,19 +155,39 @@ class CameraManager: NSObject, ObservableObject {
         }
     }
 
-    /// Check and request camera permission.
-    private func checkPermission() {
+    /// Apply current authorization without prompting. Used at init so cold
+    /// launch does not show the system camera dialog until tracking starts.
+    private func syncExistingAuthorization() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
             permissionGranted = true
             setupCamera()
+
+        case .denied, .restricted:
+            permissionGranted = false
+            error = .permissionDenied
+
+        case .notDetermined:
+            break
+
+        @unknown default:
+            permissionGranted = false
+        }
+    }
+
+    /// Check and request camera permission when tracking actually starts.
+    private func checkPermission(onGranted: (() -> Void)? = nil) {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            permissionGranted = true
+            onGranted?()
 
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 DispatchQueue.main.async {
                     self?.permissionGranted = granted
                     if granted {
-                        self?.setupCamera()
+                        onGranted?()
                     } else {
                         self?.error = .permissionDenied
                     }
@@ -242,13 +322,28 @@ class CameraManager: NSObject, ObservableObject {
         return orientation != .portraitUpsideDown
     }
 
-    /// Start camera capture.
+    /// Start camera capture. Requests permission on first use if still undetermined.
     func start() {
+        checkPermission { [weak self] in
+            self?.startSessionIfNeeded()
+        }
+    }
+
+    private func startSessionIfNeeded() {
         sessionQueue.async { [weak self] in
-            guard let self = self, !self.captureSession.isRunning else { return }
+            guard let self = self else { return }
+
+            if self.captureSession.inputs.isEmpty {
+                self.configureSession()
+            }
+
+            guard !self.captureSession.inputs.isEmpty else { return }
+            guard !self.captureSession.isRunning else {
+                DispatchQueue.main.async { self.isRunning = true }
+                return
+            }
 
             self.captureSession.startRunning()
-
             DispatchQueue.main.async {
                 self.isRunning = true
             }

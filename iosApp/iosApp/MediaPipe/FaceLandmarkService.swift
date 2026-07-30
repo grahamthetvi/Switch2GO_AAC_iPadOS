@@ -8,7 +8,7 @@ import VocableShared
 /// Service for detecting face landmarks using MediaPipe.
 /// This class wraps the MediaPipe FaceLandmarker for use with the gaze tracking system.
 class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
-    // MediaPipe face landmarker instance
+    // MediaPipe face landmarker instance — mutated only on detectionQueue
     private var faceLandmarker: FaceLandmarker?
     private var isInitialized = false
     private var lastUseGpu = false  // saved for reinitialize()
@@ -23,7 +23,11 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
     @Published var lastTimestamp: Int = 0
 
     private let detectionQueue = DispatchQueue(label: "com.switch2go.mediapipe.detection")
-    private var latestSampleBuffer: CMSampleBuffer?
+    private static let detectionQueueKey = DispatchSpecificKey<UInt8>()
+    private let detectionQueueContext: UInt8 = 1
+
+    /// Retain only the pixel buffer from AVCapture's pool — never the CMSampleBuffer.
+    private var latestPixelBuffer: CVPixelBuffer?
     private var latestOrientation: UIImage.Orientation = .up
     private var latestFrameSize: CGSize = .zero
     private var pendingRequest = false
@@ -34,6 +38,7 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
  
     override init() {
         super.init()
+        detectionQueue.setSpecific(key: Self.detectionQueueKey, value: detectionQueueContext)
     }
  
     /// Attach the Kotlin detector so results can be bridged back.
@@ -45,32 +50,32 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
     /// - Parameter useGpu: Whether to use GPU acceleration
     /// - Returns: true if initialization was successful
     func initialize(useGpu: Bool = false) -> Bool {
+        // Confine landmarker lifecycle to detectionQueue (no cross-queue races with reinitialize).
+        if DispatchQueue.getSpecific(key: Self.detectionQueueKey) != nil {
+            return initializeOnQueue(useGpu: useGpu)
+        }
+        return detectionQueue.sync { initializeOnQueue(useGpu: useGpu) }
+    }
+
+    private func initializeOnQueue(useGpu: Bool) -> Bool {
         if isInitialized && lastUseGpu == useGpu && faceLandmarker != nil {
-            // Already initialized, just reset state
             pendingRequest = false
             isDetecting = false
-            latestSampleBuffer = nil
+            latestPixelBuffer = nil
             DebugLog.info("Reused existing FaceLandmarker (GPU: \(useGpu))", tag: "MediaPipe")
             return true
         }
 
-        // If we are changing GPU settings or re-initializing, clean up the old one first
         if faceLandmarker != nil {
-            close()
+            closeOnQueue()
         }
 
         lastUseGpu = useGpu
-
-        // Reset detection state machine.  If a previous landmarker was in the
-        // middle of detecting, its callback is now orphaned — clear the flags
-        // so the new instance can start fresh.
         pendingRequest = false
         isDetecting = false
-        latestSampleBuffer = nil
+        latestPixelBuffer = nil
 
         do {
-            // Get the model file from the app bundle
-            // Search in main bundle and also in Resources subdirectory
             let modelPath: String
             if let path = Bundle.main.path(forResource: "face_landmarker", ofType: "task") {
                 modelPath = path
@@ -83,7 +88,6 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
             }
             DebugLog.info("Found model at: \(modelPath)", tag: "MediaPipe")
  
-            // Configure options
             let options = FaceLandmarkerOptions()
             options.baseOptions.modelAssetPath = modelPath
             options.runningMode = .liveStream
@@ -94,14 +98,12 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
             options.outputFaceBlendshapes = false
             options.outputFacialTransformationMatrixes = true
  
-            // Set delegate based on GPU preference
             if useGpu {
                 options.baseOptions.delegate = .GPU
             } else {
                 options.baseOptions.delegate = .CPU
             }
  
-            // Set result callback
             options.faceLandmarkerLiveStreamDelegate = self
  
             faceLandmarker = try FaceLandmarker(options: options)
@@ -116,19 +118,15 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
     }
  
     /// Process a camera frame for face detection.
-    /// - Parameters:
-    ///   - sampleBuffer: The camera sample buffer
-    ///   - orientation: Image orientation
-    func detectAsync(sampleBuffer: CMSampleBuffer, orientation: UIImage.Orientation) {
+    func detectAsync(pixelBuffer: CVPixelBuffer, orientation: UIImage.Orientation) {
         guard isInitialized, let faceLandmarker = faceLandmarker else {
             DebugLog.warn("Not initialized or landmarker is nil, skipping detection", tag: "MediaPipe")
             notifyDetectorNoFace()
             return
         }
  
-        // Convert sample buffer to MPImage
-        guard let image = try? MPImage(sampleBuffer: sampleBuffer, orientation: orientation) else {
-            DebugLog.error("Failed to create MPImage from sample buffer", tag: "MediaPipe")
+        guard let image = try? MPImage(pixelBuffer: pixelBuffer, orientation: orientation) else {
+            DebugLog.error("Failed to create MPImage from pixel buffer", tag: "MediaPipe")
             notifyDetectorNoFace()
             return
         }
@@ -137,7 +135,6 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
             DebugLog.debug("Sending \(Int(image.width))x\(Int(image.height)) image, orientation: \(orientation.rawValue)", tag: "MediaPipe")
         }
  
-        // Get timestamp in milliseconds — must be strictly increasing for live stream mode
         let timestamp = Int(CACurrentMediaTime() * 1000)
  
         do {
@@ -148,20 +145,19 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
         }
     }
 
-    /// Store the latest frame and optionally trigger detection if requested.
+    /// Store the latest frame pixel buffer and optionally trigger detection if requested.
     func updateLatestSampleBuffer(_ sampleBuffer: CMSampleBuffer, orientation: UIImage.Orientation) {
         detectionQueue.async { [weak self] in
             guard let self else { return }
-            self.latestSampleBuffer = sampleBuffer
-            self.latestOrientation = orientation
-
+            // Retain CVPixelBuffer only — release the sample buffer back to the pool.
             if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+                self.latestPixelBuffer = pixelBuffer
                 self.latestFrameSize = CGSize(
                     width: CVPixelBufferGetWidth(pixelBuffer),
                     height: CVPixelBufferGetHeight(pixelBuffer)
                 )
             }
-
+            self.latestOrientation = orientation
             self.triggerDetectionIfNeeded()
         }
     }
@@ -176,7 +172,6 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
     }
 
     private func triggerDetectionIfNeeded() {
-        // Recovery: if detection has been running for too long, assume it failed
         if isDetecting && (CACurrentMediaTime() - detectionStartTime) > detectionTimeout {
             DebugLog.warn("Detection timed out — resetting state", tag: "MediaPipe")
             isDetecting = false
@@ -184,9 +179,7 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
 
         guard pendingRequest, !isDetecting else { return }
 
-        guard let buffer = latestSampleBuffer else {
-            // No buffer available — clear pending request and notify detector
-            // so the Kotlin coroutine doesn't hang waiting forever.
+        guard let pixelBuffer = latestPixelBuffer else {
             pendingRequest = false
             detector?.onNoFaceDetected()
             return
@@ -194,17 +187,16 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
 
         isDetecting = true
         detectionStartTime = CACurrentMediaTime()
-        detectAsync(sampleBuffer: buffer, orientation: latestOrientation)
+        detectAsync(pixelBuffer: pixelBuffer, orientation: latestOrientation)
     }
  
     /// Reset processing state without closing the service.
-    /// Used during orientation changes to prevent stuck detection state.
     func resetProcessingState() {
         detectionQueue.async { [weak self] in
             guard let self else { return }
             self.pendingRequest = false
             self.isDetecting = false
-            self.latestSampleBuffer = nil
+            self.latestPixelBuffer = nil
             DebugLog.debug("Processing state reset for orientation change", tag: "MediaPipe")
         }
         DispatchQueue.main.async { [weak self] in
@@ -214,48 +206,38 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
     }
 
     /// Destroy and recreate the MediaPipe FaceLandmarker.
-    ///
-    /// MediaPipe's liveStream mode maintains internal tracking state tied to
-    /// the input frame dimensions. When device orientation changes and
-    /// `videoRotationAngle` causes the pixel buffer dimensions to swap
-    /// (e.g. 480×360 → 360×480), the landmarker's internal state becomes
-    /// corrupted and it silently stops detecting faces — even after the
-    /// dimensions revert. Recreating the landmarker gives it a fresh start
-    /// with the new frame geometry.
-    ///
-    /// The Kotlin bridge and camera pipeline are NOT affected; only the
-    /// MediaPipe model instance is torn down and rebuilt.
     func reinitialize() {
         let useGpu = lastUseGpu
         DebugLog.info("Reinitializing for new frame dimensions (GPU: \(useGpu))...", tag: "MediaPipe")
 
         detectionQueue.async { [weak self] in
             guard let self else { return }
-            
-            // Tear down existing landmarker and reset all processing state
-            self.close()
-
-            // Recreate the landmarker
-            let success = self.initialize(useGpu: useGpu)
+            self.closeOnQueue()
+            let success = self.initializeOnQueue(useGpu: useGpu)
             DebugLog.log("Reinitialize: \(success ? "success" : "FAILED")", tag: "MediaPipe", level: success ? .info : .error)
         }
     }
 
     /// Release resources.
     func close() {
+        if DispatchQueue.getSpecific(key: Self.detectionQueueKey) != nil {
+            closeOnQueue()
+            return
+        }
+        detectionQueue.sync { closeOnQueue() }
+    }
+
+    private func closeOnQueue() {
         faceLandmarker = nil
         isInitialized = false
-        
+        pendingRequest = false
+        isDetecting = false
+        latestPixelBuffer = nil
+        latestFrameSize = .zero
         DispatchQueue.main.async {
             self.currentLandmarks = nil
             self.isTracking = false
         }
-        
-
-        pendingRequest = false
-        isDetecting = false
-        latestSampleBuffer = nil
-        latestFrameSize = .zero
         DebugLog.debug("FaceLandmarkService closed", tag: "MediaPipe")
     }
 }
@@ -276,7 +258,6 @@ extension FaceLandmarkService: FaceLandmarkerLiveStreamDelegate {
  
         guard let result = result,
               let firstFace = result.faceLandmarks.first else {
-            // Log exactly what happened for debugging
             if AppSettings.shared.showDebugCameraPreview {
                 DebugLog.warn("No face detected in frame", tag: "MediaPipe")
             }
@@ -288,7 +269,6 @@ extension FaceLandmarkService: FaceLandmarkerLiveStreamDelegate {
             return
         }
         
-        // Check if irises were detected (478 points = full face + irises, 468 = face only)
         if AppSettings.shared.showDebugCameraPreview && firstFace.count < 478 {
             DebugLog.warn("Face detected but missing irises (count: \(firstFace.count))", tag: "MediaPipe")
         }
@@ -386,6 +366,3 @@ struct FaceLandmarkIndices {
     static let chin = 152
     static let forehead = 10
 }
-
-
-

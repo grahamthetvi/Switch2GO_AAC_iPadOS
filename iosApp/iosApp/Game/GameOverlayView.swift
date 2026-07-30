@@ -29,6 +29,7 @@ struct GameOverlayView: View {
                 if GameSelectionMode.usesGaze(selectionMode: settings.selectionMode),
                    isTrackingEnabled,
                    gazeManager.isTracking,
+                   gazeManager.isFaceDetected,
                    gazeManager.isCursorVisible {
                     GazePointerView(
                         position: gazeManager.gazePosition,
@@ -91,6 +92,7 @@ struct GameOverlayView: View {
                 guard GameSelectionMode.usesGaze(selectionMode: settings.selectionMode),
                       isTrackingEnabled,
                       gazeManager.isTracking,
+                      gazeManager.isFaceDetected,
                       gazeManager.isCursorVisible else { return nil }
                 return gazeManager.gazePosition
             }()

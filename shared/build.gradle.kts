@@ -24,7 +24,12 @@ kotlin {
         it.binaries.framework {
             baseName = "VocableShared"
             isStatic = true
-            
+
+            // Allow suspend calls from MediaPipe's non-main detection queue.
+            // Also set in gradle.properties; redundant binaryOption keeps the
+            // framework build self-describing if properties are overridden.
+            binaryOption("objcExportSuspendFunctionLaunchThreadRestriction", "none")
+
             // Generate dSYM for crash reporting
             freeCompilerArgs += listOf("-Xadd-light-debug=enable")
         }

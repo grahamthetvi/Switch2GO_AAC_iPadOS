@@ -17,7 +17,8 @@ final class PoseLandmarkService: NSObject, ObservableObject {
     @Published private(set) var isTracking = false
 
     private let detectionQueue = DispatchQueue(label: "com.switch2go.mediapipe.pose")
-    private var latestSampleBuffer: CMSampleBuffer?
+    /// Retain only the pixel buffer — never the CMSampleBuffer from AVCapture's pool.
+    private var latestPixelBuffer: CVPixelBuffer?
     private var latestOrientation: UIImage.Orientation = .up
     private var pendingRequest = false
     private var isDetecting = false
@@ -35,7 +36,7 @@ final class PoseLandmarkService: NSObject, ObservableObject {
         if isInitialized && lastUseGpu == useGpu && poseLandmarker != nil {
             pendingRequest = false
             isDetecting = false
-            latestSampleBuffer = nil
+            latestPixelBuffer = nil
             DebugLog.info("Reused existing PoseLandmarker (GPU: \(useGpu))", tag: "MediaPipe")
             return true
         }
@@ -47,7 +48,7 @@ final class PoseLandmarkService: NSObject, ObservableObject {
         lastUseGpu = useGpu
         pendingRequest = false
         isDetecting = false
-        latestSampleBuffer = nil
+        latestPixelBuffer = nil
 
         do {
             guard let modelPath = Self.modelPath() else {
@@ -75,7 +76,9 @@ final class PoseLandmarkService: NSObject, ObservableObject {
     func updateLatestSampleBuffer(_ sampleBuffer: CMSampleBuffer, orientation: UIImage.Orientation) {
         detectionQueue.async { [weak self] in
             guard let self else { return }
-            self.latestSampleBuffer = sampleBuffer
+            if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+                self.latestPixelBuffer = pixelBuffer
+            }
             self.latestOrientation = orientation
             self.triggerDetectionIfNeeded()
         }
@@ -94,7 +97,7 @@ final class PoseLandmarkService: NSObject, ObservableObject {
             guard let self else { return }
             self.pendingRequest = false
             self.isDetecting = false
-            self.latestSampleBuffer = nil
+            self.latestPixelBuffer = nil
         }
         DispatchQueue.main.async { [weak self] in
             self?.currentLandmarks = []
@@ -117,7 +120,7 @@ final class PoseLandmarkService: NSObject, ObservableObject {
         isInitialized = false
         pendingRequest = false
         isDetecting = false
-        latestSampleBuffer = nil
+        latestPixelBuffer = nil
         DispatchQueue.main.async { [weak self] in
             self?.currentLandmarks = []
             self?.isTracking = false
@@ -132,7 +135,7 @@ final class PoseLandmarkService: NSObject, ObservableObject {
 
         guard pendingRequest, !isDetecting else { return }
 
-        guard let buffer = latestSampleBuffer else {
+        guard let pixelBuffer = latestPixelBuffer else {
             pendingRequest = false
             notifyNoPose()
             return
@@ -143,7 +146,7 @@ final class PoseLandmarkService: NSObject, ObservableObject {
             return
         }
 
-        guard let image = try? MPImage(sampleBuffer: buffer, orientation: latestOrientation) else {
+        guard let image = try? MPImage(pixelBuffer: pixelBuffer, orientation: latestOrientation) else {
             notifyNoPose()
             return
         }

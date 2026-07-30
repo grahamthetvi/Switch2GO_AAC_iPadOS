@@ -38,12 +38,13 @@ Manual QA for **iOS** and **Web**. Android (`app/`) is legacy and not covered he
 ### Selection modes (device + camera)
 
 - [ ] **Touch only** — no camera required; dwell off or irrelevant
-- [ ] **Eye gaze** — cursor moves; dwell selects tile
-- [ ] **Head tracking** — cursor moves with head
+- [ ] **Eye gaze** — cursor moves; dwell selects tile; face loss hides cursor but tracking recovers when face returns
+- [ ] **Head tracking** — cursor moves with head; same face-loss recovery
 - [ ] **Arm raise** — with **2 symbols** on page, left/right arm maps to tiles
 - [ ] **Hand gesture** — 2-symbol page; open/close hand selects side
-- [ ] Recenter cursor from Settings
+- [ ] Recenter cursor via double-blink or Advanced Eye Tracking → Reset Calibration
 - [ ] Advanced eye: change smoothing / 2D vs 3D; no crash
+- [ ] Background the app briefly, then return — camera/tracking resumes without a stuck cursor
 
 ### Switches (optional)
 

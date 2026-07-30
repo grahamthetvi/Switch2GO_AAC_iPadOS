@@ -355,12 +355,13 @@ struct PhraseButton: View {
         let font = Font.system(size: fontSize, weight: fontWeight, design: .default)
         let outlineColor = borderWidth > 0 ? borderColor : nil
         let outlineWidth = outlineColor != nil ? max(2, min(8, borderWidth)) : 0
-        let offsets: [(CGFloat, CGFloat)] = [
-            (-outlineWidth, 0), (outlineWidth, 0),
-            (0, -outlineWidth), (0, outlineWidth),
-            (-outlineWidth, -outlineWidth), (outlineWidth, -outlineWidth),
-            (-outlineWidth, outlineWidth), (outlineWidth, outlineWidth)
-        ]
+        // Sample a full circle so stroked glyphs don't show flat "rungs"
+        // from the old 8-direction offset technique.
+        let sampleCount = 16
+        let offsets: [(CGFloat, CGFloat)] = (0..<sampleCount).map { index in
+            let angle = (Double(index) / Double(sampleCount)) * 2 * Double.pi
+            return (CGFloat(cos(angle)) * outlineWidth, CGFloat(sin(angle)) * outlineWidth)
+        }
 
         return ZStack {
             if let outlineColor, outlineWidth > 0 {

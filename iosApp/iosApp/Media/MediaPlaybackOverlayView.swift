@@ -37,6 +37,7 @@ struct MediaPlaybackOverlayView: View {
                 if isTrackingEnabled
                     && !GazeTrackingManager.isBodyGestureMode(AppSettings.shared.selectionMode)
                     && gazeManager.isTracking
+                    && gazeManager.isFaceDetected
                     && gazeManager.isCursorVisible {
                     GazePointerView(
                         position: gazeManager.gazePosition,

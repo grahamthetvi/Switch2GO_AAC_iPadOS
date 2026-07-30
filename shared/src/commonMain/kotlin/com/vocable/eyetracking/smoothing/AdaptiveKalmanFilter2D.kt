@@ -37,25 +37,37 @@ import kotlin.math.sqrt
 class AdaptiveKalmanFilter2D(
     private val baseProcessNoise: Float = 1e-4f,
     private val baseMeasurementNoise: Float = 1e-2f,
-    private val lowVelocityThreshold: Float = 0.02f,
-    private val highVelocityThreshold: Float = 0.15f,
+    // Velocity thresholds in normalized-gaze units per second (were ~per-frame at 20 FPS).
+    private val lowVelocityThreshold: Float = 0.4f,
+    private val highVelocityThreshold: Float = 3.0f,
     private val dwellMeasurementMultiplier: Float = 3.0f,
     private val rapidMeasurementMultiplier: Float = 0.3f
 ) {
-    // State: [x, y, vx, vy]
+    companion object {
+        const val DEFAULT_DT = KalmanFilter2D.DEFAULT_DT
+        private const val MIN_DT = 1f / 120f
+        private const val MAX_DT = 0.25f
+    }
+
+    // State: [x, y, vx, vy] — velocity in units/second when dt-aware
     private var state = floatArrayOf(0f, 0f, 0f, 0f)
 
     // State covariance matrix (4x4)
     private var P = createIdentityMatrix(4)
 
-    // State transition matrix (constant velocity model)
-    // x' = x + vx, y' = y + vy, vx' = vx, vy' = vy
+    // State transition matrix; F[0][2] / F[1][3] set to dt each update
     private val F = arrayOf(
         floatArrayOf(1f, 0f, 1f, 0f),
         floatArrayOf(0f, 1f, 0f, 1f),
         floatArrayOf(0f, 0f, 1f, 0f),
         floatArrayOf(0f, 0f, 0f, 1f)
     )
+
+    private fun setTransitionDt(dt: Float) {
+        val clamped = dt.coerceIn(MIN_DT, MAX_DT)
+        F[0][2] = clamped
+        F[1][3] = clamped
+    }
 
     // Measurement matrix (we only observe position)
     private val H = arrayOf(
@@ -75,12 +87,15 @@ class AdaptiveKalmanFilter2D(
 
     /**
      * Predict the next state based on the velocity model.
+     * @param dtSeconds Elapsed time since last update (seconds). Velocity is in units/sec.
      * @return Predicted [x, y] position
      */
-    fun predict(): FloatArray {
+    fun predict(dtSeconds: Float = DEFAULT_DT): FloatArray {
         if (!initialized) {
             return floatArrayOf(state[0], state[1])
         }
+
+        setTransitionDt(dtSeconds)
 
         // Get adaptive Q based on velocity
         val Q = getAdaptiveProcessNoise()
@@ -101,9 +116,10 @@ class AdaptiveKalmanFilter2D(
      *
      * @param x Measured x position
      * @param y Measured y position
+     * @param dtSeconds Elapsed seconds since the previous update (velocity in units/sec)
      * @return Filtered [x, y] position
      */
-    fun update(x: Float, y: Float): FloatArray {
+    fun update(x: Float, y: Float, dtSeconds: Float = DEFAULT_DT): FloatArray {
         val measurement = floatArrayOf(x, y)
 
         if (!initialized) {
@@ -116,7 +132,7 @@ class AdaptiveKalmanFilter2D(
         }
 
         // Predict step
-        predict()
+        predict(dtSeconds)
 
         // Get adaptive R based on velocity
         val R = getAdaptiveMeasurementNoise()

@@ -25,8 +25,15 @@ class IrisGazeCalculator(
     var headPitchCompensation: Float = 0.25f
 ) {
     companion object {
-        // Blink detection threshold (eye aspect ratio)
-        const val BLINK_THRESHOLD = 0.015f
+        // Blink detection threshold on the Eye Aspect Ratio (eyelid gap / eye width).
+        // Both distances are measured in the same space, so the ratio is invariant
+        // to how far the user sits from the camera (Soukupová–Čech classic value).
+        const val BLINK_EAR_THRESHOLD = 0.2f
+
+        // Raw gaze safety bound. Wider than the usable [-1, 1] range so that
+        // out-of-bounds detection (threshold 1.2 on the Swift side) still sees
+        // values beyond the screen edge instead of a pre-clamped ±1.
+        const val RAW_GAZE_LIMIT = 2.0f
 
         // Landmark indices
         const val NOSE_TIP = 1
@@ -121,8 +128,10 @@ class IrisGazeCalculator(
         val yawCorrection = -headYaw / 45f * headYawCompensation
         val pitchCorrection = -headPitch / 45f * headPitchCompensation
 
-        val compensatedX = (gazeX + yawCorrection).coerceIn(-1f, 1f)
-        val compensatedY = (gazeY + pitchCorrection).coerceIn(-1f, 1f)
+        // Only bound to the safety range — the caller needs values beyond ±1
+        // for out-of-bounds detection.
+        val compensatedX = (gazeX + yawCorrection).coerceIn(-RAW_GAZE_LIMIT, RAW_GAZE_LIMIT)
+        val compensatedY = (gazeY + pitchCorrection).coerceIn(-RAW_GAZE_LIMIT, RAW_GAZE_LIMIT)
 
         return Pair(compensatedX, compensatedY)
     }
@@ -179,9 +188,10 @@ class IrisGazeCalculator(
             gazeX += offsetX
             gazeY += offsetY
 
-            // Clamp to valid range
-            gazeX = gazeX.coerceIn(-1f, 1f)
-            gazeY = gazeY.coerceIn(-1f, 1f)
+            // Safety bound only: values beyond ±1 are preserved so the caller
+            // can detect the gaze going out of bounds (threshold 1.2).
+            gazeX = gazeX.coerceIn(-RAW_GAZE_LIMIT, RAW_GAZE_LIMIT)
+            gazeY = gazeY.coerceIn(-RAW_GAZE_LIMIT, RAW_GAZE_LIMIT)
 
             return Pair(floatArrayOf(gazeX, gazeY), Pair(irisPx[0], irisPx[1]))
         } catch (e: Exception) {
@@ -190,19 +200,48 @@ class IrisGazeCalculator(
     }
 
     /**
-     * Detect if an eye is blinking based on eye aspect ratio.
+     * Detect if an eye is blinking using the Eye Aspect Ratio (EAR):
+     * vertical eyelid distance divided by eye width, both measured in pixel
+     * space. Because both distances scale identically with the user's
+     * distance from the camera, the ratio is distance-invariant — unlike a
+     * raw eyelid-distance threshold, which reads as "permanently blinking"
+     * for users sitting farther away.
      *
      * @param eyeTop Top eyelid landmark
      * @param eyeBottom Bottom eyelid landmark
+     * @param eyeOuter Outer eye corner landmark
+     * @param eyeInner Inner eye corner landmark
+     * @param frameWidth Frame width in pixels
+     * @param frameHeight Frame height in pixels
      * @return true if eye is blinking
      */
-    fun detectBlink(eyeTop: LandmarkPoint, eyeBottom: LandmarkPoint): Boolean {
+    fun detectBlink(
+        eyeTop: LandmarkPoint,
+        eyeBottom: LandmarkPoint,
+        eyeOuter: LandmarkPoint,
+        eyeInner: LandmarkPoint,
+        frameWidth: Float,
+        frameHeight: Float
+    ): Boolean {
         return try {
-            val eyeHeight = abs(eyeBottom.y - eyeTop.y)
-            eyeHeight < BLINK_THRESHOLD
+            val eyeHeight = distancePx(eyeTop, eyeBottom, frameWidth, frameHeight)
+            val eyeWidth = distancePx(eyeOuter, eyeInner, frameWidth, frameHeight)
+            if (eyeWidth < 1f) return false
+            (eyeHeight / eyeWidth) < BLINK_EAR_THRESHOLD
         } catch (e: Exception) {
             false
         }
+    }
+
+    private fun distancePx(
+        a: LandmarkPoint,
+        b: LandmarkPoint,
+        frameWidth: Float,
+        frameHeight: Float
+    ): Float {
+        val dx = (a.x - b.x) * frameWidth
+        val dy = (a.y - b.y) * frameHeight
+        return sqrt(dx * dx + dy * dy)
     }
 
     /**

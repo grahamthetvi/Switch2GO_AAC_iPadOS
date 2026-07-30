@@ -28,6 +28,7 @@ Requires **JDK 17**, **CocoaPods**, and **Xcode 15+**. Deployment target: **iOS 
 - Always open **`iosApp.xcworkspace`**, not `.xcodeproj`.
 - Run `pod install` after every clone (`iosApp/Pods/` is not in git).
 - Camera-based tracking requires a **physical device** (simulator has no camera).
+- Calibration is **not** required for normal classroom use; double-blink (or Reset Calibration) recenters the cursor. Full calibration UI is deferred.
 - The Xcode project is versioned; you do **not** need to create a new Xcode project from scratch.
 
 ## Layout

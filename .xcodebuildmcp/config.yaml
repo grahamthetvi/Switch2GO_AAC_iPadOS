@@ -1,0 +1,11 @@
+schemaVersion: 1
+enabledWorkflows:
+  - simulator
+  - simulator-management
+  - project-discovery
+  - ui-automation
+  - debugging
+sessionDefaults:
+  workspacePath: "./iosApp/iosApp.xcworkspace"
+  scheme: "iosApp"
+  simulatorName: "iPhone 17"

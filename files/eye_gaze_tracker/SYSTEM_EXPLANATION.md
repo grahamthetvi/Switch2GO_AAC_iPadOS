@@ -1,5 +1,7 @@
 # Eye Gaze Tracking System: Technical Overview
 
+> **Scope:** Standalone **Python / webcam prototype** docs (same content as `files/SYSTEM_EXPLANATION.md`). Not the iPad app guide — the iPad app does not require 9-point calibration for classroom use.
+
 ## System Architecture
 
 This eye gaze tracking system combines **MediaPipe Iris** (Google's real-time iris detection) with **Kalman Filters** (predictive smoothing algorithm) to create an affordable, webcam-based gaze tracker suitable for CVI assessment and AAC applications.

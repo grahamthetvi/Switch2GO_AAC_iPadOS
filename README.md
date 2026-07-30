@@ -32,7 +32,7 @@ Switch2Go is a fork of [Vocable AAC](https://github.com/willowtreeapps/vocable-a
 - Hands-free use via **eye gaze**, **head tracking**, **arm raise**, or **hand gesture** (where supported)
 - **Touch** and **switch** input (iOS: ESP32 BLE keyboard; Web: keyboard keys 1–4)
 
-Neither iOS nor Web requires a 9-point gaze calibration for normal use. Optional calibration UI exists on iOS for advanced tuning.
+Neither iOS nor Web requires a 9-point gaze calibration for normal use. Most students use eye/head tracking **without** calibration. Day-to-day cursor correction is **double-blink recenter** (or **Reset Calibration** in Advanced Eye Tracking, which also recenters). Full 9-point calibration UI exists in the codebase but is currently unreachable and deferred.
 
 ## Features
 

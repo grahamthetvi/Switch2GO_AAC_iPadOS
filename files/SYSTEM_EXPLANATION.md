@@ -1,5 +1,7 @@
 # Eye Gaze Tracking System: Technical Overview
 
+> **Scope:** This document describes the **standalone Python / webcam prototype** under `files/eye_gaze_tracker/`. It is **not** the iPad app user guide. The production iOS app (and Web port) ship usable eye/head tracking **without** requiring 9-point calibration; students typically recenter with double-blink or Reset Calibration. Treat calibration guidance below as research/prototype context only.
+
 ## System Architecture
 
 This eye gaze tracking system combines **MediaPipe Iris** (Google's real-time iris detection) with **Kalman Filters** (predictive smoothing algorithm) to create an affordable, webcam-based gaze tracker suitable for CVI assessment and AAC applications.
@@ -209,14 +211,18 @@ This achieves **30+ FPS** real-time performance on standard hardware.
 
 ## Recommended Usage
 
-### For CVI Assessment / AAC Applications
+### For the Python prototype (this `files/` toolkit)
 
-1. **Always run calibration first** for each user
-2. Save calibration to `gaze_calibration.npz`
-3. Load calibration in assessment sessions
+1. Calibration is optional but often helpful for assessment accuracy on a desktop webcam
+2. Save calibration to `gaze_calibration.npz` when you run it
+3. Load calibration in assessment sessions if you have a saved file
 4. Use **black backgrounds** with **high-contrast colors** (yellow, red, blue)
 5. Start with **longer dwell times** (1.0-1.5 seconds) and decrease as user improves
 6. Use **larger targets** (200-300px) initially
+
+### For the iPad Switch2Go app (not this prototype)
+
+Most students use tracking **without** 9-point calibration. Day-to-day tool: **double-blink recenter** (or Advanced Eye Tracking → Reset Calibration). Do not instruct classroom users that calibration is required first.
 
 ### Optimal Setup
 
@@ -224,7 +230,7 @@ This achieves **30+ FPS** real-time performance on standard hardware.
 - **Good lighting** on face (not backlit)
 - User positioned **40-60cm** from camera
 - Minimal **head movement** during use
-- **Re-calibrate** when switching users or moving setup
+- **Re-calibrate** the Python toolkit when switching users or moving setup (iPad app: recenter instead)
 
 ---
 
@@ -246,4 +252,4 @@ The calibration system transforms unreliable, biased gaze detection into a usabl
 2. Corrects for camera angle bias
 3. Handles individual anatomical differences
 
-**Bottom line**: Without calibration, only 50% of the screen is usable. With calibration, 100% of the screen becomes accessible for gaze-based selection.
+**Bottom line (Python prototype):** Without calibration, only part of the screen may be usable on some webcam setups. With calibration, mapping improves. **This does not apply as a requirement for the iPad app**, which is designed for uncalibrated classroom use with recenter.

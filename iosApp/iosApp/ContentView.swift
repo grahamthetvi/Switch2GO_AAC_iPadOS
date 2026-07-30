@@ -13,10 +13,9 @@ struct ContentView: View {
 
     @State private var showSettings = false
     @State private var showOnboarding = false
-    @State private var showTrackingTip = false
-    @State private var hasShownTrackingTip = false
     @State private var orientationBanner: OrientationBannerInfo?
     @State private var currentOrientationText: String = "Unknown"
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
@@ -41,9 +40,10 @@ struct ContentView: View {
                 isTrackingEnabled: appState.isTrackingEnabled
             )
 
-            // Gaze pointer — hidden during playback and in body-gesture modes
+            // Gaze pointer — hidden when face lost / cursor hidden / body-gesture modes
             if !GazeTrackingManager.isBodyGestureMode(settings.selectionMode)
-                && gazeManager.isTracking && gazeManager.isCursorVisible && appState.isTrackingEnabled
+                && gazeManager.isTracking && gazeManager.isFaceDetected
+                && gazeManager.isCursorVisible && appState.isTrackingEnabled
                 && mediaCoordinator.phase != .playing
                 && gameCoordinator.phase != .playing {
                 GazePointerView(
@@ -112,33 +112,6 @@ struct ContentView: View {
                 }
                 .zIndex(20)
             }
-
-            // Floating controls (top-right to avoid nav bar overlap)
-            VStack {
-                HStack {
-                    Spacer()
-                    VStack(spacing: 12) {
-                        Button {
-                            showSettings = true
-                        } label: {
-                            Image(systemName: "gear")
-                                .font(.title3)
-                                .foregroundColor(.white)
-                                .padding(12)
-                                .background(Color.blue.opacity(0.85))
-                                .clipShape(Circle())
-                                .shadow(radius: 4)
-                        }
-                        .accessibilityLabel("Settings")
-
-                        if settings.switchControlEnabled {
-                            SwitchControlStatusBadge(switchManager: gazeManager.switchManager)
-                        }
-                    }
-                    .padding()
-                }
-                Spacer()
-            }
         }
         .coordinateSpace(name: GazeCoordinateSpace.name)
         .ignoresSafeArea()
@@ -150,6 +123,31 @@ struct ContentView: View {
             KeyPressInterceptorRepresentable(switchManager: gazeManager.switchManager)
                 .allowsHitTesting(false)
         )
+        // Overlay keeps settings clear of the status bar / Dynamic Island.
+        // Explicit window inset is required because .ignoresSafeArea() zeroes
+        // SwiftUI safe-area padding for descendants/overlays.
+        .overlay(alignment: .topTrailing) {
+            VStack(spacing: 12) {
+                Button {
+                    showSettings = true
+                } label: {
+                    Image(systemName: "gear")
+                        .font(.title3)
+                        .foregroundColor(.white)
+                        .padding(12)
+                        .background(Color.blue.opacity(0.85))
+                        .clipShape(Circle())
+                        .shadow(radius: 4)
+                }
+                .accessibilityLabel("Settings")
+
+                if settings.switchControlEnabled {
+                    SwitchControlStatusBadge(switchManager: gazeManager.switchManager)
+                }
+            }
+            .padding(.trailing, 16)
+            .padding(.top, windowTopSafeInset + 8)
+        }
         .tint(.blue)
         .overlay(
             RoundedRectangle(cornerRadius: 0)
@@ -157,11 +155,6 @@ struct ContentView: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
         )
-        .alert("Tracking Tip", isPresented: $showTrackingTip) {
-            Button("Got It") { }
-        } message: {
-            Text("If dwell selection isn't responding, try rotating your iPad to portrait and then back to landscape. This resets the tracking system and usually fixes it.")
-        }
         .sheet(isPresented: $showSettings) {
             MainSettingsView()
                 .environmentObject(appState)
@@ -207,6 +200,18 @@ struct ContentView: View {
             
             // Keep the screen on while the app is active
             UIApplication.shared.isIdleTimerDisabled = true
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            switch newPhase {
+            case .active:
+                gazeManager.handleScenePhase("active")
+            case .inactive:
+                gazeManager.handleScenePhase("inactive")
+            case .background:
+                gazeManager.handleScenePhase("background")
+            @unknown default:
+                break
+            }
         }
         .onChange(of: settings.selectionMode) { _, newMode in
             // Only restart tracking if settings sheet is closed.
@@ -269,6 +274,19 @@ struct ContentView: View {
         }
     }
 
+    /// Top safe-area inset from the key window. Needed because the AAC ZStack
+    /// uses `.ignoresSafeArea()`, which collapses SwiftUI safe-area padding.
+    private var windowTopSafeInset: CGFloat {
+        guard let scene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene }).first else {
+            return 59
+        }
+        let inset = scene.windows.first(where: \.isKeyWindow)?.safeAreaInsets.top
+            ?? scene.windows.first?.safeAreaInsets.top
+            ?? 0
+        return inset > 0 ? inset : 59
+    }
+
     private func updateTrackingForSelectionMode() {
         let wantsTracking = settings.selectionMode != "none"
         let inTrackingOrientation = CameraManager.isTrackingSupportedOrientation
@@ -279,12 +297,6 @@ struct ContentView: View {
         appState.isTrackingEnabled = shouldTrack
         if shouldTrack {
             gazeManager.startTracking()
-            if !hasShownTrackingTip {
-                hasShownTrackingTip = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    showTrackingTip = true
-                }
-            }
         } else {
             gazeManager.stopTracking()
         }

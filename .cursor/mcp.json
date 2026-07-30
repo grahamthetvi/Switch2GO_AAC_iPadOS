@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "XcodeBuildMCP": {
+      "command": "/Users/j.d.graham/.nvm/versions/node/v24.18.1/bin/xcodebuildmcp",
+      "args": ["mcp"],
+      "env": {
+        "PATH": "/Users/j.d.graham/.nvm/versions/node/v24.18.1/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+      }
+    }
+  }
+}

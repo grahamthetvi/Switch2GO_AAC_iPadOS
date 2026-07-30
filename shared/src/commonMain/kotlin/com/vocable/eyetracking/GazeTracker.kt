@@ -127,34 +127,51 @@ class GazeTracker(
         val frameWidth = landmarkResult.frameWidth.toFloat()
         val frameHeight = landmarkResult.frameHeight.toFloat()
 
+        val timestampMs = landmarkResult.timestamp
         return when (trackingMethod) {
-            TrackingMethod.IRIS_2D -> process2D(landmarks, frameWidth, frameHeight)
-            TrackingMethod.EYEBALL_3D -> process3D(landmarks, frameWidth, frameHeight)
+            TrackingMethod.IRIS_2D -> process2D(landmarks, frameWidth, frameHeight, timestampMs)
+            TrackingMethod.EYEBALL_3D -> process3D(landmarks, frameWidth, frameHeight, timestampMs)
         }
     }
 
     private fun process2D(
         landmarks: List<com.vocable.eyetracking.models.LandmarkPoint>,
         frameWidth: Float,
-        frameHeight: Float
+        frameHeight: Float,
+        timestampMs: Long = 0L
     ): GazeResult? {
         // Estimate head pose
         val (headYaw, headPitch, headRoll) = gazeCalculator.estimateHeadPose(landmarks)
 
-        // Detect blinks
-        val leftBlink = if (landmarks.size > LEFT_EYE_BOTTOM) {
+        // Detect blinks (EAR-based, distance-invariant)
+        val leftBlink = if (landmarks.size > maxOf(LEFT_EYE_TOP, LEFT_EYE_BOTTOM, LEFT_EYE_OUTER, LEFT_EYE_INNER)) {
             gazeCalculator.detectBlink(
-                landmarks[LEFT_EYE_TOP],
-                landmarks[LEFT_EYE_BOTTOM]
+                eyeTop = landmarks[LEFT_EYE_TOP],
+                eyeBottom = landmarks[LEFT_EYE_BOTTOM],
+                eyeOuter = landmarks[LEFT_EYE_OUTER],
+                eyeInner = landmarks[LEFT_EYE_INNER],
+                frameWidth = frameWidth,
+                frameHeight = frameHeight
             )
         } else false
 
-        val rightBlink = if (landmarks.size > RIGHT_EYE_BOTTOM) {
+        val rightBlink = if (landmarks.size > maxOf(RIGHT_EYE_TOP, RIGHT_EYE_BOTTOM, RIGHT_EYE_OUTER, RIGHT_EYE_INNER)) {
             gazeCalculator.detectBlink(
-                landmarks[RIGHT_EYE_TOP],
-                landmarks[RIGHT_EYE_BOTTOM]
+                eyeTop = landmarks[RIGHT_EYE_TOP],
+                eyeBottom = landmarks[RIGHT_EYE_BOTTOM],
+                eyeOuter = landmarks[RIGHT_EYE_OUTER],
+                eyeInner = landmarks[RIGHT_EYE_INNER],
+                frameWidth = frameWidth,
+                frameHeight = frameHeight
             )
         } else false
+
+        // Both eyes blinking: no iris data is available, but the caller still
+        // needs a result carrying the blink flags so double-blink recenter can
+        // fire. Reuse the last known gaze so the cursor holds position.
+        if (leftBlink && rightBlink) {
+            return blinkOnlyResult(headYaw, headPitch, headRoll)
+        }
 
         // Calculate iris positions
         var leftGaze: FloatArray? = null
@@ -209,7 +226,9 @@ class GazeTracker(
         )
 
         // Apply smoothing
-        val (smoothedX, smoothedY) = applySmoothing(compensatedX, compensatedY)
+        val (smoothedX, smoothedY) = applySmoothing(compensatedX, compensatedY, timestampMs)
+        lastGazeX = smoothedX
+        lastGazeY = smoothedY
 
         return GazeResult(
             gazeX = smoothedX,
@@ -225,10 +244,32 @@ class GazeTracker(
         )
     }
 
+    /**
+     * Result emitted while both eyes are closed: carries the blink flags with
+     * the last known gaze values (or center if none yet). The Swift side skips
+     * cursor movement for these results, so the cursor holds still during the
+     * blink instead of jumping.
+     */
+    private fun blinkOnlyResult(headYaw: Float, headPitch: Float, headRoll: Float): GazeResult {
+        return GazeResult(
+            gazeX = lastGazeX ?: 0f,
+            gazeY = lastGazeY ?: 0f,
+            leftIrisCenter = null,
+            rightIrisCenter = null,
+            confidence = 0f,
+            leftBlink = true,
+            rightBlink = true,
+            headYaw = headYaw,
+            headPitch = headPitch,
+            headRoll = headRoll
+        )
+    }
+
     private fun process3D(
         landmarks: List<com.vocable.eyetracking.models.LandmarkPoint>,
         frameWidth: Float,
-        frameHeight: Float
+        frameHeight: Float,
+        timestampMs: Long = 0L
     ): GazeResult? {
         val (headYaw, headPitch, headRoll) = eyeball3DCalculator.estimateHeadPose(
             landmarks,
@@ -236,8 +277,29 @@ class GazeTracker(
             frameHeight
         )
 
-        val leftBlink = eyeball3DCalculator.detectBlink(landmarks, Eyeball3DGazeCalculator.LEFT_EYE_TOP, Eyeball3DGazeCalculator.LEFT_EYE_BOTTOM)
-        val rightBlink = eyeball3DCalculator.detectBlink(landmarks, Eyeball3DGazeCalculator.RIGHT_EYE_TOP, Eyeball3DGazeCalculator.RIGHT_EYE_BOTTOM)
+        val leftBlink = eyeball3DCalculator.detectBlink(
+            landmarks,
+            Eyeball3DGazeCalculator.LEFT_EYE_TOP,
+            Eyeball3DGazeCalculator.LEFT_EYE_BOTTOM,
+            Eyeball3DGazeCalculator.LEFT_EYE_OUTER,
+            Eyeball3DGazeCalculator.LEFT_EYE_INNER,
+            frameWidth,
+            frameHeight
+        )
+        val rightBlink = eyeball3DCalculator.detectBlink(
+            landmarks,
+            Eyeball3DGazeCalculator.RIGHT_EYE_TOP,
+            Eyeball3DGazeCalculator.RIGHT_EYE_BOTTOM,
+            Eyeball3DGazeCalculator.RIGHT_EYE_OUTER,
+            Eyeball3DGazeCalculator.RIGHT_EYE_INNER,
+            frameWidth,
+            frameHeight
+        )
+
+        // See process2D: surface both-eye blinks instead of returning null.
+        if (leftBlink && rightBlink) {
+            return blinkOnlyResult(headYaw, headPitch, headRoll)
+        }
 
         val useLeftEye = eyeSelection == EyeSelection.BOTH_EYES || eyeSelection == EyeSelection.LEFT_EYE_ONLY
         val useRightEye = eyeSelection == EyeSelection.BOTH_EYES || eyeSelection == EyeSelection.RIGHT_EYE_ONLY
@@ -276,7 +338,9 @@ class GazeTracker(
             eyeSelection
         ) ?: return null
 
-        val (smoothedX, smoothedY) = applySmoothing(combined.first, combined.second)
+        val (smoothedX, smoothedY) = applySmoothing(combined.first, combined.second, timestampMs)
+        lastGazeX = smoothedX
+        lastGazeY = smoothedY
 
         val leftIrisCenter = if (landmarks.size > Eyeball3DGazeCalculator.LEFT_IRIS_CENTER) {
             val iris = landmarks[Eyeball3DGazeCalculator.LEFT_IRIS_CENTER]
@@ -307,10 +371,19 @@ class GazeTracker(
     private var oldGazeY: Float? = null
     private var lerpFactor: Float = 0.3f
 
+    // Last successfully computed gaze, reused for blink-only results
+    private var lastGazeX: Float? = null
+    private var lastGazeY: Float? = null
+
+    // Elapsed-time tracking for dt-aware Kalman (nanoseconds from landmark timestamp
+    // when available; otherwise wall-clock via successive processFrame calls).
+    private var lastSmoothTimestampNs: Long? = null
+
     /**
      * Apply smoothing filter to gaze coordinates.
      */
-    private fun applySmoothing(gazeX: Float, gazeY: Float): Pair<Float, Float> {
+    private fun applySmoothing(gazeX: Float, gazeY: Float, timestampMs: Long? = null): Pair<Float, Float> {
+        val dt = computeSmoothDt(timestampMs)
         return when (smoothingMode) {
             SmoothingMode.SIMPLE_LERP -> {
                 val ox = oldGazeX
@@ -328,16 +401,16 @@ class GazeTracker(
                 }
             }
             SmoothingMode.KALMAN_FILTER -> {
-                val filtered = kalmanFilter.update(gazeX, gazeY)
+                val filtered = kalmanFilter.update(gazeX, gazeY, dt)
                 Pair(filtered[0], filtered[1])
             }
             SmoothingMode.ADAPTIVE_KALMAN -> {
-                val filtered = adaptiveKalmanFilter.update(gazeX, gazeY)
+                val filtered = adaptiveKalmanFilter.update(gazeX, gazeY, dt)
                 Pair(filtered[0], filtered[1])
             }
             SmoothingMode.COMBINED -> {
                 // Adaptive Kalman first, then lerp for additional smoothing
-                val filtered = adaptiveKalmanFilter.update(gazeX, gazeY)
+                val filtered = adaptiveKalmanFilter.update(gazeX, gazeY, dt)
                 val ox = oldGazeX
                 val oy = oldGazeY
                 if (ox == null || oy == null) {
@@ -354,6 +427,18 @@ class GazeTracker(
                 }
             }
         }
+    }
+
+    private fun computeSmoothDt(timestampMs: Long?): Float {
+        if (timestampMs == null || timestampMs <= 0L) {
+            return KalmanFilter2D.DEFAULT_DT
+        }
+        val nowNs = timestampMs * 1_000_000L
+        val previous = lastSmoothTimestampNs
+        lastSmoothTimestampNs = nowNs
+        if (previous == null) return KalmanFilter2D.DEFAULT_DT
+        val dt = (nowNs - previous).toFloat() / 1_000_000_000f
+        return if (dt <= 0f) KalmanFilter2D.DEFAULT_DT else dt
     }
 
     /**
@@ -381,6 +466,9 @@ class GazeTracker(
         adaptiveKalmanFilter.reset()
         oldGazeX = null
         oldGazeY = null
+        lastGazeX = null
+        lastGazeY = null
+        lastSmoothTimestampNs = null
     }
 
     /**

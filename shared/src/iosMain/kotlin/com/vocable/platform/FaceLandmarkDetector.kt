@@ -3,6 +3,8 @@ package com.vocable.platform
 import com.vocable.eyetracking.models.LandmarkPoint
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.concurrent.AtomicLong
+import kotlin.concurrent.AtomicReference
 import kotlin.coroutines.resume
 
 /**
@@ -25,9 +27,20 @@ actual class PlatformFaceLandmarkDetector : FaceLandmarkDetector {
     private var usingGpu = false
     private var swiftBridge: IOSFaceLandmarkBridge? = null
 
-    // Pending result for async detection
-    private var pendingResult: FaceLandmarkResult? = null
-    private var resultCallback: ((FaceLandmarkResult?) -> Unit)? = null
+    /**
+     * In-flight detection callback. Written by the caller's coroutine and
+     * consumed (atomically exchanged) by the MediaPipe detection queue, so it
+     * must be an atomic reference — a plain var could double-resume the
+     * continuation or drop a result under concurrent access.
+     *
+     * Pair is (requestGeneration, callback). Late MediaPipe results for a
+     * superseded request are ignored via the generation check.
+     */
+    private val resultCallback =
+        AtomicReference<Pair<Long, (FaceLandmarkResult?) -> Unit>?>(null)
+
+    /** Monotonic request id so late callbacks cannot resume a newer wait. */
+    private val requestGeneration = AtomicLong(0)
 
     /**
      * Set the Swift bridge that handles actual MediaPipe detection.
@@ -55,24 +68,33 @@ actual class PlatformFaceLandmarkDetector : FaceLandmarkDetector {
         // Timeout prevents permanent hang if Swift bridge never calls back
         // (e.g., if MediaPipe fails silently or the detection queue stalls).
         // 2 seconds is generous — normal detection takes ~20-50ms.
+        val generation = requestGeneration.addAndGet(1)
         return withTimeoutOrNull(2000L) {
             suspendCancellableCoroutine { continuation ->
-                // Request detection from Swift side
-                // Swift will call onLandmarksDetected when ready
-                resultCallback = { result ->
+                val callback: (FaceLandmarkResult?) -> Unit = { result ->
                     if (continuation.isActive) {
                         continuation.resume(result)
                     }
-                    resultCallback = null
                 }
+                resultCallback.value = generation to callback
 
                 continuation.invokeOnCancellation {
-                    // Clean up callback if coroutine is cancelled (e.g., by timeout)
-                    resultCallback = null
+                    // Only clear if this request is still the active one
+                    val current = resultCallback.value
+                    if (current != null && current.first == generation) {
+                        resultCallback.compareAndSet(current, null)
+                    }
                 }
 
                 // Trigger detection on Swift side
                 bridge.requestDetection()
+            }
+        }.also {
+            // Timeout / completion: drop callback if still ours so a late
+            // MediaPipe result cannot resume a finished continuation.
+            val current = resultCallback.value
+            if (current != null && current.first == generation) {
+                resultCallback.compareAndSet(current, null)
             }
         }
     }
@@ -82,7 +104,8 @@ actual class PlatformFaceLandmarkDetector : FaceLandmarkDetector {
      * This bridges the async result back to Kotlin coroutines.
      */
     fun onLandmarksDetected(result: FaceLandmarkResult?) {
-        resultCallback?.invoke(result)
+        val holder = resultCallback.getAndSet(null) ?: return
+        holder.second.invoke(result)
     }
 
     /**
@@ -127,7 +150,7 @@ actual class PlatformFaceLandmarkDetector : FaceLandmarkDetector {
     override fun close() {
         swiftBridge?.close()
         isInitialized = false
-        resultCallback = null
+        resultCallback.value = null
     }
 }
 

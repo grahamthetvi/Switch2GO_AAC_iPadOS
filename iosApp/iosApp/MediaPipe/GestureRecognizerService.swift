@@ -17,7 +17,8 @@ final class GestureRecognizerService: NSObject, ObservableObject {
     @Published private(set) var isTracking = false
 
     private let detectionQueue = DispatchQueue(label: "com.switch2go.mediapipe.gesture")
-    private var latestSampleBuffer: CMSampleBuffer?
+    /// Retain only the pixel buffer — never the CMSampleBuffer from AVCapture's pool.
+    private var latestPixelBuffer: CVPixelBuffer?
     private var latestOrientation: UIImage.Orientation = .up
     private var pendingRequest = false
     private var isDetecting = false
@@ -35,7 +36,7 @@ final class GestureRecognizerService: NSObject, ObservableObject {
         if isInitialized && lastUseGpu == useGpu && gestureRecognizer != nil {
             pendingRequest = false
             isDetecting = false
-            latestSampleBuffer = nil
+            latestPixelBuffer = nil
             DebugLog.info("Reused existing GestureRecognizer (GPU: \(useGpu))", tag: "MediaPipe")
             return true
         }
@@ -47,7 +48,7 @@ final class GestureRecognizerService: NSObject, ObservableObject {
         lastUseGpu = useGpu
         pendingRequest = false
         isDetecting = false
-        latestSampleBuffer = nil
+        latestPixelBuffer = nil
 
         do {
             guard let modelPath = Self.modelPath() else {
@@ -79,7 +80,9 @@ final class GestureRecognizerService: NSObject, ObservableObject {
     func updateLatestSampleBuffer(_ sampleBuffer: CMSampleBuffer, orientation: UIImage.Orientation) {
         detectionQueue.async { [weak self] in
             guard let self else { return }
-            self.latestSampleBuffer = sampleBuffer
+            if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+                self.latestPixelBuffer = pixelBuffer
+            }
             self.latestOrientation = orientation
             self.triggerDetectionIfNeeded()
         }
@@ -98,7 +101,7 @@ final class GestureRecognizerService: NSObject, ObservableObject {
             guard let self else { return }
             self.pendingRequest = false
             self.isDetecting = false
-            self.latestSampleBuffer = nil
+            self.latestPixelBuffer = nil
         }
         DispatchQueue.main.async { [weak self] in
             self?.currentHands = []
@@ -121,7 +124,7 @@ final class GestureRecognizerService: NSObject, ObservableObject {
         isInitialized = false
         pendingRequest = false
         isDetecting = false
-        latestSampleBuffer = nil
+        latestPixelBuffer = nil
         DispatchQueue.main.async { [weak self] in
             self?.currentHands = []
             self?.isTracking = false
@@ -136,7 +139,7 @@ final class GestureRecognizerService: NSObject, ObservableObject {
 
         guard pendingRequest, !isDetecting else { return }
 
-        guard let buffer = latestSampleBuffer else {
+        guard let pixelBuffer = latestPixelBuffer else {
             pendingRequest = false
             notifyNoGestures()
             return
@@ -147,7 +150,7 @@ final class GestureRecognizerService: NSObject, ObservableObject {
             return
         }
 
-        guard let image = try? MPImage(sampleBuffer: buffer, orientation: latestOrientation) else {
+        guard let image = try? MPImage(pixelBuffer: pixelBuffer, orientation: latestOrientation) else {
             notifyNoGestures()
             return
         }

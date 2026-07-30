@@ -68,8 +68,11 @@ struct CategoriesView: View {
             let rowCount = max(Int(ceil(Double(viewModel.categories.count) / Double(columnCount))), 1)
             let spacing: CGFloat = 12
             let padding: CGFloat = 12
+            // Leave room for ContentView's floating settings control
+            // (status-bar inset ~59 + pad + ~44pt gear + gap).
+            let topChrome: CGFloat = 100
             let totalSpacing = spacing * CGFloat(max(rowCount - 1, 0))
-            let availableHeight = geometry.size.height - totalSpacing - (padding * 2)
+            let availableHeight = geometry.size.height - totalSpacing - (padding * 2) - topChrome
             let itemHeight = max(140, availableHeight / CGFloat(rowCount))
 
             ScrollView {
@@ -90,7 +93,9 @@ struct CategoriesView: View {
                         )
                     }
                 }
-                .padding(padding)
+                .padding(.horizontal, padding)
+                .padding(.bottom, padding)
+                .padding(.top, padding + topChrome)
             }
             .scrollContentBackground(.hidden)
             .background(settings.appBorderColor)
