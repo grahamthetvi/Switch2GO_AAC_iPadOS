@@ -170,8 +170,8 @@ private struct GameGazeZoneRegistrar: View {
             .onChange(of: dwellManager.hoveredButtonId) { _, hovered in
                 coordinator.showExitControl = hovered == id
             }
-            .onChange(of: dwellManager.activationToken) { _, _ in
-                guard dwellManager.activatedButtonId == id else { return }
+            .onChange(of: dwellManager.lastActivation) { _, activation in
+                guard let activation, activation.buttonId == id else { return }
                 coordinator.stopEarly()
             }
             .onDisappear {

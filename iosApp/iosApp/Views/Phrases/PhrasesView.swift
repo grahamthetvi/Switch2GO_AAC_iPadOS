@@ -1,6 +1,7 @@
 import SwiftUI
 import VocableShared
 import UIKit
+import Combine
 
 /// Phrases grid screen for a category
 struct PhrasesView: View {
@@ -11,8 +12,8 @@ struct PhrasesView: View {
     @EnvironmentObject var gameCoordinator: GamePlaybackCoordinator
     @StateObject private var viewModel: PhrasesViewModel
     @StateObject private var settings = AppSettings.shared
-    @StateObject private var ttsManager = TTSManager.shared
     @State private var currentPage = 0
+    @State private var lastHandledActivationToken: UInt64 = 0
     @Environment(\.dismiss) private var dismiss
     
     init(categoryId: String, database: VocableDatabase = DatabaseManager.shared.db) {
@@ -59,6 +60,8 @@ struct PhrasesView: View {
         .tint(.blue)
         .onAppear {
             gazeManager.dwellManager.unregisterButtons(withPrefix: "cat_")
+            // Don't replay activations that happened before this screen appeared.
+            lastHandledActivationToken = gazeManager.dwellManager.activationToken
         }
         .onDisappear {
             gazeManager.dwellManager.clearAllButtons()
@@ -68,8 +71,8 @@ struct PhrasesView: View {
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PhrasesUpdated"))) { _ in
             viewModel.loadPhrases()
         }
-        .onReceive(gazeManager.dwellManager.$activationToken) { _ in
-            dispatchDwellPhraseActivation()
+        .onReceive(gazeManager.dwellManager.$lastActivation.compactMap { $0 }) { activation in
+            dispatchDwellPhraseActivation(activation)
         }
         .onReceive(gazeManager.armRaiseActivation) { side in
             guard settings.selectionMode == "armRaise" else { return }
@@ -204,7 +207,15 @@ struct PhrasesView: View {
                                     id: "phrase_\(phrase.id)",
                                     manager: gazeManager.dwellManager,
                                     isActive: currentPage == page,
-                                    onActivate: {}
+                                    onActivate: {
+                                        // Belt-and-suspenders with $lastActivation:
+                                        // LazyVGrid recycling can drop per-button handlers,
+                                        // but when they fire this shares the token dedupe path.
+                                        if let activation = gazeManager.dwellManager.lastActivation,
+                                           activation.buttonId == "phrase_\(phrase.id)" {
+                                            dispatchDwellPhraseActivation(activation)
+                                        }
+                                    }
                                 )
                         }
                     }
@@ -241,20 +252,26 @@ struct PhrasesView: View {
             )
             return
         }
+        DebugLog.info("Phrase selected — speaking \"\(phrase.text)\"", tag: "Dwell")
         viewModel.markPhraseAsSpoken(phraseId: phrase.id)
-        ttsManager.speak(phrase.text)
+        TTSManager.shared.speak(phrase.text)
         mediaCoordinator.onPhraseSelected(phrase)
         gameCoordinator.onPhraseSelected(phrase)
     }
 
-    private func dispatchDwellPhraseActivation() {
-        guard let buttonId = gazeManager.dwellManager.activatedButtonId,
-              buttonId.hasPrefix("phrase_") else { return }
-        let phraseId = String(buttonId.dropFirst("phrase_".count))
+    private func dispatchDwellPhraseActivation(_ activation: DwellActivation) {
+        guard activation.token != lastHandledActivationToken else { return }
+        guard activation.buttonId.hasPrefix("phrase_") else { return }
+        // Ignore stale activations replayed while phrases are still loading
+        // (onReceive resubscribes and can redeliver CurrentValueSubject values).
+        guard !viewModel.isLoading else { return }
+
+        let phraseId = String(activation.buttonId.dropFirst("phrase_".count))
         guard let phrase = viewModel.phrases.first(where: { $0.id == phraseId }) else {
-            DebugLog.warn("Dwell: no phrase matches \(buttonId)", tag: "Dwell")
+            DebugLog.warn("Dwell: no phrase matches \(activation.buttonId)", tag: "Dwell")
             return
         }
+        lastHandledActivationToken = activation.token
         handlePhraseSelection(phrase)
     }
 }

@@ -15,8 +15,16 @@ enum GazeCoordinateSpace {
 /// 1. Register button frames via `registerButton(id:frame:)`
 /// 2. Feed gaze positions via `updateGazePosition(_:)`
 /// 3. Observe `hoveredButtonId` and `dwellProgress` for UI
-/// 4. Listen to `activatedButtonId` for selection events
+/// 4. Listen to `lastActivation` / `activationToken` for selection events
 /// 5. Call `activateHoveredButton()` for instant switch-based selection
+///
+/// One dwell/switch activation event (token + button id published together).
+struct DwellActivation: Equatable {
+    let token: UInt64
+    let buttonId: String
+}
+
+/// Manages dwell-based selection for gaze, switch, and scanning input.
 class DwellSelectionManager: ObservableObject {
     /// The button currently being hovered over (nil if none)
     @Published var hoveredButtonId: String?
@@ -33,6 +41,10 @@ class DwellSelectionManager: ObservableObject {
     /// Increments on every activation so observers reliably receive events even when
     /// `activatedButtonId` repeats or LazyVGrid/TabView recycles child views.
     @Published private(set) var activationToken: UInt64 = 0
+
+    /// Atomic activation snapshot so observers never race `activatedButtonId`
+    /// being cleared by a subsequent `startDwell` before they handle the event.
+    @Published private(set) var lastActivation: DwellActivation?
 
     /// The button highlighted in scanning mode (nil if not scanning)
     @Published var scanHighlightedButtonId: String?
@@ -263,9 +275,13 @@ class DwellSelectionManager: ObservableObject {
 
     /// Record an activation and notify observers (haptic optional).
     private func publishActivation(buttonId: String, hapticStyle: UIImpactFeedbackGenerator.FeedbackStyle?) {
-        DebugLog.debug("Dwell: activated \(buttonId)", tag: "Dwell")
-        activatedButtonId = buttonId
         activationToken &+= 1
+        let activation = DwellActivation(token: activationToken, buttonId: buttonId)
+        DebugLog.debug("Dwell: activated \(buttonId) (token=\(activation.token))", tag: "Dwell")
+        // Keep legacy fields for existing observers, then publish the atomic
+        // snapshot last so `$lastActivation` subscribers always see a matching id.
+        activatedButtonId = buttonId
+        lastActivation = activation
         lastActivationTime = CACurrentMediaTime()
 
         if let hapticStyle {
@@ -450,10 +466,9 @@ struct DwellSelectableModifier: ViewModifier {
             )
             .scaleEffect((isHovered || isScanHighlighted) ? 1.03 : 1.0)
             .animation(.easeInOut(duration: 0.15), value: isHovered || isScanHighlighted)
-            .onChange(of: dwellManager.activationToken) { _, _ in
-                if dwellManager.activatedButtonId == id {
-                    onActivate()
-                }
+            .onChange(of: dwellManager.lastActivation) { _, activation in
+                guard let activation, activation.buttonId == id else { return }
+                onActivate()
             }
             .onDisappear {
                 dwellManager.unregisterButton(id: id)
