@@ -18,6 +18,8 @@ class TTSManager: NSObject, ObservableObject, @unchecked Sendable, AVSpeechSynth
     
     private var phraseQueue: [String] = []
     
+    private var utteranceGeneration: UInt64 = 0
+
     private override init() {
         super.init()
         synthesizer.delegate = self
@@ -59,19 +61,35 @@ class TTSManager: NSObject, ObservableObject, @unchecked Sendable, AVSpeechSynth
     
     /// Speak text immediately (interrupts current speech)
     func speak(_ text: String) {
-        guard !text.isEmpty else { return }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
 
-        configureAudioSession()
-        
-        // Stop current speech
-        if synthesizer.isSpeaking {
-            synthesizer.stopSpeaking(at: .immediate)
+        // AVSpeechSynthesizer + AVAudioSession changes must run on the main thread.
+        // Defer one turn so session activation settles before enqueueing speech
+        // (avoids silent no-ops while the camera capture session is active).
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.configureAudioSession()
+
+            self.utteranceGeneration &+= 1
+            let generation = self.utteranceGeneration
+
+            if self.synthesizer.isSpeaking || self.synthesizer.isPaused {
+                self.synthesizer.stopSpeaking(at: .immediate)
+            }
+
+            self.currentText = trimmed
+            let utterance = self.createUtterance(from: trimmed)
+            DebugLog.info("Speaking: \"\(trimmed)\"", tag: "TTSManager")
+
+            // stopSpeaking's didCancel can race an immediate speak(); defer one
+            // turn so the cancelled utterance settles before the new one starts.
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.utteranceGeneration == generation else { return }
+                self.synthesizer.speak(utterance)
+                self.isSpeaking = true
+            }
         }
-        
-        currentText = text
-        let utterance = createUtterance(from: text)
-        synthesizer.speak(utterance)
-        isSpeaking = true
     }
     
     /// Add text to queue (speaks after current finishes)
@@ -89,6 +107,7 @@ class TTSManager: NSObject, ObservableObject, @unchecked Sendable, AVSpeechSynth
     
     /// Stop speaking immediately
     func stop() {
+        utteranceGeneration &+= 1
         synthesizer.stopSpeaking(at: .immediate)
         phraseQueue.removeAll()
         isSpeaking = false
@@ -136,10 +155,28 @@ class TTSManager: NSObject, ObservableObject, @unchecked Sendable, AVSpeechSynth
     private func configureAudioSession() {
         let session = AVAudioSession.sharedInstance()
         do {
-            try session.setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
+            // mixWithOthers keeps TTS audible while the eye-tracking camera
+            // capture session owns the shared audio session.
+            // defaultToSpeaker matters on iPhone; harmless on iPad.
+            try session.setCategory(
+                .playback,
+                mode: .spokenAudio,
+                options: [.duckOthers, .mixWithOthers, .defaultToSpeaker]
+            )
             try session.setActive(true, options: [])
         } catch {
             DebugLog.error("Failed to configure audio session: \(error)", tag: "TTSManager")
+            // Fallback without defaultToSpeaker for older route configurations.
+            do {
+                try session.setCategory(
+                    .playback,
+                    mode: .spokenAudio,
+                    options: [.duckOthers, .mixWithOthers]
+                )
+                try session.setActive(true, options: [])
+            } catch {
+                DebugLog.error("Audio session fallback failed: \(error)", tag: "TTSManager")
+            }
         }
     }
     
@@ -167,9 +204,12 @@ class TTSManager: NSObject, ObservableObject, @unchecked Sendable, AVSpeechSynth
     
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
         DispatchQueue.main.async { [weak self] in
-            self?.isSpeaking = false
-            self?.currentText = ""
-            self?.phraseQueue.removeAll()
+            guard let self else { return }
+            // A newer speak() may already be in flight after stopSpeaking.
+            guard !self.synthesizer.isSpeaking else { return }
+            self.isSpeaking = false
+            self.currentText = ""
+            self.phraseQueue.removeAll()
         }
     }
 }

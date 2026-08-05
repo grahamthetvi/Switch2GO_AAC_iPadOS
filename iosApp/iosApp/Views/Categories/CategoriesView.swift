@@ -1,5 +1,6 @@
 import SwiftUI
 import VocableShared
+import Combine
 
 /// Main categories grid screen
 struct CategoriesView: View {
@@ -8,6 +9,7 @@ struct CategoriesView: View {
     @StateObject private var settings = AppSettings.shared
     @State private var selectedCategory: String?
     @State private var navigateToPhases = false
+    @State private var lastHandledActivationToken: UInt64 = 0
     
     init(database: VocableDatabase = DatabaseManager.shared.db) {
         _viewModel = StateObject(wrappedValue: CategoriesViewModel(database: database))
@@ -44,15 +46,25 @@ struct CategoriesView: View {
             .onAppear {
                 viewModel.loadCategories()
                 gazeManager.dwellManager.unregisterButtons(withPrefix: "phrase_")
+                lastHandledActivationToken = gazeManager.dwellManager.activationToken
             }
             .onDisappear {
-                gazeManager.dwellManager.clearAllButtons()
+                // Only drop category targets. clearAllButtons() here races PhrasesView
+                // registration when NavigationStack pushes the phrases destination.
+                gazeManager.dwellManager.unregisterButtons(withPrefix: "cat_")
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("CategoriesUpdated"))) { _ in
                 viewModel.loadCategories()
             }
-            .onReceive(gazeManager.dwellManager.$activationToken) { _ in
-                dispatchDwellCategoryActivation()
+            .onReceive(gazeManager.dwellManager.$lastActivation.compactMap { $0 }) { activation in
+                dispatchDwellCategoryActivation(activation)
+            }
+            .onChange(of: navigateToPhases) { _, isShowingPhrases in
+                if isShowingPhrases {
+                    // Phrases screen owns dwell targets; drop category registrations
+                    // so covered category tiles cannot steal activations or remount PhrasesView.
+                    gazeManager.dwellManager.unregisterButtons(withPrefix: "cat_")
+                }
             }
         }
         .background(settings.appBorderColor.ignoresSafeArea())
@@ -89,7 +101,13 @@ struct CategoriesView: View {
                         .dwellSelectable(
                             id: "cat_\(category.id)",
                             manager: gazeManager.dwellManager,
-                            onActivate: {}
+                            isActive: !navigateToPhases,
+                            onActivate: {
+                                if let activation = gazeManager.dwellManager.lastActivation,
+                                   activation.buttonId == "cat_\(category.id)" {
+                                    dispatchDwellCategoryActivation(activation)
+                                }
+                            }
                         )
                     }
                 }
@@ -124,14 +142,16 @@ struct CategoriesView: View {
         }
     }
 
-    private func dispatchDwellCategoryActivation() {
-        guard let buttonId = gazeManager.dwellManager.activatedButtonId,
-              buttonId.hasPrefix("cat_") else { return }
-        let categoryId = String(buttonId.dropFirst("cat_".count))
+    private func dispatchDwellCategoryActivation(_ activation: DwellActivation) {
+        guard activation.token != lastHandledActivationToken else { return }
+        guard !navigateToPhases else { return }
+        guard activation.buttonId.hasPrefix("cat_") else { return }
+        let categoryId = String(activation.buttonId.dropFirst("cat_".count))
         guard viewModel.categories.contains(where: { $0.id == categoryId }) else {
-            DebugLog.warn("Dwell: no category matches \(buttonId)", tag: "Dwell")
+            DebugLog.warn("Dwell: no category matches \(activation.buttonId)", tag: "Dwell")
             return
         }
+        lastHandledActivationToken = activation.token
         selectedCategory = categoryId
         navigateToPhases = true
     }
