@@ -1,0 +1,17 @@
+{
+  "name": "Switch2Go Web",
+  "install": "bash .cursor/install.sh",
+  "terminals": [
+    {
+      "name": "web-dev",
+      "command": "cd web && npm run dev",
+      "description": "Vite dev server for the Switch2Go web app (http://localhost:5173/Switch2GO_AAC_iPadOS/)."
+    }
+  ],
+  "ports": [
+    {
+      "name": "web",
+      "port": 5173
+    }
+  ]
+}
