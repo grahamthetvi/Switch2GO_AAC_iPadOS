@@ -23,6 +23,10 @@ insertCategory:
 INSERT OR REPLACE INTO Category (category_id, creation_date, localized_name, hidden, sort_order, color_hex, symbol_name)
 VALUES (?, ?, ?, ?, ?, ?, ?);
 
+insertCategoryExclusive:
+INSERT INTO Category (category_id, creation_date, localized_name, hidden, sort_order, color_hex, symbol_name)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
 updateCategoryName:
 UPDATE Category SET localized_name = ? WHERE category_id = ?;
 

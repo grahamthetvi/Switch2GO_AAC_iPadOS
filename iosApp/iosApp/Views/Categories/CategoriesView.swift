@@ -5,6 +5,7 @@ import Combine
 /// Main categories grid screen
 struct CategoriesView: View {
     @EnvironmentObject var gazeManager: GazeTrackingManager
+    @EnvironmentObject var phrasePacks: PhrasePackSession
     @StateObject private var viewModel: CategoriesViewModel
     @StateObject private var settings = AppSettings.shared
     @State private var selectedCategory: String?
@@ -55,6 +56,13 @@ struct CategoriesView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("CategoriesUpdated"))) { _ in
                 viewModel.loadCategories()
+            }
+            .onChange(of: phrasePacks.importedCategoryId) { _, categoryId in
+                guard let categoryId else { return }
+                viewModel.loadCategories()
+                selectedCategory = categoryId
+                navigateToPhases = true
+                phrasePacks.importedCategoryId = nil
             }
             .onReceive(gazeManager.dwellManager.$lastActivation.compactMap { $0 }) { activation in
                 dispatchDwellCategoryActivation(activation)
@@ -205,4 +213,6 @@ struct CategoryButton: View {
 
 #Preview {
     CategoriesView()
+        .environmentObject(GazeTrackingManager())
+        .environmentObject(PhrasePackSession())
 }

@@ -44,6 +44,14 @@ struct MainSettingsView: View {
                                 color: .blue
                             )
                         }
+
+                        NavigationLink(destination: PhrasePackSettingsView()) {
+                            settingsRow(
+                                title: "Phrase Packs",
+                                icon: "square.and.arrow.up.on.square",
+                                color: .teal
+                            )
+                        }
                         
                         NavigationLink(destination: TimingSensitivityView()) {
                             settingsRow(

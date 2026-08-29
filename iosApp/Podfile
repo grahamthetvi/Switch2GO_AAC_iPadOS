@@ -13,6 +13,9 @@ target 'iosApp' do
   # This provides the FaceLandmarker API for eye tracking
   pod 'MediaPipeTasksVision', '~> 0.10.14'
 
+  # Zip create/extract for .switch2go phrase packs
+  pod 'ZIPFoundation', '~> 0.9'
+
   target 'iosAppTests' do
     inherit! :search_paths
   end

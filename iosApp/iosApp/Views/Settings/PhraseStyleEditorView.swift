@@ -302,12 +302,15 @@ struct PhraseStyleEditorView: View {
         MediaPickerView(
             mediaType: type,
             currentMediaRef: currentStyle.mediaRef,
-            onMediaSelected: { mediaRef, mediaType in
+            currentImageRef: currentStyle.imageRef,
+            onMediaSelected: { mediaRef, mediaType, posterRef in
                 clearPreviousLocalMedia(oldRef: currentStyle.mediaRef, newRef: mediaRef)
                 if mediaRef == nil {
                     clearPreviousLocalMedia(oldRef: currentStyle.mediaRef, newRef: nil)
                 }
+                let shouldApplyPoster = posterRef != nil && (currentStyle.imageRef == nil || currentStyle.imageRef?.isEmpty == true)
                 currentStyle = cloneCurrentStyle(
+                    imageRef: shouldApplyPoster ? posterRef : nil,
                     mediaRef: mediaRef,
                     mediaType: mediaType,
                     clearMedia: mediaRef == nil,

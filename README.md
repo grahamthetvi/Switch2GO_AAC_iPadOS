@@ -60,6 +60,7 @@ Neither iOS nor Web requires a 9-point gaze calibration for normal use. Most stu
 - Preset and custom phrases with TTS (iOS: system speech; Web: native speech + Piper fallback)
 - Optional **video/audio** and **YouTube** attachments on phrases (iOS and Web)
 - Optional **games** after phrase selection (e.g. Blocs, cursor rocket) on iOS and Web
+- **iOS phrase packs** (`.switch2go`): export a category and import it on another iPad via Mail, AirDrop, or Files. Built-in boards are never overwritten. Guided Access / Single App Mode blocks Mail and AirDrop; exit those modes or use Settings → Phrase Packs → Import from Files.
 
 ### Privacy
 
