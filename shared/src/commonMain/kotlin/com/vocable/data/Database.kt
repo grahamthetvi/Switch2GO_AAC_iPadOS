@@ -27,3 +27,14 @@ fun createDatabase(driverFactory: DatabaseDriverFactory): VocableDatabase {
     val driver = driverFactory.createDriver()
     return VocableDatabase(driver)
 }
+
+/**
+ * Runs [block] in a SQLite transaction. Return 0 (or throw) to roll back; return 1 to commit.
+ */
+fun VocableDatabase.runInTransaction(block: () -> Int) {
+    transaction {
+        if (block() == 0) {
+            error("transaction aborted")
+        }
+    }
+}

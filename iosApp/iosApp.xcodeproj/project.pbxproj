@@ -92,6 +92,14 @@
 		MEDB0062F6000MED0000006 /* YouTubePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0062F6000MED0000006 /* YouTubePickerView.swift */; };
 		TPN0012F6000TPN00000001 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */; };
 		TPN0022F6000TPN00000002 /* ThirdPartyNoticesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */; };
+		PACKB0012F7000PACK000001 /* PhrasePackModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0012F7000PACK000001 /* PhrasePackModels.swift */; };
+		PACKB0022F7000PACK000001 /* PhrasePackArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0022F7000PACK000001 /* PhrasePackArchive.swift */; };
+		PACKB0032F7000PACK000001 /* PhrasePackExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0032F7000PACK000001 /* PhrasePackExporter.swift */; };
+		PACKB0042F7000PACK000001 /* PhrasePackImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0042F7000PACK000001 /* PhrasePackImporter.swift */; };
+		PACKB0052F7000PACK000001 /* VideoMediaHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0052F7000PACK000001 /* VideoMediaHelpers.swift */; };
+		PACKB0062F7000PACK000001 /* PhrasePackSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0062F7000PACK000001 /* PhrasePackSession.swift */; };
+		PACKB0072F7000PACK000001 /* PhrasePackImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0072F7000PACK000001 /* PhrasePackImportView.swift */; };
+		PACKB0082F7000PACK000001 /* PhrasePackSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0082F7000PACK000001 /* PhrasePackSettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -268,6 +276,14 @@
 		MEDF0062F6000MED0000006 /* YouTubePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubePickerView.swift; sourceTree = "<group>"; };
 		TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
 		TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThirdPartyNoticesView.swift; sourceTree = "<group>"; };
+		PACKF0012F7000PACK000001 /* PhrasePackModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackModels.swift; sourceTree = "<group>"; };
+		PACKF0022F7000PACK000001 /* PhrasePackArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackArchive.swift; sourceTree = "<group>"; };
+		PACKF0032F7000PACK000001 /* PhrasePackExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackExporter.swift; sourceTree = "<group>"; };
+		PACKF0042F7000PACK000001 /* PhrasePackImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackImporter.swift; sourceTree = "<group>"; };
+		PACKF0052F7000PACK000001 /* VideoMediaHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoMediaHelpers.swift; sourceTree = "<group>"; };
+		PACKF0062F7000PACK000001 /* PhrasePackSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackSession.swift; sourceTree = "<group>"; };
+		PACKF0072F7000PACK000001 /* PhrasePackImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackImportView.swift; sourceTree = "<group>"; };
+		PACKF0082F7000PACK000001 /* PhrasePackSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -626,6 +642,7 @@
 				GAMEG0012F6000GAME000001 /* Game */,
 				DCE330402F304AC900ED4C53 /* Resources */,
 				DCE330422F304AC900ED4C53 /* Tracking */,
+				PACKG0012F7000PACK000001 /* PhrasePack */,
 				DCE3304A2F304AC900ED4C53 /* Views */,
 				BB000003AAAA000100000002 /* Services */,
 				DCE3304B2F304AC900ED4C53 /* ContentView.swift */,
@@ -1110,6 +1127,21 @@
 			path = Media;
 			sourceTree = "<group>";
 		};
+		PACKG0012F7000PACK000001 /* PhrasePack */ = {
+			isa = PBXGroup;
+			children = (
+				PACKF0012F7000PACK000001 /* PhrasePackModels.swift */,
+				PACKF0022F7000PACK000001 /* PhrasePackArchive.swift */,
+				PACKF0032F7000PACK000001 /* PhrasePackExporter.swift */,
+				PACKF0042F7000PACK000001 /* PhrasePackImporter.swift */,
+				PACKF0052F7000PACK000001 /* VideoMediaHelpers.swift */,
+				PACKF0062F7000PACK000001 /* PhrasePackSession.swift */,
+				PACKF0072F7000PACK000001 /* PhrasePackImportView.swift */,
+				PACKF0082F7000PACK000001 /* PhrasePackSettingsView.swift */,
+			);
+			path = PhrasePack;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1419,6 +1451,14 @@
 				DCDD8B112F500003000B97D2 /* SettingsHomeAction.swift in Sources */,
 				BB000001AAAA000100000001 /* WelcomeView.swift in Sources */,
 				BB000001AAAA000100000002 /* TroubleshootingView.swift in Sources */,
+				PACKB0012F7000PACK000001 /* PhrasePackModels.swift in Sources */,
+				PACKB0022F7000PACK000001 /* PhrasePackArchive.swift in Sources */,
+				PACKB0032F7000PACK000001 /* PhrasePackExporter.swift in Sources */,
+				PACKB0042F7000PACK000001 /* PhrasePackImporter.swift in Sources */,
+				PACKB0052F7000PACK000001 /* VideoMediaHelpers.swift in Sources */,
+				PACKB0062F7000PACK000001 /* PhrasePackSession.swift in Sources */,
+				PACKB0072F7000PACK000001 /* PhrasePackImportView.swift in Sources */,
+				PACKB0082F7000PACK000001 /* PhrasePackSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

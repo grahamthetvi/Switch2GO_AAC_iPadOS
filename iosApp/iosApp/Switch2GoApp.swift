@@ -6,11 +6,22 @@ import Combine
 @main
 struct Switch2GoApp: App {
     @StateObject private var appState = AppState()
+    @StateObject private var phrasePacks = PhrasePackSession()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
+                .environmentObject(phrasePacks)
+                .onOpenURL { url in
+                    let ext = url.pathExtension.lowercased()
+                    guard ext == PhrasePackFormat.fileExtension || ext == "zip" else { return }
+                    phrasePacks.handleIncomingFile(url)
+                }
+                .fullScreenCover(isPresented: $phrasePacks.showImportSheet) {
+                    PhrasePackImportView()
+                        .environmentObject(phrasePacks)
+                }
         }
     }
 }

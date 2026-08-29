@@ -48,6 +48,7 @@ Android (Gradle) — typical licenses:
 
 iOS — typical licenses:
   - MediaPipeTasksVision / MediaPipeTasksCommon: Apache-2.0 (see Section 1)
+  - ZIPFoundation (CocoaPods, bundled): MIT
   - VocableShared (Kotlin Multiplatform shared module): MIT (project)
   - Apple system frameworks (e.g. AVFoundation speech): Apple SDK terms
 

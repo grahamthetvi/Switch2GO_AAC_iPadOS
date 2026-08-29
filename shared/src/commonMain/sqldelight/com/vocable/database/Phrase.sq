@@ -31,6 +31,10 @@ insertPhrase:
 INSERT OR REPLACE INTO Phrase (phrase_id, parent_category_id, creation_date, last_spoken_date, localized_utterance, sort_order, style)
 VALUES (?, ?, ?, ?, ?, ?, ?);
 
+insertPhraseExclusive:
+INSERT INTO Phrase (phrase_id, parent_category_id, creation_date, last_spoken_date, localized_utterance, sort_order, style)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
 updatePhraseText:
 UPDATE Phrase SET localized_utterance = ? WHERE phrase_id = ?;
 

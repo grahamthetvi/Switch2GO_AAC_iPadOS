@@ -6,7 +6,8 @@ import VocableShared
 struct MediaPickerView: View {
     let mediaType: String
     let currentMediaRef: String?
-    let onMediaSelected: (String?, String?) -> Void
+    var currentImageRef: String? = nil
+    let onMediaSelected: (String?, String?, String?) -> Void
     let onCancel: () -> Void
 
     @State private var showingDocumentPicker = false
@@ -24,7 +25,7 @@ struct MediaPickerView: View {
                     }
 
                     Button {
-                        onMediaSelected(nil, nil)
+                        onMediaSelected(nil, nil, nil)
                     } label: {
                         optionRow(title: "Remove media", icon: "slash.circle", color: .gray)
                     }
@@ -37,6 +38,13 @@ struct MediaPickerView: View {
                             icon: mediaType == PhraseStyle.companion.MEDIA_TYPE_VIDEO ? "film" : "waveform",
                             color: .blue
                         )
+                    }
+
+                    if mediaType == PhraseStyle.companion.MEDIA_TYPE_VIDEO {
+                        Text("Videos must be 20 seconds or shorter. Longer files are not attached.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal)
                     }
                 }
                 .padding()
@@ -68,15 +76,48 @@ struct MediaPickerView: View {
     private func handlePickedURL(_ url: URL?) {
         showingDocumentPicker = false
         guard let url else { return }
-        let accessed = url.startAccessingSecurityScopedResource()
-        defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+        Task {
+            let accessed = url.startAccessingSecurityScopedResource()
+            defer { if accessed { url.stopAccessingSecurityScopedResource() } }
 
-        let ext = url.pathExtension.isEmpty ? (mediaType == PhraseStyle.companion.MEDIA_TYPE_VIDEO ? "mp4" : "m4a") : url.pathExtension
-        guard let saved = MediaStorage.saveMedia(from: url, preferredExtension: ext) else {
-            pickerError = "Could not save file (max 100 MB)."
-            return
+            if mediaType == PhraseStyle.companion.MEDIA_TYPE_VIDEO {
+                do {
+                    let seconds = try await VideoDurationLimiter.durationSeconds(url: url)
+                    if !VideoDurationLimiter.isWithinLimit(seconds) {
+                        await MainActor.run {
+                            pickerError = "Videos must be 20 seconds or shorter. This video is \(Int(seconds.rounded())) seconds."
+                        }
+                        return
+                    }
+                } catch {
+                    await MainActor.run {
+                        pickerError = "Could not read this video."
+                    }
+                    return
+                }
+            }
+
+            let ext = url.pathExtension.isEmpty
+                ? (mediaType == PhraseStyle.companion.MEDIA_TYPE_VIDEO ? "mp4" : "m4a")
+                : url.pathExtension
+            guard let saved = MediaStorage.saveMedia(from: url, preferredExtension: ext) else {
+                await MainActor.run {
+                    pickerError = "Could not save file (max 100 MB)."
+                }
+                return
+            }
+
+            var posterRef: String?
+            let needsPoster = mediaType == PhraseStyle.companion.MEDIA_TYPE_VIDEO
+                && (currentImageRef == nil || currentImageRef?.isEmpty == true)
+            if needsPoster, let posterURL = VideoPosterGenerator.savePosterImage(from: saved) {
+                posterRef = posterURL.absoluteString
+            }
+
+            await MainActor.run {
+                onMediaSelected(saved.absoluteString, mediaType, posterRef)
+            }
         }
-        onMediaSelected(saved.absoluteString, mediaType)
     }
 
     private func optionRow(title: String, icon: String, color: Color) -> some View {

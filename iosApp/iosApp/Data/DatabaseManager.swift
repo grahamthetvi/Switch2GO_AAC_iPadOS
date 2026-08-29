@@ -129,4 +129,25 @@ class DatabaseManager: ObservableObject {
         
         DebugLog.info("Database reset to defaults", tag: "DatabaseManager")
     }
+
+    /// Runs work in a SQLite transaction. Throws and rolls back if [work] throws.
+    func transaction(_ work: () throws -> Void) throws {
+        var captured: Error?
+        do {
+            DatabaseKt.runInTransaction(database) {
+                do {
+                    try work()
+                    return Int32(1)
+                } catch {
+                    captured = error
+                    return Int32(0)
+                }
+            }
+        } catch {
+            throw captured ?? error
+        }
+        if let captured {
+            throw captured
+        }
+    }
 }

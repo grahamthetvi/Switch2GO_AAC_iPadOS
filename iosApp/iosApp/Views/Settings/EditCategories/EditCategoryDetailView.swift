@@ -14,6 +14,12 @@ struct EditCategoryDetailView: View {
     @State private var showingSymbolPicker = false
     @State private var categoryColorHex: UInt32?
     @State private var categorySymbolName: String?
+    @State private var isExporting = false
+    @State private var showingShareSheet = false
+    @State private var exportShareURL: URL?
+    @State private var showingEmailSizeWarning = false
+    @State private var pendingExport: PhrasePackExportResult?
+    @State private var exportError: String?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
     
@@ -153,6 +159,31 @@ struct EditCategoryDetailView: View {
                 }
             }
             
+            Section("Phrase Pack") {
+                if CoreVocabulary.isRecents(category.id) {
+                    Text("Recently Said cannot be exported.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    Button {
+                        exportCategory()
+                    } label: {
+                        if isExporting {
+                            HStack {
+                                ProgressView()
+                                Text("Preparing pack...")
+                            }
+                        } else {
+                            Label("Export Category", systemImage: "square.and.arrow.up")
+                        }
+                    }
+                    .disabled(isExporting)
+                    Text("Creates a .switch2go file you can send by Mail, AirDrop, or Files. Videos should be 20 seconds or shorter. Files larger than 24.75 MB may not send by school email.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
             Section {
                 if !category.isPreset {
                     Button(role: .destructive, action: {
@@ -219,6 +250,35 @@ struct EditCategoryDetailView: View {
                 },
                 onCancel: { showingSymbolPicker = false }
             )
+        }
+        .alert("Could not export", isPresented: Binding(
+            get: { exportError != nil },
+            set: { if !$0 { exportError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(exportError ?? "")
+        }
+        .alert("File may be too large for email", isPresented: $showingEmailSizeWarning) {
+            Button("Share anyway") {
+                if let pendingExport {
+                    exportShareURL = pendingExport.fileURL
+                    showingShareSheet = true
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                pendingExport = nil
+            }
+        } message: {
+            Text("This pack is larger than 24.75 MB. School email may reject it. Use AirDrop or Save to Files.")
+        }
+        .sheet(isPresented: $showingShareSheet, onDismiss: {
+            exportShareURL = nil
+            pendingExport = nil
+        }) {
+            if let exportShareURL {
+                ShareSheet(items: [exportShareURL])
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PhrasesUpdated"))) { _ in
             phrasesViewModel.loadPhrases()
@@ -292,6 +352,31 @@ struct EditCategoryDetailView: View {
             DispatchQueue.main.async {
                 dismiss()
                 NotificationCenter.default.post(name: Notification.Name("CategoriesUpdated"), object: nil)
+            }
+        }
+    }
+
+    private func exportCategory() {
+        isExporting = true
+        let snapshot = category
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let result = try PhrasePackExporter.exportCategory(category: snapshot)
+                DispatchQueue.main.async {
+                    isExporting = false
+                    pendingExport = result
+                    if result.exceedsEmailLimit {
+                        showingEmailSizeWarning = true
+                    } else {
+                        exportShareURL = result.fileURL
+                        showingShareSheet = true
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    isExporting = false
+                    exportError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                }
             }
         }
     }

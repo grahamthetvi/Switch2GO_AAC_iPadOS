@@ -6,6 +6,7 @@ import AVFoundation
 /// Main content view that hosts the AAC interface and gaze tracking overlay.
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var phrasePacks: PhrasePackSession
     @StateObject private var gazeManager = GazeTrackingManager()
     @StateObject private var mediaCoordinator = MediaPlaybackCoordinator()
     @StateObject private var gameCoordinator = GamePlaybackCoordinator()
@@ -24,6 +25,7 @@ struct ContentView: View {
                 .environmentObject(gazeManager)
                 .environmentObject(mediaCoordinator)
                 .environmentObject(gameCoordinator)
+                .environmentObject(phrasePacks)
 
             MediaPlaybackOverlayView(
                 coordinator: mediaCoordinator,
@@ -74,6 +76,27 @@ struct ContentView: View {
             if let gameNotice = gameCoordinator.unsupportedGameNotice {
                 GameUnsupportedBanner(message: gameNotice) {
                     gameCoordinator.clearUnsupportedGameNotice()
+                }
+            }
+
+            if let toast = phrasePacks.toastMessage {
+                VStack {
+                    Spacer()
+                    Text(toast)
+                        .font(.footnote)
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.black.opacity(0.85))
+                        .cornerRadius(12)
+                        .padding()
+                }
+                .zIndex(30)
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                        if phrasePacks.toastMessage == toast {
+                            phrasePacks.toastMessage = nil
+                        }
+                    }
                 }
             }
 
@@ -159,16 +182,17 @@ struct ContentView: View {
             MainSettingsView()
                 .environmentObject(appState)
                 .environmentObject(gazeManager)
+                .environmentObject(phrasePacks)
                 .environment(\.settingsHomeAction, {
                     showSettings = false
                 })
         }
         .onChange(of: showSettings) { _, isOpen in
-            gazeManager.isModalOpen = isOpen || showOnboarding
+            updateModalTracking()
             if isOpen {
                 gazeManager.stopTracking()
             } else {
-                if !showOnboarding {
+                if !showOnboarding && !phrasePacks.showImportSheet {
                     updateTrackingForSelectionMode()
                 }
                 if !settings.hasSeenOnboarding {
@@ -180,16 +204,24 @@ struct ContentView: View {
             WelcomeView()
         }
         .onChange(of: showOnboarding) { _, isOpen in
-            gazeManager.isModalOpen = isOpen || showSettings
+            updateModalTracking()
             if isOpen {
                 gazeManager.stopTracking()
             } else {
-                if !showSettings {
+                if !showSettings && !phrasePacks.showImportSheet {
                     updateTrackingForSelectionMode()
                 }
                 // Show orientation banner after onboarding if not in the right orientation
                 let inTrackingOrientation = CameraManager.isTrackingSupportedOrientation
                 showOrientationBanner(trackingSupported: inTrackingOrientation)
+            }
+        }
+        .onChange(of: phrasePacks.showImportSheet) { _, isOpen in
+            updateModalTracking()
+            if isOpen {
+                gazeManager.stopTracking()
+            } else if !showSettings && !showOnboarding {
+                updateTrackingForSelectionMode()
             }
         }
         .onAppear {
@@ -285,6 +317,10 @@ struct ContentView: View {
             ?? scene.windows.first?.safeAreaInsets.top
             ?? 0
         return inset > 0 ? inset : 59
+    }
+
+    private func updateModalTracking() {
+        gazeManager.isModalOpen = showSettings || showOnboarding || phrasePacks.showImportSheet
     }
 
     private func updateTrackingForSelectionMode() {
@@ -605,4 +641,5 @@ struct CameraPreviewView: UIViewRepresentable {
 #Preview {
     ContentView()
         .environmentObject(AppState())
+        .environmentObject(PhrasePackSession())
 }
