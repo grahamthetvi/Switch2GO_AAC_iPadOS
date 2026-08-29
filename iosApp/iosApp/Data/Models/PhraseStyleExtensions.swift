@@ -64,8 +64,9 @@ extension PhraseStyle {
         return String(data: jsonData, encoding: .utf8)
     }
     
-    /// Decode from JSON string
-    static func fromJSONString(_ json: String) -> PhraseStyle? {
+    /// Decode from JSON string. SQLDelight style columns are nullable.
+    static func fromJSONString(_ json: String?) -> PhraseStyle? {
+        guard let json, !json.isEmpty else { return nil }
         guard let data = json.data(using: .utf8) else { return nil }
         let decoder = JSONDecoder()
         guard let styleData = try? decoder.decode(PhraseStyleData.self, from: data) else { return nil }

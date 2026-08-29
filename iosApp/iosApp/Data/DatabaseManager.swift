@@ -137,10 +137,10 @@ class DatabaseManager: ObservableObject {
             DatabaseKt.runInTransaction(database) {
                 do {
                     try work()
-                    return Int32(1)
+                    return KotlinInt(value: 1)
                 } catch {
                     captured = error
-                    return Int32(0)
+                    return KotlinInt(value: 0)
                 }
             }
         } catch {
