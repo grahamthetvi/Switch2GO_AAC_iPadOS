@@ -17,6 +17,8 @@ final class PoseLandmarkService: NSObject, ObservableObject {
     @Published private(set) var isTracking = false
 
     private let detectionQueue = DispatchQueue(label: "com.switch2go.mediapipe.pose")
+    private static let detectionQueueKey = DispatchSpecificKey<UInt8>()
+    private let detectionQueueContext: UInt8 = 1
     /// Retain only the pixel buffer — never the CMSampleBuffer from AVCapture's pool.
     private var latestPixelBuffer: CVPixelBuffer?
     private var latestOrientation: UIImage.Orientation = .up
@@ -30,9 +32,17 @@ final class PoseLandmarkService: NSObject, ObservableObject {
 
     override init() {
         super.init()
+        detectionQueue.setSpecific(key: Self.detectionQueueKey, value: detectionQueueContext)
     }
 
     func initialize(useGpu: Bool = false) -> Bool {
+        if DispatchQueue.getSpecific(key: Self.detectionQueueKey) != nil {
+            return initializeOnQueue(useGpu: useGpu)
+        }
+        return detectionQueue.sync { initializeOnQueue(useGpu: useGpu) }
+    }
+
+    private func initializeOnQueue(useGpu: Bool) -> Bool {
         if isInitialized && lastUseGpu == useGpu && poseLandmarker != nil {
             pendingRequest = false
             isDetecting = false
@@ -42,7 +52,7 @@ final class PoseLandmarkService: NSObject, ObservableObject {
         }
 
         if poseLandmarker != nil {
-            close()
+            closeOnQueue()
         }
 
         lastUseGpu = useGpu
@@ -109,13 +119,21 @@ final class PoseLandmarkService: NSObject, ObservableObject {
         let useGpu = lastUseGpu
         detectionQueue.async { [weak self] in
             guard let self else { return }
-            self.close()
-            let success = self.initialize(useGpu: useGpu)
+            self.closeOnQueue()
+            let success = self.initializeOnQueue(useGpu: useGpu)
             DebugLog.log("PoseLandmarker reinitialize: \(success ? "success" : "FAILED")", tag: "MediaPipe", level: success ? .info : .error)
         }
     }
 
     func close() {
+        if DispatchQueue.getSpecific(key: Self.detectionQueueKey) != nil {
+            closeOnQueue()
+            return
+        }
+        detectionQueue.sync { closeOnQueue() }
+    }
+
+    private func closeOnQueue() {
         poseLandmarker = nil
         isInitialized = false
         pendingRequest = false
@@ -165,7 +183,7 @@ final class PoseLandmarkService: NSObject, ObservableObject {
 
     private func notifyLandmarks(_ landmarks: [LandmarkPoint]) {
         detectionQueue.async { [weak self] in
-            guard let self else { return }
+            guard let self, self.isInitialized else { return }
             DispatchQueue.main.async {
                 self.currentLandmarks = landmarks
                 self.isTracking = true
@@ -178,7 +196,7 @@ final class PoseLandmarkService: NSObject, ObservableObject {
 
     private func notifyNoPose() {
         detectionQueue.async { [weak self] in
-            guard let self else { return }
+            guard let self, self.isInitialized else { return }
             DispatchQueue.main.async {
                 self.currentLandmarks = []
                 self.isTracking = false

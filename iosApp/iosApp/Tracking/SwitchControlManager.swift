@@ -274,14 +274,18 @@ final class SwitchControlManager: NSObject, ObservableObject {
     }
 
     @objc private func keyboardDidConnect(_ notification: Notification) {
-        if let keyboard = GCKeyboard.coalesced {
-            bindKeyboard(keyboard)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            if let keyboard = GCKeyboard.coalesced {
+                self.bindKeyboard(keyboard)
+            }
+            self.markConnected()
         }
-        markConnected()
     }
 
     @objc private func keyboardDidDisconnect(_ notification: Notification) {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             self.isConnected = GCKeyboard.coalesced != nil
             if !self.isConnected {
                 self.connectedDeviceName = nil
@@ -300,6 +304,13 @@ final class SwitchControlManager: NSObject, ObservableObject {
     }
 
     private func handleHIDKey(_ hidCode: Int, pressed: Bool, source: String) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in
+                self?.handleHIDKey(hidCode, pressed: pressed, source: source)
+            }
+            return
+        }
+
         guard let switchIndex = configuration.activeKeyHIDs.firstIndex(of: hidCode) else { return }
 
         markConnected()
@@ -316,15 +327,11 @@ final class SwitchControlManager: NSObject, ObservableObject {
             tag: "Switch"
         )
 
-        DispatchQueue.main.async {
-            self.lastSwitchEvent = event
-        }
+        self.lastSwitchEvent = event
 
         guard pressed else { return }
 
-        DispatchQueue.main.async {
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        }
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 
         dispatchPress(switchIndex: switchIndex)
     }
@@ -407,9 +414,14 @@ final class SwitchControlManager: NSObject, ObservableObject {
 
     private func markConnected() {
         guard !isConnected else { return }
-        DispatchQueue.main.async {
+        if Thread.isMainThread {
             self.isConnected = true
             self.connectedDeviceName = "Switch2GO"
+        } else {
+            DispatchQueue.main.async {
+                self.isConnected = true
+                self.connectedDeviceName = "Switch2GO"
+            }
         }
     }
 

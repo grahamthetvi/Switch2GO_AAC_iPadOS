@@ -355,7 +355,7 @@ struct ContentView: View {
             info = OrientationBannerInfo(
                 icon: "hand.tap",
                 title: "Touch & Switch Only",
-                subtitle: "Rotate to landscape (home button right) for head/eye tracking",
+                subtitle: "Rotate so the front camera is not at the bottom for head/eye tracking",
                 color: .orange
             )
         }
