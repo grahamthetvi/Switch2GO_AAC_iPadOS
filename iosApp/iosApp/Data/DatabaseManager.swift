@@ -6,13 +6,17 @@ import VocableShared
 class DatabaseManager: ObservableObject {
     private let database: VocableDatabase
     private let driverFactory: DatabaseDriverFactory
-    
+    private let writeQueue = DispatchQueue(label: "com.switch2go.database.write", qos: .userInitiated)
+    private static let writeQueueKey = DispatchSpecificKey<UInt8>()
+    private let writeQueueContext: UInt8 = 1
+
     /// Singleton instance
     static let shared = DatabaseManager()
     
     private init() {
         self.driverFactory = DatabaseDriverFactory()
         self.database = DatabaseKt.createDatabase(driverFactory: driverFactory)
+        writeQueue.setSpecific(key: Self.writeQueueKey, value: writeQueueContext)
         
         // Initialize preset data on first launch
         initializePresetsIfNeeded()
@@ -91,63 +95,84 @@ class DatabaseManager: ObservableObject {
         DebugLog.info("Initialized \(presetData.categories.count) categories and \(allPhrases.count) phrases", tag: "DatabaseManager")
     }
     
-    /// Reset database to defaults (clear custom data, keep presets)
-    func resetToDefaults() {
-        // Clear all custom categories
-        let customCategories = database.categoryQueries.getAllCategories().executeAsList()
-        for category in customCategories {
-            database.categoryQueries.deleteCategory(category_id: category.category_id)
+    /// Perform database write operations asynchronously on the dedicated serial write queue.
+    func asyncWrite(_ block: @escaping () -> Void) {
+        writeQueue.async {
+            block()
         }
-        
-        // Clear all custom phrases
-        let customPhrases = database.phraseQueries.getAllPhrases().executeAsList()
-        for phrase in customPhrases {
-            database.phraseQueries.deletePhrase(phrase_id: phrase.phrase_id)
-        }
-        
-        // Reset preset categories to defaults (unhide all)
-        let presetCategories = database.presetCategoryQueries.getAllPresetCategories().executeAsList()
-        for category in presetCategories {
-            database.presetCategoryQueries.updatePresetCategoryHidden(
-                hidden: 0,
-                category_id: category.category_id
-            )
-            database.presetCategoryQueries.updatePresetCategoryDeleted(
-                deleted: 0,
-                category_id: category.category_id
-            )
-        }
-        
-        // Clear last spoken dates from preset phrases
-        let presetPhrases = database.presetPhraseQueries.getAllPresetPhrases().executeAsList()
-        for phrase in presetPhrases {
-            database.presetPhraseQueries.updatePresetPhraseLastSpoken(
-                last_spoken_date: nil,
-                phrase_id: phrase.phrase_id
-            )
-        }
-        
-        DebugLog.info("Database reset to defaults", tag: "DatabaseManager")
     }
 
-    /// Runs work in a SQLite transaction. Throws and rolls back if [work] throws.
-    func transaction(_ work: () throws -> Void) throws {
-        var captured: Error?
-        do {
-            DatabaseKt.runInTransaction(database) {
-                do {
-                    try work()
-                    return KotlinInt(value: 1)
-                } catch {
-                    captured = error
-                    return KotlinInt(value: 0)
-                }
-            }
-        } catch {
-            throw captured ?? error
+    /// Perform database write operations synchronously on the dedicated serial write queue.
+    func syncWrite<T>(_ block: () throws -> T) rethrows -> T {
+        if DispatchQueue.getSpecific(key: Self.writeQueueKey) != nil {
+            return try block()
         }
-        if let captured {
-            throw captured
+        return try writeQueue.sync {
+            try block()
+        }
+    }
+
+    /// Reset database to defaults (clear custom data, keep presets)
+    func resetToDefaults() {
+        syncWrite {
+            // Clear all custom categories
+            let customCategories = database.categoryQueries.getAllCategories().executeAsList()
+            for category in customCategories {
+                database.categoryQueries.deleteCategory(category_id: category.category_id)
+            }
+            
+            // Clear all custom phrases
+            let customPhrases = database.phraseQueries.getAllPhrases().executeAsList()
+            for phrase in customPhrases {
+                database.phraseQueries.deletePhrase(phrase_id: phrase.phrase_id)
+            }
+            
+            // Reset preset categories to defaults (unhide all)
+            let presetCategories = database.presetCategoryQueries.getAllPresetCategories().executeAsList()
+            for category in presetCategories {
+                database.presetCategoryQueries.updatePresetCategoryHidden(
+                    hidden: 0,
+                    category_id: category.category_id
+                )
+                database.presetCategoryQueries.updatePresetCategoryDeleted(
+                    deleted: 0,
+                    category_id: category.category_id
+                )
+            }
+            
+            // Clear last spoken dates from preset phrases
+            let presetPhrases = database.presetPhraseQueries.getAllPresetPhrases().executeAsList()
+            for phrase in presetPhrases {
+                database.presetPhraseQueries.updatePresetPhraseLastSpoken(
+                    last_spoken_date: nil,
+                    phrase_id: phrase.phrase_id
+                )
+            }
+            
+            DebugLog.info("Database reset to defaults", tag: "DatabaseManager")
+        }
+    }
+
+    /// Runs work in a SQLite transaction on the serial write queue. Throws and rolls back if [work] throws.
+    func transaction(_ work: () throws -> Void) throws {
+        try syncWrite {
+            var captured: Error?
+            do {
+                DatabaseKt.runInTransaction(database) {
+                    do {
+                        try work()
+                        return KotlinInt(value: 1)
+                    } catch {
+                        captured = error
+                        return KotlinInt(value: 0)
+                    }
+                }
+            } catch {
+                throw captured ?? error
+            }
+            if let captured {
+                throw captured
+            }
         }
     }
 }
