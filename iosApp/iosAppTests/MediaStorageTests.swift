@@ -36,4 +36,33 @@ final class MediaStorageTests: XCTestCase {
     func testResolveMissingRelativeReturnsNil() {
         XCTAssertNil(MediaStorage.resolveURL(mediaRef: "Images/does_not_exist_\(UUID().uuidString).jpg"))
     }
+
+    func testVideoPosterRefDetection() {
+        XCTAssertTrue(MediaStorage.isVideoPosterRef("Images/video_poster_abc.jpg"))
+        XCTAssertTrue(MediaStorage.isVideoPosterRef("/tmp/video_poster_abc.jpg"))
+        XCTAssertFalse(MediaStorage.isVideoPosterRef("Images/custom_image_abc.jpg"))
+        XCTAssertFalse(MediaStorage.isVideoPosterRef("emoji:😀"))
+        XCTAssertFalse(MediaStorage.isVideoPosterRef("ic_symbol_happy"))
+        XCTAssertFalse(MediaStorage.isVideoPosterRef(nil))
+        XCTAssertFalse(MediaStorage.isVideoPosterRef(""))
+    }
+
+    func testCustomPhotoIsNotAVideoPoster() {
+        XCTAssertFalse(MediaStorage.isVideoPosterRef("Images/custom_image_abc.jpg"))
+        XCTAssertFalse(MediaStorage.isVideoPosterRef("file:///tmp/still.jpg"))
+        XCTAssertFalse(MediaStorage.isVideoPosterRef("emoji:😀"))
+        XCTAssertFalse(MediaStorage.isVideoPosterRef("ic_symbol_happy"))
+    }
+
+    func testSavePosterImageUsesPosterPrefix() throws {
+        let data = Data("fake-poster".utf8)
+        guard let ref = MediaStorage.savePosterImage(data: data) else {
+            XCTFail("savePosterImage failed")
+            return
+        }
+        XCTAssertTrue(ref.hasPrefix("Images/"))
+        XCTAssertTrue(MediaStorage.isVideoPosterRef(ref))
+        MediaStorage.deleteMedia(mediaRef: ref)
+        XCTAssertNil(MediaStorage.resolveURL(mediaRef: ref))
+    }
 }
