@@ -8,6 +8,7 @@ struct EditPhraseDetailView: View {
     @StateObject private var settings = AppSettings.shared
     @State private var phraseText: String
     @State private var showingDeleteConfirmation = false
+    @State private var showingMediaDelayTip = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
     
@@ -77,6 +78,22 @@ struct EditPhraseDetailView: View {
                 }
             }
         }
+        .onAppear {
+            if !settings.hasSeenPhraseMediaDelayTip {
+                showingMediaDelayTip = true
+            }
+        }
+        .alert("Video, Audio & Game Delay", isPresented: $showingMediaDelayTip) {
+            Button("Got It") {
+                settings.hasSeenPhraseMediaDelayTip = true
+            }
+        } message: {
+            Text(
+                "When you attach a video, audio, or game to a phrase, it starts after a short delay "
+                + "(\(Self.formattedDelay(settings.mediaPlaybackDelay))) so another phrase can be selected first. "
+                + "Change this anytime in Settings → Timing & Sensitivity."
+            )
+        }
         .alert("Delete Phrase?", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
@@ -87,6 +104,13 @@ struct EditPhraseDetailView: View {
         }
         .toolbarBackground(settings.appBorderColor, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
+    }
+
+    private static func formattedDelay(_ seconds: Double) -> String {
+        if seconds == seconds.rounded() {
+            return "\(Int(seconds)) seconds"
+        }
+        return String(format: "%.1f seconds", seconds)
     }
     
     private func updatePhraseText(_ newText: String) {

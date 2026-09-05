@@ -77,6 +77,14 @@ struct MainSettingsView: View {
                             )
                         }
                         
+                        NavigationLink(destination: DataBackupView()) {
+                            settingsRow(
+                                title: "Backup & Restore",
+                                icon: "square.and.arrow.up.on.square",
+                                color: .teal
+                            )
+                        }
+
                         NavigationLink(destination: ResetAppView()) {
                             settingsRow(
                                 title: "Reset App",

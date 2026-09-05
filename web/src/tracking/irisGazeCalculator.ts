@@ -10,7 +10,9 @@ export class IrisGazeCalculator {
   headYawCompensation = 0.3
   headPitchCompensation = 0.25
 
-  static readonly BLINK_THRESHOLD = 0.015
+  static readonly BLINK_EAR_THRESHOLD = 0.2
+  /** @deprecated Use BLINK_EAR_THRESHOLD. */
+  static readonly BLINK_THRESHOLD = 0.2
   private static readonly NOSE_TIP = 1
   private static readonly CHIN = 152
   private static readonly LEFT_EYE_CORNER = 33
@@ -102,9 +104,33 @@ export class IrisGazeCalculator {
     }
   }
 
-  detectBlink(eyeTop: LandmarkPoint, eyeBottom: LandmarkPoint): boolean {
+  private distancePx(
+    a: LandmarkPoint,
+    b: LandmarkPoint,
+    frameWidth: number,
+    frameHeight: number,
+  ): number {
+    const dx = (a.x - b.x) * frameWidth
+    const dy = (a.y - b.y) * frameHeight
+    return Math.hypot(dx, dy)
+  }
+
+  /**
+   * Eye Aspect Ratio blink detection (distance-invariant), matching shared IrisGazeCalculator.kt.
+   */
+  detectBlink(
+    eyeTop: LandmarkPoint,
+    eyeBottom: LandmarkPoint,
+    eyeOuter: LandmarkPoint,
+    eyeInner: LandmarkPoint,
+    frameWidth: number,
+    frameHeight: number,
+  ): boolean {
     try {
-      return Math.abs(eyeBottom.y - eyeTop.y) < IrisGazeCalculator.BLINK_THRESHOLD
+      const eyeHeight = this.distancePx(eyeTop, eyeBottom, frameWidth, frameHeight)
+      const eyeWidth = this.distancePx(eyeOuter, eyeInner, frameWidth, frameHeight)
+      if (eyeWidth < 1) return false
+      return eyeHeight / eyeWidth < IrisGazeCalculator.BLINK_EAR_THRESHOLD
     } catch {
       return false
     }

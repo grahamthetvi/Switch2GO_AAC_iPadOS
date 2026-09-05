@@ -184,12 +184,32 @@ export class Eyeball3DGazeCalculator {
     return [gazeX, gazeY, confidence]
   }
 
-  detectBlink(landmarks: LandmarkPoint[], eyeTop: number, eyeBottom: number): boolean {
-    if (landmarks.length <= Math.max(eyeTop, eyeBottom)) return false
+  detectBlink(
+    landmarks: LandmarkPoint[],
+    eyeTop: number,
+    eyeBottom: number,
+    eyeOuter: number,
+    eyeInner: number,
+    frameWidth: number,
+    frameHeight: number,
+  ): boolean {
+    if (landmarks.length <= Math.max(eyeTop, eyeBottom, eyeOuter, eyeInner)) return false
     try {
       const top = landmarks[eyeTop]
       const bottom = landmarks[eyeBottom]
-      return Math.abs(bottom.y - top.y) < IrisGazeCalculator.BLINK_THRESHOLD
+      const outer = landmarks[eyeOuter]
+      const inner = landmarks[eyeInner]
+
+      const heightDx = (top.x - bottom.x) * frameWidth
+      const heightDy = (top.y - bottom.y) * frameHeight
+      const eyeHeight = Math.hypot(heightDx, heightDy)
+
+      const widthDx = (outer.x - inner.x) * frameWidth
+      const widthDy = (outer.y - inner.y) * frameHeight
+      const eyeWidth = Math.hypot(widthDx, widthDy)
+
+      if (eyeWidth < 1) return false
+      return eyeHeight / eyeWidth < IrisGazeCalculator.BLINK_EAR_THRESHOLD
     } catch {
       return false
     }

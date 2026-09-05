@@ -46,6 +46,7 @@ class AppSettings: ObservableObject {
         
         // Onboarding
         static let hasSeenOnboarding = "hasSeenOnboarding"
+        static let hasSeenPhraseMediaDelayTip = "hasSeenPhraseMediaDelayTip"
         
         // Debugging
         static let showDebugCameraPreview = "showDebugCameraPreview"
@@ -198,7 +199,7 @@ class AppSettings: ObservableObject {
         }
     }
 
-    /// Seconds to wait after phrase selection before playing attached video/audio (2.0 - 30.0)
+    /// Seconds to wait after phrase selection before playing attached video/audio/game (2.0 - 30.0)
     @Published var mediaPlaybackDelay: Double {
         didSet {
             defaults.set(mediaPlaybackDelay, forKey: Keys.mediaPlaybackDelay)
@@ -315,6 +316,13 @@ class AppSettings: ObservableObject {
             defaults.set(hasSeenOnboarding, forKey: Keys.hasSeenOnboarding)
         }
     }
+
+    /// Whether the user has seen the tip about video/audio/game delay when editing a phrase
+    @Published var hasSeenPhraseMediaDelayTip: Bool {
+        didSet {
+            defaults.set(hasSeenPhraseMediaDelayTip, forKey: Keys.hasSeenPhraseMediaDelayTip)
+        }
+    }
     
     // MARK: - Debugging
     
@@ -357,7 +365,7 @@ class AppSettings: ObservableObject {
         self.enableAutoRecenter = defaults.object(forKey: Keys.enableAutoRecenter) as? Bool ?? true
         self.enableRepeatDwell = defaults.object(forKey: Keys.enableRepeatDwell) as? Bool ?? false
         self.repeatDwellDelay = defaults.object(forKey: Keys.repeatDwellDelay) as? Double ?? 1.0
-        self.mediaPlaybackDelay = defaults.object(forKey: Keys.mediaPlaybackDelay) as? Double ?? 5.0
+        self.mediaPlaybackDelay = defaults.object(forKey: Keys.mediaPlaybackDelay) as? Double ?? 3.0
         self.headCameraPosition = defaults.string(forKey: Keys.headCameraPosition) ?? "left"
         self.headCameraOffsetYaw = defaults.object(forKey: Keys.headCameraOffsetYaw) as? Double ?? 4.0
         self.headCameraOffsetPitch = defaults.object(forKey: Keys.headCameraOffsetPitch) as? Double ?? 0.0
@@ -379,6 +387,7 @@ class AppSettings: ObservableObject {
 
         // Onboarding
         self.hasSeenOnboarding = defaults.object(forKey: Keys.hasSeenOnboarding) as? Bool ?? false
+        self.hasSeenPhraseMediaDelayTip = defaults.object(forKey: Keys.hasSeenPhraseMediaDelayTip) as? Bool ?? false
         
         // Debugging
         self.showDebugCameraPreview = defaults.object(forKey: Keys.showDebugCameraPreview) as? Bool ?? false
@@ -390,6 +399,7 @@ class AppSettings: ObservableObject {
     func resetToDefaults() {
         symbolCount = 2
         hasSeenOnboarding = false
+        hasSeenPhraseMediaDelayTip = false
         dwellTime = 1.0
         sensitivity = 1
         useGPU = false
@@ -403,7 +413,7 @@ class AppSettings: ObservableObject {
         enableAutoRecenter = true
         enableRepeatDwell = false
         repeatDwellDelay = 1.0
-        mediaPlaybackDelay = 5.0
+        mediaPlaybackDelay = 3.0
         headCameraPosition = "left"
         headCameraOffsetYaw = 4.0
         headCameraOffsetPitch = 0.0
@@ -434,6 +444,94 @@ class AppSettings: ObservableObject {
             scanNextKeyHID: switchKey2,
             phraseKeyHIDs: [switchKey1, switchKey2, switchKey3, switchKey4]
         )
+    }
+
+    /// Snapshot of settings for backup export.
+    func exportSnapshot() -> [String: AnyCodableValue] {
+        var snapshot: [String: AnyCodableValue] = [
+            Keys.symbolCount: .int(symbolCount),
+            Keys.dwellTime: .double(dwellTime),
+            Keys.sensitivity: .int(sensitivity),
+            Keys.useGPU: .bool(useGPU),
+            Keys.trackingMode: .string(trackingMode),
+            Keys.smoothingMode: .string(smoothingMode),
+            Keys.eyeSelection: .string(eyeSelection),
+            Keys.gazeAmplification: .double(gazeAmplification),
+            Keys.enableOutOfBoundsHiding: .bool(enableOutOfBoundsHiding),
+            Keys.showTrackingErrorBanner: .bool(showTrackingErrorBanner),
+            Keys.enableDoubleBlinkRecenter: .bool(enableDoubleBlinkRecenter),
+            Keys.enableAutoRecenter: .bool(enableAutoRecenter),
+            Keys.enableRepeatDwell: .bool(enableRepeatDwell),
+            Keys.repeatDwellDelay: .double(repeatDwellDelay),
+            Keys.mediaPlaybackDelay: .double(mediaPlaybackDelay),
+            Keys.headCameraPosition: .string(headCameraPosition),
+            Keys.headCameraOffsetYaw: .double(headCameraOffsetYaw),
+            Keys.headCameraOffsetPitch: .double(headCameraOffsetPitch),
+            Keys.headSensitivityX: .double(headSensitivityX),
+            Keys.headSensitivityY: .double(headSensitivityY),
+            Keys.selectionMode: .string(selectionMode),
+            Keys.appBorderColor: .int(Int(appBorderColor.toHex())),
+            Keys.switchControlEnabled: .bool(switchControlEnabled),
+            Keys.switchControlMode: .string(switchControlMode),
+            Keys.switchScanInterval: .double(switchScanInterval),
+            Keys.switchKey1: .int(switchKey1),
+            Keys.switchKey2: .int(switchKey2),
+            Keys.switchKey3: .int(switchKey3),
+            Keys.switchKey4: .int(switchKey4),
+            Keys.hasSeenOnboarding: .bool(hasSeenOnboarding),
+            Keys.hasSeenPhraseMediaDelayTip: .bool(hasSeenPhraseMediaDelayTip),
+        ]
+        for position in 1...4 {
+            if let colorValue = defaults.object(forKey: Keys.symbolColor(position)) as? UInt32 {
+                snapshot[Keys.symbolColor(position)] = .int(Int(colorValue))
+            }
+        }
+        return snapshot
+    }
+
+    /// Restore settings from a backup snapshot.
+    func importSnapshot(_ snapshot: [String: AnyCodableValue]) {
+        if let v = snapshot[Keys.symbolCount]?.intValue { symbolCount = max(1, min(4, v)) }
+        if let v = snapshot[Keys.dwellTime]?.doubleValue { dwellTime = v }
+        if let v = snapshot[Keys.sensitivity]?.intValue { sensitivity = v }
+        if let v = snapshot[Keys.useGPU]?.boolValue { useGPU = v }
+        if let v = snapshot[Keys.trackingMode]?.stringValue { trackingMode = v }
+        if let v = snapshot[Keys.smoothingMode]?.stringValue { smoothingMode = v }
+        if let v = snapshot[Keys.eyeSelection]?.stringValue { eyeSelection = v }
+        if let v = snapshot[Keys.gazeAmplification]?.doubleValue { gazeAmplification = v }
+        if let v = snapshot[Keys.enableOutOfBoundsHiding]?.boolValue { enableOutOfBoundsHiding = v }
+        if let v = snapshot[Keys.showTrackingErrorBanner]?.boolValue { showTrackingErrorBanner = v }
+        if let v = snapshot[Keys.enableDoubleBlinkRecenter]?.boolValue { enableDoubleBlinkRecenter = v }
+        if let v = snapshot[Keys.enableAutoRecenter]?.boolValue { enableAutoRecenter = v }
+        if let v = snapshot[Keys.enableRepeatDwell]?.boolValue { enableRepeatDwell = v }
+        if let v = snapshot[Keys.repeatDwellDelay]?.doubleValue { repeatDwellDelay = v }
+        if let v = snapshot[Keys.mediaPlaybackDelay]?.doubleValue { mediaPlaybackDelay = v }
+        if let v = snapshot[Keys.headCameraPosition]?.stringValue { headCameraPosition = v }
+        if let v = snapshot[Keys.headCameraOffsetYaw]?.doubleValue { headCameraOffsetYaw = v }
+        if let v = snapshot[Keys.headCameraOffsetPitch]?.doubleValue { headCameraOffsetPitch = v }
+        if let v = snapshot[Keys.headSensitivityX]?.doubleValue { headSensitivityX = v }
+        if let v = snapshot[Keys.headSensitivityY]?.doubleValue { headSensitivityY = v }
+        if let v = snapshot[Keys.selectionMode]?.stringValue { selectionMode = v }
+        if let v = snapshot[Keys.appBorderColor]?.intValue {
+            appBorderColor = Color(hex: UInt32(bitPattern: Int32(truncatingIfNeeded: v)))
+        }
+        if let v = snapshot[Keys.switchControlEnabled]?.boolValue { switchControlEnabled = v }
+        if let v = snapshot[Keys.switchControlMode]?.stringValue {
+            switchControlMode = SwitchControlMode.migrated(from: v).rawValue
+        }
+        if let v = snapshot[Keys.switchScanInterval]?.doubleValue { switchScanInterval = v }
+        if let v = snapshot[Keys.switchKey1]?.intValue { switchKey1 = v }
+        if let v = snapshot[Keys.switchKey2]?.intValue { switchKey2 = v }
+        if let v = snapshot[Keys.switchKey3]?.intValue { switchKey3 = v }
+        if let v = snapshot[Keys.switchKey4]?.intValue { switchKey4 = v }
+        if let v = snapshot[Keys.hasSeenOnboarding]?.boolValue { hasSeenOnboarding = v }
+        if let v = snapshot[Keys.hasSeenPhraseMediaDelayTip]?.boolValue { hasSeenPhraseMediaDelayTip = v }
+        for position in 1...4 {
+            if let v = snapshot[Keys.symbolColor(position)]?.intValue {
+                defaults.set(UInt32(bitPattern: Int32(truncatingIfNeeded: v)), forKey: Keys.symbolColor(position))
+            }
+        }
+        objectWillChange.send()
     }
 
     /// Returns .dark when appBorderColor is dark (low luminance), .light otherwise.

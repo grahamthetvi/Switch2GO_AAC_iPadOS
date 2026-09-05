@@ -80,9 +80,8 @@ struct ImagePickerView: View {
             .onChange(of: selectedPhotoItem) { _, newItem in
                 Task {
                     if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                        // Save to documents directory
-                        if let imageUrl = saveImageToDocuments(data: data) {
-                            onImageSelected(imageUrl.absoluteString)
+                        if let relativeRef = saveImageToDocuments(data: data) {
+                            onImageSelected(relativeRef)
                         }
                     }
                 }
@@ -120,51 +119,32 @@ struct ImagePickerView: View {
         openURL(url)
     }
     
-    private func saveImageToDocuments(data: Data) -> URL? {
-        // Validate the data can be converted to UIImage first
+    /// Saves image under Documents/Images/ and returns a relative ref.
+    private func saveImageToDocuments(data: Data) -> String? {
         guard let image = UIImage(data: data) else {
             DebugLog.error("Invalid image data, cannot create UIImage", tag: "ImagePickerView")
             return nil
         }
-        
-        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        
-        // Determine format and save with appropriate extension
+
         let isTransparent = image.hasAlpha()
-        let fileName = "custom_image_\(UUID().uuidString).\(isTransparent ? "png" : "jpg")"
-        let fileURL = documentsDirectory.appendingPathComponent(fileName)
-        
-        DebugLog.debug("Saving image to: \(fileURL.path)", tag: "ImagePickerView")
-        DebugLog.debug("Image size: \(image.size), has alpha: \(isTransparent)", tag: "ImagePickerView")
-        
-        // Convert to appropriate format
         let imageData: Data?
         if isTransparent {
             imageData = image.pngData()
         } else {
             imageData = image.jpegData(compressionQuality: 0.85)
         }
-        
+
         guard let finalData = imageData else {
             DebugLog.error("Failed to convert image to final format", tag: "ImagePickerView")
             return nil
         }
-        
-        do {
-            try finalData.write(to: fileURL)
-            
-            // Verify the file was written
-            if FileManager.default.fileExists(atPath: fileURL.path) {
-                let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
-                let fileSize = attributes[.size] as? Int64 ?? 0
-                DebugLog.info("File saved successfully, size: \(fileSize) bytes", tag: "ImagePickerView")
-            }
-            
-            return fileURL
-        } catch {
-            DebugLog.error("Error saving image: \(error.localizedDescription)", tag: "ImagePickerView")
+
+        let ext = isTransparent ? "png" : "jpg"
+        guard let relativeRef = MediaStorage.saveImage(data: finalData, preferredExtension: ext) else {
             return nil
         }
+        DebugLog.info("Image saved as relative ref: \(relativeRef)", tag: "ImagePickerView")
+        return relativeRef
     }
 }
 

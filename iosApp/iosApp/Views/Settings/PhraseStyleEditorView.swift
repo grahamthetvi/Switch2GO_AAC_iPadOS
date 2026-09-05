@@ -524,7 +524,10 @@ struct PhraseStyleEditorView: View {
             return "Image/Emoji: \(emoji)"
         }
         
-        if imageRef.hasPrefix("content://") || imageRef.hasPrefix("file://") {
+        if imageRef.hasPrefix("content://")
+            || imageRef.hasPrefix("file://")
+            || imageRef.hasPrefix("/")
+            || MediaStorage.isRelativeFileRef(imageRef) {
             return "Image/Emoji: Custom"
         }
         

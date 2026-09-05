@@ -72,11 +72,11 @@ struct MediaPickerView: View {
         defer { if accessed { url.stopAccessingSecurityScopedResource() } }
 
         let ext = url.pathExtension.isEmpty ? (mediaType == PhraseStyle.companion.MEDIA_TYPE_VIDEO ? "mp4" : "m4a") : url.pathExtension
-        guard let saved = MediaStorage.saveMedia(from: url, preferredExtension: ext) else {
+        guard let relativeRef = MediaStorage.saveMedia(from: url, preferredExtension: ext) else {
             pickerError = "Could not save file (max 100 MB)."
             return
         }
-        onMediaSelected(saved.absoluteString, mediaType)
+        onMediaSelected(relativeRef, mediaType)
     }
 
     private func optionRow(title: String, icon: String, color: Color) -> some View {

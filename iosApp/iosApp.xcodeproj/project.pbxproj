@@ -32,6 +32,8 @@
 		BB000001AAAA000100000001 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000002AAAA000100000001 /* WelcomeView.swift */; };
 		BB000001AAAA000100000002 /* TroubleshootingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000002AAAA000100000002 /* TroubleshootingView.swift */; };
 		BB8DD2255E5D649A50D78333 /* CategoriesDisplaySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 260908C7C80788094E37EFFF /* CategoriesDisplaySettingsView.swift */; };
+		BKP00001DATA0000000001 /* DataBackupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BKP00002DATA0000000001 /* DataBackupManager.swift */; };
+		BKP00003DATA0000000001 /* DataBackupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BKP00004DATA0000000001 /* DataBackupView.swift */; };
 		BODYARM0022F700001000B97D1 /* ArmRaiseDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BODYARM0012F700001000B97D1 /* ArmRaiseDetector.swift */; };
 		BODYGEST0022F700001000B97D2 /* gesture_recognizer.task in Resources */ = {isa = PBXBuildFile; fileRef = BODYGEST0012F700001000B97D2 /* gesture_recognizer.task */; };
 		BODYGEST0042F700001000B97D4 /* GestureRecognizerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BODYGEST0032F700001000B97D4 /* GestureRecognizerService.swift */; };
@@ -146,6 +148,8 @@
 		BB000002AAAA000100000001 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		BB000002AAAA000100000002 /* TroubleshootingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TroubleshootingView.swift; sourceTree = "<group>"; };
 		BFE7C269918DF0B28C2AD9ED /* EmojiKeyboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmojiKeyboardView.swift; sourceTree = "<group>"; };
+		BKP00002DATA0000000001 /* DataBackupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataBackupManager.swift; sourceTree = "<group>"; };
+		BKP00004DATA0000000001 /* DataBackupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataBackupView.swift; sourceTree = "<group>"; };
 		BODYARM0012F700001000B97D1 /* ArmRaiseDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArmRaiseDetector.swift; sourceTree = "<group>"; };
 		BODYGEST0012F700001000B97D2 /* gesture_recognizer.task */ = {isa = PBXFileReference; lastKnownFileType = file; path = gesture_recognizer.task; sourceTree = "<group>"; };
 		BODYGEST0032F700001000B97D4 /* GestureRecognizerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GestureRecognizerService.swift; sourceTree = "<group>"; };
@@ -429,6 +433,7 @@
 			children = (
 				DCDD8ABF2F3185E9000B97D2 /* Models */,
 				DCDD8AC02F3185E9000B97D2 /* DatabaseManager.swift */,
+				BKP00002DATA0000000001 /* DataBackupManager.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -586,6 +591,7 @@
 				A1B2C3D4E5F60718293A4B5C /* SwitchControlSettingsView.swift */,
 				6761A54E055C85B1954A60F1 /* AdvancedEyeTrackingView.swift */,
 				75124A4EB46EBC55FCF77509 /* CVIDisplaySettingsView.swift */,
+				BKP00004DATA0000000001 /* DataBackupView.swift */,
 				8FC0C64D726888E3E1BF2306 /* ResetAppView.swift */,
 				B0DE128958687E125695E4FD /* PrivacyPolicyView.swift */,
 				TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */,
@@ -1358,6 +1364,8 @@
 				6430199225781A2EC54B8A1C /* DebugLogManager.swift in Sources */,
 				26EEA166226F4D2223031C33 /* DebugLogView.swift in Sources */,
 				DCDD8ACE2F3185FF000B97D2 /* ImageCache.swift in Sources */,
+				BKP00001DATA0000000001 /* DataBackupManager.swift in Sources */,
+				BKP00003DATA0000000001 /* DataBackupView.swift in Sources */,
 				MEDB0012F6000MED0000001 /* MediaStorage.swift in Sources */,
 				MEDB0022F6000MED0000002 /* MediaPickerView.swift in Sources */,
 				MEDB0032F6000MED0000003 /* MediaPlaybackCoordinator.swift in Sources */,
