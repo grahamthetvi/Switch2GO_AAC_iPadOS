@@ -251,11 +251,13 @@ enum PhrasePackImporter {
                     throw PhrasePackError.mediaTooLarge
                 }
                 let ext = fileURL.pathExtension.isEmpty ? "bin" : fileURL.pathExtension
-                guard let saved = MediaStorage.saveMedia(from: fileURL, preferredExtension: ext) else {
+                guard let relativeRef = MediaStorage.saveMedia(from: fileURL, preferredExtension: ext) else {
                     throw PhrasePackError.mediaTooLarge
                 }
-                createdFiles.append(saved)
-                mediaRef = saved.absoluteString
+                if let savedURL = MediaStorage.resolveURL(mediaRef: relativeRef) {
+                    createdFiles.append(savedURL)
+                }
+                mediaRef = relativeRef
                 mediaType = type
             }
         }
@@ -284,17 +286,19 @@ enum PhrasePackImporter {
         guard let data = try? Data(contentsOf: source), let image = UIImage(data: data) else {
             throw PhrasePackError.invalidImage
         }
-        let saved: URL?
+        let relativeRef: String?
         if image.hasAlpha(), let png = image.pngData() {
-            saved = PhraseImageStore.savePNG(png)
+            relativeRef = MediaStorage.saveImage(data: png, preferredExtension: "png")
         } else if let jpeg = image.jpegData(compressionQuality: 0.85) {
-            saved = PhraseImageStore.saveJPEG(jpeg)
+            relativeRef = MediaStorage.saveImage(data: jpeg, preferredExtension: "jpg")
         } else {
-            saved = nil
+            relativeRef = nil
         }
-        guard let saved else { throw PhrasePackError.invalidImage }
-        createdFiles.append(saved)
-        return saved.absoluteString
+        guard let relativeRef else { throw PhrasePackError.invalidImage }
+        if let savedURL = MediaStorage.resolveURL(mediaRef: relativeRef) {
+            createdFiles.append(savedURL)
+        }
+        return relativeRef
     }
 
     private static func requireAsset(relativePath: String, extractRoot: URL) throws -> URL {

@@ -100,7 +100,7 @@ struct MediaPickerView: View {
             let ext = url.pathExtension.isEmpty
                 ? (mediaType == PhraseStyle.companion.MEDIA_TYPE_VIDEO ? "mp4" : "m4a")
                 : url.pathExtension
-            guard let saved = MediaStorage.saveMedia(from: url, preferredExtension: ext) else {
+            guard let relativeRef = MediaStorage.saveMedia(from: url, preferredExtension: ext) else {
                 await MainActor.run {
                     pickerError = "Could not save file (max 100 MB)."
                 }
@@ -110,12 +110,13 @@ struct MediaPickerView: View {
             var posterRef: String?
             let needsPoster = mediaType == PhraseStyle.companion.MEDIA_TYPE_VIDEO
                 && (currentImageRef == nil || currentImageRef?.isEmpty == true)
-            if needsPoster, let posterURL = VideoPosterGenerator.savePosterImage(from: saved) {
-                posterRef = posterURL.absoluteString
+            if needsPoster, let videoURL = MediaStorage.resolveURL(mediaRef: relativeRef),
+               let posterData = VideoPosterGenerator.jpegPoster(from: videoURL) {
+                posterRef = MediaStorage.saveImage(data: posterData, preferredExtension: "jpg")
             }
 
             await MainActor.run {
-                onMediaSelected(saved.absoluteString, mediaType, posterRef)
+                onMediaSelected(relativeRef, mediaType, posterRef)
             }
         }
     }

@@ -32,6 +32,8 @@
 		BB000001AAAA000100000001 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000002AAAA000100000001 /* WelcomeView.swift */; };
 		BB000001AAAA000100000002 /* TroubleshootingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000002AAAA000100000002 /* TroubleshootingView.swift */; };
 		BB8DD2255E5D649A50D78333 /* CategoriesDisplaySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 260908C7C80788094E37EFFF /* CategoriesDisplaySettingsView.swift */; };
+		BKP00001DATA0000000001 /* DataBackupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BKP00002DATA0000000001 /* DataBackupManager.swift */; };
+		BKP00003DATA0000000001 /* DataBackupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BKP00004DATA0000000001 /* DataBackupView.swift */; };
 		BODYARM0022F700001000B97D1 /* ArmRaiseDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BODYARM0012F700001000B97D1 /* ArmRaiseDetector.swift */; };
 		BODYGEST0022F700001000B97D2 /* gesture_recognizer.task in Resources */ = {isa = PBXBuildFile; fileRef = BODYGEST0012F700001000B97D2 /* gesture_recognizer.task */; };
 		BODYGEST0042F700001000B97D4 /* GestureRecognizerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BODYGEST0032F700001000B97D4 /* GestureRecognizerService.swift */; };
@@ -90,8 +92,6 @@
 		MEDB0042F6000MED0000004 /* MediaPlaybackOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0042F6000MED0000004 /* MediaPlaybackOverlayView.swift */; };
 		MEDB0052F6000MED0000005 /* YouTubePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0052F6000MED0000005 /* YouTubePlayerView.swift */; };
 		MEDB0062F6000MED0000006 /* YouTubePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MEDF0062F6000MED0000006 /* YouTubePickerView.swift */; };
-		TPN0012F6000TPN00000001 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */; };
-		TPN0022F6000TPN00000002 /* ThirdPartyNoticesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */; };
 		PACKB0012F7000PACK000001 /* PhrasePackModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0012F7000PACK000001 /* PhrasePackModels.swift */; };
 		PACKB0022F7000PACK000001 /* PhrasePackArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0022F7000PACK000001 /* PhrasePackArchive.swift */; };
 		PACKB0032F7000PACK000001 /* PhrasePackExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0032F7000PACK000001 /* PhrasePackExporter.swift */; };
@@ -100,6 +100,8 @@
 		PACKB0062F7000PACK000001 /* PhrasePackSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0062F7000PACK000001 /* PhrasePackSession.swift */; };
 		PACKB0072F7000PACK000001 /* PhrasePackImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0072F7000PACK000001 /* PhrasePackImportView.swift */; };
 		PACKB0082F7000PACK000001 /* PhrasePackSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0082F7000PACK000001 /* PhrasePackSettingsView.swift */; };
+		TPN0012F6000TPN00000001 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */; };
+		TPN0022F6000TPN00000002 /* ThirdPartyNoticesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -154,6 +156,8 @@
 		BB000002AAAA000100000001 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		BB000002AAAA000100000002 /* TroubleshootingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TroubleshootingView.swift; sourceTree = "<group>"; };
 		BFE7C269918DF0B28C2AD9ED /* EmojiKeyboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmojiKeyboardView.swift; sourceTree = "<group>"; };
+		BKP00002DATA0000000001 /* DataBackupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataBackupManager.swift; sourceTree = "<group>"; };
+		BKP00004DATA0000000001 /* DataBackupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataBackupView.swift; sourceTree = "<group>"; };
 		BODYARM0012F700001000B97D1 /* ArmRaiseDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArmRaiseDetector.swift; sourceTree = "<group>"; };
 		BODYGEST0012F700001000B97D2 /* gesture_recognizer.task */ = {isa = PBXFileReference; lastKnownFileType = file; path = gesture_recognizer.task; sourceTree = "<group>"; };
 		BODYGEST0032F700001000B97D4 /* GestureRecognizerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GestureRecognizerService.swift; sourceTree = "<group>"; };
@@ -274,8 +278,6 @@
 		MEDF0042F6000MED0000004 /* MediaPlaybackOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlaybackOverlayView.swift; sourceTree = "<group>"; };
 		MEDF0052F6000MED0000005 /* YouTubePlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubePlayerView.swift; sourceTree = "<group>"; };
 		MEDF0062F6000MED0000006 /* YouTubePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubePickerView.swift; sourceTree = "<group>"; };
-		TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
-		TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThirdPartyNoticesView.swift; sourceTree = "<group>"; };
 		PACKF0012F7000PACK000001 /* PhrasePackModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackModels.swift; sourceTree = "<group>"; };
 		PACKF0022F7000PACK000001 /* PhrasePackArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackArchive.swift; sourceTree = "<group>"; };
 		PACKF0032F7000PACK000001 /* PhrasePackExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackExporter.swift; sourceTree = "<group>"; };
@@ -284,16 +286,22 @@
 		PACKF0062F7000PACK000001 /* PhrasePackSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackSession.swift; sourceTree = "<group>"; };
 		PACKF0072F7000PACK000001 /* PhrasePackImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackImportView.swift; sourceTree = "<group>"; };
 		PACKF0082F7000PACK000001 /* PhrasePackSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackSettingsView.swift; sourceTree = "<group>"; };
+		TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
+		TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThirdPartyNoticesView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DC669A302F30403B00AED789 /* iosAppTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = iosAppTests;
 			sourceTree = "<group>";
 		};
 		DC669A3A2F30403B00AED789 /* iosAppUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = iosAppUITests;
 			sourceTree = "<group>";
 		};
@@ -445,6 +453,7 @@
 			children = (
 				DCDD8ABF2F3185E9000B97D2 /* Models */,
 				DCDD8AC02F3185E9000B97D2 /* DatabaseManager.swift */,
+				BKP00002DATA0000000001 /* DataBackupManager.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -602,6 +611,7 @@
 				A1B2C3D4E5F60718293A4B5C /* SwitchControlSettingsView.swift */,
 				6761A54E055C85B1954A60F1 /* AdvancedEyeTrackingView.swift */,
 				75124A4EB46EBC55FCF77509 /* CVIDisplaySettingsView.swift */,
+				BKP00004DATA0000000001 /* DataBackupView.swift */,
 				8FC0C64D726888E3E1BF2306 /* ResetAppView.swift */,
 				B0DE128958687E125695E4FD /* PrivacyPolicyView.swift */,
 				TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */,
@@ -1154,6 +1164,7 @@
 				DC669A1C2F30403900AED789 /* Sources */,
 				DC669A1D2F30403900AED789 /* Frameworks */,
 				DC669A1E2F30403900AED789 /* Resources */,
+				8119DA222C85DD044E2C4CBC /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -1330,6 +1341,23 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		8119DA222C85DD044E2C4CBC /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-iosApp/Pods-iosApp-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-iosApp/Pods-iosApp-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-iosApp/Pods-iosApp-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		D1A7A61132CA901A8F8F14C3 /* Build Kotlin Framework */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -1390,6 +1418,8 @@
 				6430199225781A2EC54B8A1C /* DebugLogManager.swift in Sources */,
 				26EEA166226F4D2223031C33 /* DebugLogView.swift in Sources */,
 				DCDD8ACE2F3185FF000B97D2 /* ImageCache.swift in Sources */,
+				BKP00001DATA0000000001 /* DataBackupManager.swift in Sources */,
+				BKP00003DATA0000000001 /* DataBackupView.swift in Sources */,
 				MEDB0012F6000MED0000001 /* MediaStorage.swift in Sources */,
 				MEDB0022F6000MED0000002 /* MediaPickerView.swift in Sources */,
 				MEDB0032F6000MED0000003 /* MediaPlaybackCoordinator.swift in Sources */,

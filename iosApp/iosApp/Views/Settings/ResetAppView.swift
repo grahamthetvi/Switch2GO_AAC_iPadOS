@@ -19,7 +19,7 @@ struct ResetAppView: View {
                 .font(.title)
                 .fontWeight(.bold)
             
-            Text("This will delete all custom categories and phrases. Preset data will be restored to defaults. This cannot be undone.")
+            Text("This will delete all custom categories and phrases, and remove saved images and media. Preset data will be restored to defaults. This cannot be undone.")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -33,6 +33,7 @@ struct ResetAppView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     resetItem("All custom categories")
                     resetItem("All custom phrases")
+                    resetItem("Custom images and media files")
                     resetItem("Symbol count to 2")
                     resetItem("Colors to defaults")
                     resetItem("All settings to defaults")

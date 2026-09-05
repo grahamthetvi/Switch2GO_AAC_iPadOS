@@ -13,6 +13,8 @@ import {
 
 /** Velocity-adaptive 2D Kalman filter (ported from shared AdaptiveKalmanFilter2D.kt). */
 export class AdaptiveKalmanFilter2D {
+  static readonly DEFAULT_DT = 1 / 20
+
   private state = [0, 0, 0, 0]
   private P = createIdentityMatrix(4)
   private initialized = false
@@ -39,8 +41,14 @@ export class AdaptiveKalmanFilter2D {
     private readonly rapidMeasurementMultiplier = 0.3,
   ) {}
 
-  predict(): [number, number] {
+  private setTransitionDt(dt: number): void {
+    this.F[0][2] = dt
+    this.F[1][3] = dt
+  }
+
+  predict(dtSeconds = AdaptiveKalmanFilter2D.DEFAULT_DT): [number, number] {
     if (!this.initialized) return [this.state[0], this.state[1]]
+    this.setTransitionDt(dtSeconds)
     const Q = this.getAdaptiveProcessNoise()
     this.state = multiplyMatrixVector(this.F, this.state)
     const FP = multiplyMatrices(this.F, this.P)
@@ -48,14 +56,14 @@ export class AdaptiveKalmanFilter2D {
     return [this.state[0], this.state[1]]
   }
 
-  update(x: number, y: number): [number, number] {
+  update(x: number, y: number, dtSeconds = AdaptiveKalmanFilter2D.DEFAULT_DT): [number, number] {
     if (!this.initialized) {
       this.state = [x, y, 0, 0]
       this.initialized = true
       return [x, y]
     }
 
-    this.predict()
+    this.predict(dtSeconds)
     const R = this.getAdaptiveMeasurementNoise()
     const Hx = multiplyMatrixVector(this.H, this.state)
     const innovation = [x - Hx[0], y - Hx[1]]
