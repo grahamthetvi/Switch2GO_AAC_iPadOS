@@ -43,6 +43,7 @@ class AppSettings: ObservableObject {
         static let switchKey2 = "switchKey2"
         static let switchKey3 = "switchKey3"
         static let switchKey4 = "switchKey4"
+        static let switchOutputPeripheralUUID = "switchOutputPeripheralUUID"
         
         // Onboarding
         static let hasSeenOnboarding = "hasSeenOnboarding"
@@ -308,6 +309,17 @@ class AppSettings: ObservableObject {
         }
     }
 
+    /// Last ESP32 used for environmental-control (PowerLink) output.
+    @Published var switchOutputPeripheralUUID: String? {
+        didSet {
+            if let switchOutputPeripheralUUID {
+                defaults.set(switchOutputPeripheralUUID, forKey: Keys.switchOutputPeripheralUUID)
+            } else {
+                defaults.removeObject(forKey: Keys.switchOutputPeripheralUUID)
+            }
+        }
+    }
+
     // MARK: - Onboarding
 
     /// Whether the user has seen the first-launch onboarding
@@ -384,6 +396,7 @@ class AppSettings: ObservableObject {
         self.switchKey2 = defaults.object(forKey: Keys.switchKey2) as? Int ?? 31  // Key "2"
         self.switchKey3 = defaults.object(forKey: Keys.switchKey3) as? Int ?? 32  // Key "3"
         self.switchKey4 = defaults.object(forKey: Keys.switchKey4) as? Int ?? 33  // Key "4"
+        self.switchOutputPeripheralUUID = defaults.string(forKey: Keys.switchOutputPeripheralUUID)
 
         // Onboarding
         self.hasSeenOnboarding = defaults.object(forKey: Keys.hasSeenOnboarding) as? Bool ?? false
@@ -428,6 +441,7 @@ class AppSettings: ObservableObject {
         switchKey2 = 31  // Key "2"
         switchKey3 = 32  // Key "3"
         switchKey4 = 33  // Key "4"
+        switchOutputPeripheralUUID = nil
         showDebugCameraPreview = false
         debugCameraRotation = -1.0
         enableTrackingDiagnostics = false
@@ -481,6 +495,9 @@ class AppSettings: ObservableObject {
             Keys.hasSeenOnboarding: .bool(hasSeenOnboarding),
             Keys.hasSeenPhraseMediaDelayTip: .bool(hasSeenPhraseMediaDelayTip),
         ]
+        if let uuid = switchOutputPeripheralUUID {
+            snapshot[Keys.switchOutputPeripheralUUID] = .string(uuid)
+        }
         for position in 1...4 {
             if let colorValue = defaults.object(forKey: Keys.symbolColor(position)) as? UInt32 {
                 snapshot[Keys.symbolColor(position)] = .int(Int(colorValue))
@@ -524,6 +541,7 @@ class AppSettings: ObservableObject {
         if let v = snapshot[Keys.switchKey2]?.intValue { switchKey2 = v }
         if let v = snapshot[Keys.switchKey3]?.intValue { switchKey3 = v }
         if let v = snapshot[Keys.switchKey4]?.intValue { switchKey4 = v }
+        if let v = snapshot[Keys.switchOutputPeripheralUUID]?.stringValue { switchOutputPeripheralUUID = v }
         if let v = snapshot[Keys.hasSeenOnboarding]?.boolValue { hasSeenOnboarding = v }
         if let v = snapshot[Keys.hasSeenPhraseMediaDelayTip]?.boolValue { hasSeenPhraseMediaDelayTip = v }
         for position in 1...4 {

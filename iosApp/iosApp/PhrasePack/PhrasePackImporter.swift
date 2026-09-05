@@ -274,6 +274,7 @@ enum PhrasePackImporter {
             mediaType: mediaType,
             gameType: packStyle.gameType
         )
+        style.sendSwitchOutput = packStyle.sendSwitchOutput ?? false
         return style
     }
 

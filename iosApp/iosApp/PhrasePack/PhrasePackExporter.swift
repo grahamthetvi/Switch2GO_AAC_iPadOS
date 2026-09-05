@@ -122,7 +122,8 @@ enum PhrasePackExporter {
             media: nil,
             mediaType: nil,
             thumb: nil,
-            gameType: style.gameType
+            gameType: style.gameType,
+            sendSwitchOutput: style.sendSwitchOutput ? true : nil
         )
 
         if let imageRef = style.imageRef, !imageRef.isEmpty {
@@ -158,7 +159,8 @@ enum PhrasePackExporter {
 
         if pack.backgroundColor == nil && pack.textColor == nil && pack.textSizeSp == nil
             && !pack.isBold && pack.borderColor == nil && pack.borderWidthDp == nil
-            && pack.image == nil && pack.media == nil && pack.gameType == nil && pack.thumb == nil {
+            && pack.image == nil && pack.media == nil && pack.gameType == nil && pack.thumb == nil
+            && pack.sendSwitchOutput != true {
             return nil
         }
         return pack
