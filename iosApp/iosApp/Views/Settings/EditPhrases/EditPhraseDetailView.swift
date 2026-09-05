@@ -51,14 +51,13 @@ struct EditPhraseDetailView: View {
             }
             
             Section {
-                if !phrase.isPreset {
-                    Button(role: .destructive, action: {
-                        showingDeleteConfirmation = true
-                    }) {
-                        Label("Delete Phrase", systemImage: "trash")
-                    }
-                } else {
-                    Text("Preset phrases cannot be deleted")
+                Button(role: .destructive, action: {
+                    showingDeleteConfirmation = true
+                }) {
+                    Label("Delete Phrase", systemImage: "trash")
+                }
+                if phrase.isPreset {
+                    Text("Preset phrases can be restored by resetting the app.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -100,7 +99,11 @@ struct EditPhraseDetailView: View {
                 deletePhrase()
             }
         } message: {
-            Text("This will permanently delete '\(phrase.text)'.")
+            if phrase.isPreset {
+                Text("This will remove '\(phrase.text)' from this category. Reset the app to restore preset phrases.")
+            } else {
+                Text("This will permanently delete '\(phrase.text)'.")
+            }
         }
         .toolbarBackground(settings.appBorderColor, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
@@ -130,9 +133,18 @@ struct EditPhraseDetailView: View {
     
     private func deletePhrase() {
         let database = DatabaseManager.shared.db
+        let phraseId = phrase.id
+        let isPreset = phrase.isPreset
         
         DispatchQueue.global(qos: .background).async {
-            database.phraseQueries.deletePhrase(phrase_id: phrase.id)
+            if isPreset {
+                database.presetPhraseQueries.updatePresetPhraseDeleted(
+                    deleted: 1,
+                    phrase_id: phraseId
+                )
+            } else {
+                database.phraseQueries.deletePhrase(phrase_id: phraseId)
+            }
             
             DispatchQueue.main.async {
                 dismiss()

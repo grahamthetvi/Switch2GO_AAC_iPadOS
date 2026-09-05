@@ -55,7 +55,10 @@ export function EditPhraseDetailPage() {
   const remove = async () => {
     if (!phrase) return
     const label = phrase.text
-    if (!confirm(`Remove "${label}" from this category?`)) return
+    const message = phrase.isPreset
+      ? `Remove "${label}" from this category? Reset the app to restore preset phrases.`
+      : `Delete "${label}"?`
+    if (!confirm(message)) return
     if (phrase.isPreset) {
       await softDeletePresetPhrase(phrase.id)
     } else {
@@ -119,18 +122,12 @@ export function EditPhraseDetailPage() {
       </section>
 
       <section className="settings-section">
+        <button type="button" className="danger-btn" onClick={() => void remove()}>
+          Delete phrase
+        </button>
         {phrase.isPreset ? (
-          <>
-            <button type="button" className="danger-btn secondary-danger" onClick={() => void remove()}>
-              Hide preset phrase
-            </button>
-            <p className="hint">Hides this phrase from the category. Reset the app to restore presets.</p>
-          </>
-        ) : (
-          <button type="button" className="danger-btn" onClick={() => void remove()}>
-            Delete phrase
-          </button>
-        )}
+          <p className="hint">Preset phrases can be restored by resetting the app.</p>
+        ) : null}
       </section>
     </SettingsLayout>
   )

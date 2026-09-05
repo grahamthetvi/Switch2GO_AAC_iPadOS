@@ -42,13 +42,14 @@ class DatabaseManager: ObservableObject {
         let schemaVersion = presetSchemaVersion
         let presetCount = database.presetCategoryQueries.getPresetCategoryCount().executeAsOne()
 
-        // Already on current schema: never wipe/re-seed (even if soft-deleted legacy rows remain).
+        // Already on current schema: never wipe/re-seed (even if the user soft-deleted every preset).
         if schemaVersion >= Self.currentPresetSchemaVersion {
-            if presetCount == 0 {
+            let allPresetRows = database.presetCategoryQueries.getAllPresetCategories().executeAsList()
+            if allPresetRows.isEmpty {
                 DebugLog.info("Schema current but empty; seeding presets...", tag: "DatabaseManager")
                 initializePresetData()
             } else {
-                DebugLog.info("Preset data already exists (\(presetCount) categories)", tag: "DatabaseManager")
+                DebugLog.info("Preset data already exists (\(presetCount) visible categories)", tag: "DatabaseManager")
             }
             return
         }
@@ -218,13 +219,19 @@ class DatabaseManager: ObservableObject {
             )
         }
 
-        // Clear last spoken dates from preset phrases
+        // Restore preset phrases (except legacy rows) and clear recents.
         let presetPhrases = database.presetPhraseQueries.getAllPresetPhrases().executeAsList()
         for phrase in presetPhrases {
             database.presetPhraseQueries.updatePresetPhraseLastSpoken(
                 last_spoken_date: nil,
                 phrase_id: phrase.phrase_id
             )
+            if phrase.parent_category_id != "preset_general" {
+                database.presetPhraseQueries.updatePresetPhraseDeleted(
+                    deleted: 0,
+                    phrase_id: phrase.phrase_id
+                )
+            }
         }
 
         MediaStorage.deleteAllStoredMedia()

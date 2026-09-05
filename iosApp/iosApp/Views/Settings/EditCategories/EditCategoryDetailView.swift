@@ -185,14 +185,13 @@ struct EditCategoryDetailView: View {
             }
 
             Section {
-                if !category.isPreset {
-                    Button(role: .destructive, action: {
-                        showingDeleteConfirmation = true
-                    }) {
-                        Label("Delete Category", systemImage: "trash")
-                    }
-                } else {
-                    Text("Preset categories cannot be deleted")
+                Button(role: .destructive, action: {
+                    showingDeleteConfirmation = true
+                }) {
+                    Label("Delete Category", systemImage: "trash")
+                }
+                if category.isPreset {
+                    Text("Preset categories can be restored by resetting the app.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -221,7 +220,13 @@ struct EditCategoryDetailView: View {
                 deleteCategory()
             }
         } message: {
-            Text("This will permanently delete '\(category.name)' and all its phrases.")
+            if CoreVocabulary.isRecents(category.id) {
+                Text("This will remove '\(category.name)' from the category list. Reset the app to restore it.")
+            } else if category.isPreset {
+                Text("This will remove '\(category.name)' and all its phrases. Reset the app to restore preset categories.")
+            } else {
+                Text("This will permanently delete '\(category.name)' and all its phrases.")
+            }
         }
         .sheet(isPresented: $showingAddPhrase) {
             AddPhraseView(categoryId: category.id) {
@@ -341,17 +346,37 @@ struct EditCategoryDetailView: View {
     
     private func deleteCategory() {
         let database = DatabaseManager.shared.db
+        let categoryId = category.id
+        let isPreset = category.isPreset
+        let isRecents = CoreVocabulary.isRecents(categoryId)
         
         DispatchQueue.global(qos: .background).async {
-            // Delete all phrases in category
-            database.phraseQueries.deletePhrasesForCategory(parent_category_id: category.id)
-            
-            // Delete category
-            database.categoryQueries.deleteCategory(category_id: category.id)
+            if isPreset {
+                database.presetCategoryQueries.updatePresetCategoryDeleted(
+                    deleted: 1,
+                    category_id: categoryId
+                )
+                if !isRecents {
+                    let presetPhrases = database.presetPhraseQueries
+                        .getPresetPhrasesForCategory(parent_category_id: categoryId)
+                        .executeAsList()
+                    for phrase in presetPhrases {
+                        database.presetPhraseQueries.updatePresetPhraseDeleted(
+                            deleted: 1,
+                            phrase_id: phrase.phrase_id
+                        )
+                    }
+                    database.phraseQueries.deletePhrasesForCategory(parent_category_id: categoryId)
+                }
+            } else {
+                database.phraseQueries.deletePhrasesForCategory(parent_category_id: categoryId)
+                database.categoryQueries.deleteCategory(category_id: categoryId)
+            }
             
             DispatchQueue.main.async {
                 dismiss()
                 NotificationCenter.default.post(name: Notification.Name("CategoriesUpdated"), object: nil)
+                NotificationCenter.default.post(name: Notification.Name("PhrasesUpdated"), object: nil)
             }
         }
     }

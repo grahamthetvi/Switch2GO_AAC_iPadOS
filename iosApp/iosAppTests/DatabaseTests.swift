@@ -179,4 +179,79 @@ class DatabaseTests: XCTestCase {
         // Cleanup
         db.presetPhraseQueries.updatePresetPhraseStyle(style: nil, phrase_id: phraseId)
     }
+
+    func testSoftDeletedPresetPhraseIsExcludedFromCategory() {
+        let db = DatabaseManager.shared.db
+        let phraseId = "preset_need_help"
+        let categoryId = "preset_routine_activity"
+
+        defer {
+            db.presetPhraseQueries.updatePresetPhraseDeleted(deleted: 0, phrase_id: phraseId)
+        }
+
+        db.presetPhraseQueries.updatePresetPhraseDeleted(deleted: 1, phrase_id: phraseId)
+        let remaining = db.presetPhraseQueries
+            .getPresetPhrasesForCategory(parent_category_id: categoryId)
+            .executeAsList()
+            .map { $0.phrase_id }
+        XCTAssertFalse(remaining.contains(phraseId))
+
+        db.presetPhraseQueries.updatePresetPhraseDeleted(deleted: 0, phrase_id: phraseId)
+        let restored = db.presetPhraseQueries
+            .getPresetPhrasesForCategory(parent_category_id: categoryId)
+            .executeAsList()
+            .map { $0.phrase_id }
+        XCTAssertTrue(restored.contains(phraseId))
+    }
+
+    func testSoftDeletedPresetCategoryIsExcludedFromVisibleList() {
+        let db = DatabaseManager.shared.db
+        let categoryId = "preset_food_drink"
+
+        defer {
+            db.presetCategoryQueries.updatePresetCategoryDeleted(deleted: 0, category_id: categoryId)
+        }
+
+        db.presetCategoryQueries.updatePresetCategoryDeleted(deleted: 1, category_id: categoryId)
+        let hidden = db.presetCategoryQueries
+            .getVisiblePresetCategories()
+            .executeAsList()
+            .map { $0.category_id }
+        XCTAssertFalse(hidden.contains(categoryId))
+
+        db.presetCategoryQueries.updatePresetCategoryDeleted(deleted: 0, category_id: categoryId)
+        let visible = db.presetCategoryQueries
+            .getVisiblePresetCategories()
+            .executeAsList()
+            .map { $0.category_id }
+        XCTAssertTrue(visible.contains(categoryId))
+    }
+
+    func testInitializePresetsIfNeededDoesNotReseedWhenPresetsAreSoftDeleted() {
+        let db = DatabaseManager.shared.db
+        let phraseId = "preset_need_help"
+        let styleJson = "{\"isBold\":true,\"backgroundColor\":4293456181}"
+        let categories = db.presetCategoryQueries.getAllPresetCategories().executeAsList()
+
+        defer {
+            for category in categories where category.category_id != "preset_general" {
+                db.presetCategoryQueries.updatePresetCategoryDeleted(
+                    deleted: 0,
+                    category_id: category.category_id
+                )
+            }
+            db.presetPhraseQueries.updatePresetPhraseStyle(style: nil, phrase_id: phraseId)
+        }
+
+        db.presetPhraseQueries.updatePresetPhraseStyle(style: styleJson, phrase_id: phraseId)
+        for category in categories {
+            db.presetCategoryQueries.updatePresetCategoryDeleted(deleted: 1, category_id: category.category_id)
+        }
+
+        DatabaseManager.shared.presetSchemaVersion = DatabaseManager.currentPresetSchemaVersion
+        DatabaseManager.shared.initializePresetsIfNeeded()
+
+        let phrase = db.presetPhraseQueries.getPresetPhraseById(phrase_id: phraseId).executeAsOneOrNull()
+        XCTAssertEqual(phrase?.style, styleJson)
+    }
 }

@@ -35,7 +35,7 @@ class PhrasesViewModel: ObservableObject {
                 let recentPresets = self.database.presetPhraseQueries
                     .getAllPresetPhrases()
                     .executeAsList()
-                    .filter { $0.last_spoken_date != nil }
+                    .filter { $0.deleted == 0 && $0.last_spoken_date != nil }
                     .sorted { ($0.last_spoken_date?.int64Value ?? 0) > ($1.last_spoken_date?.int64Value ?? 0) }
                     .prefix(8)
                 

@@ -121,6 +121,9 @@ struct EditCategoriesListView: View {
                 viewModel.loadCategories()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("CategoriesUpdated"))) { _ in
+            viewModel.loadCategories()
+        }
         .toolbarBackground(settings.appBorderColor, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
     }
@@ -157,7 +160,7 @@ class EditCategoriesViewModel: ObservableObject {
                 .getAllPresetCategories()
                 .executeAsList()
             
-            for preset in presets {
+            for preset in presets where preset.deleted == 0 {
                 let name = self.getCategoryName(for: preset.category_id)
                 let colorHex = preset.color_hex != nil ? UInt32(truncating: preset.color_hex!) : nil
                 displayModels.append(CategoryDisplayModel(

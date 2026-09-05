@@ -8,6 +8,7 @@ import { getDefaultCategoryColor, getDefaultCategorySymbol } from '../../data/ca
 import {
   deleteCustomCategory,
   reorderPhrases,
+  softDeletePresetCategory,
   updateCategoryColor,
   updateCategorySymbol,
   updateCustomCategoryName,
@@ -82,9 +83,19 @@ export function EditCategoryDetailPage() {
   }
 
   const deleteCategory = async () => {
-    if (!category || category.isPreset) return
-    if (!confirm(`Delete "${category.name}" and all its phrases?`)) return
-    await deleteCustomCategory(category.id)
+    if (!category) return
+    const isRecents = category.id === RECENTS_CATEGORY_ID
+    const message = isRecents
+      ? `Remove "${category.name}" from the category list? Reset the app to restore it.`
+      : category.isPreset
+        ? `Remove "${category.name}" and all its phrases? Reset the app to restore preset categories.`
+        : `Delete "${category.name}" and all its phrases?`
+    if (!confirm(message)) return
+    if (category.isPreset) {
+      await softDeletePresetCategory(category.id)
+    } else {
+      await deleteCustomCategory(category.id)
+    }
     navigate('/settings/edit/categories', { replace: true })
   }
 
@@ -200,15 +211,14 @@ export function EditCategoryDetailPage() {
         )}
       </section>
 
-      {!category.isPreset ? (
-        <section className="settings-section danger">
-          <button type="button" className="danger-btn" onClick={() => void deleteCategory()}>
-            Delete category
-          </button>
-        </section>
-      ) : (
-        <p className="hint settings-section">Preset categories cannot be deleted</p>
-      )}
+      <section className="settings-section danger">
+        <button type="button" className="danger-btn" onClick={() => void deleteCategory()}>
+          Delete category
+        </button>
+        {category.isPreset ? (
+          <p className="hint">Preset categories can be restored by resetting the app.</p>
+        ) : null}
+      </section>
 
       {showColor ? (
         <ColorPickerModal

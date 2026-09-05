@@ -2,6 +2,7 @@ import { db } from './db'
 import { pickNewCategoryColor } from './categoryDefaults'
 import { serializePhraseStyle } from './phraseStyle'
 import type { CategoryDisplay, PhraseDisplay, PhraseStyle } from './types'
+import { RECENTS_CATEGORY_ID } from './types'
 
 function isPresetId(id: string): boolean {
   return id.startsWith('preset_')
@@ -89,6 +90,19 @@ export async function deleteCustomCategory(categoryId: string): Promise<void> {
   await db.transaction('rw', [db.category, db.phrase], async () => {
     await db.phrase.where('parent_category_id').equals(categoryId).delete()
     await db.category.delete(categoryId)
+  })
+}
+
+export async function softDeletePresetCategory(categoryId: string): Promise<void> {
+  await db.transaction('rw', [db.presetCategory, db.presetPhrase, db.phrase], async () => {
+    const row = await db.presetCategory.get(categoryId)
+    if (row) await db.presetCategory.put({ ...row, deleted: 1 })
+    if (categoryId === RECENTS_CATEGORY_ID) return
+    const phrases = await db.presetPhrase.where('parent_category_id').equals(categoryId).toArray()
+    for (const phrase of phrases) {
+      await db.presetPhrase.put({ ...phrase, deleted: 1 })
+    }
+    await db.phrase.where('parent_category_id').equals(categoryId).delete()
   })
 }
 
