@@ -1,5 +1,6 @@
 import { FilesetResolver, GestureRecognizer } from '@mediapipe/tasks-vision'
 import type { LandmarkPoint } from './types'
+import { userFacingHandSideFromLabel } from './userFacingLaterality'
 
 const MEDIAPIPE_VERSION = '0.10.21'
 const WASM_BASE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}/wasm`
@@ -74,7 +75,9 @@ export class GestureRecognizerClient {
 
       for (let i = 0; i < result.landmarks.length; i++) {
         const sideLabel = result.handedness[i]?.[0]?.categoryName ?? ''
-        const side: DetectedHandSide = sideLabel.toLowerCase() === 'right' ? 'right' : 'left'
+        // Web webcam frames are not selfie-mirrored; MediaPipe labels already
+        // match the user's left/right. iOS flips because its capture is mirrored.
+        const side: DetectedHandSide = userFacingHandSideFromLabel(sideLabel, false)
         const topGesture = result.gestures[i]?.[0]
         const landmarks: LandmarkPoint[] = result.landmarks[i].map((lm) => ({
           x: lm.x,

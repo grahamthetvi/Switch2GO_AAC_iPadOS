@@ -34,6 +34,14 @@ final class HandGestureDetectorTests: XCTestCase {
         XCTAssertNil(result.activation)
     }
 
+    func testMirroredFrontCameraHandednessMapsToUserFacingSide() {
+        XCTAssertEqual(GestureRecognizerService.mapHandedness("Left"), .right)
+        XCTAssertEqual(GestureRecognizerService.mapHandedness("Right"), .left)
+        XCTAssertEqual(GestureRecognizerService.mapHandedness("left"), .right)
+        XCTAssertEqual(UserFacingLaterality.phraseIndex(for: .left), 0)
+        XCTAssertEqual(UserFacingLaterality.phraseIndex(for: .right), 1)
+    }
+
     func testCooldownPreventsImmediateReactivation() {
         let detector = HandGestureDetector()
         let open = [hand(side: .right, gesture: "Open_Palm")]

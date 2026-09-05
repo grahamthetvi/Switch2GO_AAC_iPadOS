@@ -99,19 +99,19 @@ struct PhrasesView: View {
     private func selectPhraseBySide(_ side: ArmSide, onPage page: Int) {
         guard binarySelectionReady(for: page) else { return }
         let phrases = pagePhrases(for: page)
-        let index = side == .left ? 0 : 1
+        let index = UserFacingLaterality.phraseIndex(for: side)
         handlePhraseSelection(phrases[index])
     }
 
     private func gestureHighlighted(for index: Int, page: Int) -> Bool {
         guard binarySelectionReady(for: page) else { return false }
         if armRaiseActive {
-            return (index == 0 && gazeManager.armState.leftRaised)
-                || (index == 1 && gazeManager.armState.rightRaised)
+            return (index == UserFacingLaterality.phraseIndex(for: .left) && gazeManager.armState.leftRaised)
+                || (index == UserFacingLaterality.phraseIndex(for: .right) && gazeManager.armState.rightRaised)
         }
         if handGestureActive {
-            return (index == 0 && gazeManager.handState.leftPose != nil)
-                || (index == 1 && gazeManager.handState.rightPose != nil)
+            return (index == UserFacingLaterality.phraseIndex(for: .left) && gazeManager.handState.leftPose != nil)
+                || (index == UserFacingLaterality.phraseIndex(for: .right) && gazeManager.handState.rightPose != nil)
         }
         return false
     }
