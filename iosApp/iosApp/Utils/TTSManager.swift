@@ -23,7 +23,7 @@ class TTSManager: NSObject, ObservableObject, @unchecked Sendable, AVSpeechSynth
     private override init() {
         super.init()
         synthesizer.delegate = self
-        selectedVoice = AVSpeechSynthesisVoice(language: "en-US")
+        applyVoice(for: AppSettings.shared.resolvedLanguage)
 
         NotificationCenter.default.addObserver(
             self,
@@ -128,13 +128,40 @@ class TTSManager: NSObject, ObservableObject, @unchecked Sendable, AVSpeechSynth
         }
     }
     
-    /// Get all available voices for current language
+    /// Get available voices, preferring the current AAC language.
     func getAvailableVoices() -> [AVSpeechSynthesisVoice] {
-        return AVSpeechSynthesisVoice.speechVoices()
-            .filter { $0.language.hasPrefix("en") }
-            .sorted { $0.name < $1.name }
+        let language = AppSettings.shared.resolvedLanguage
+        let prefixes = language.ttsLanguageCodes.map { $0.lowercased() }
+        let voices = AVSpeechSynthesisVoice.speechVoices()
+        let matching = voices.filter { voice in
+            let code = voice.language.lowercased()
+            return prefixes.contains { code.hasPrefix($0) || code.hasPrefix($0.replacingOccurrences(of: "-", with: "_")) }
+        }
+        if !matching.isEmpty {
+            return matching.sorted { $0.name < $1.name }
+        }
+        return voices.sorted { $0.name < $1.name }
     }
-    
+
+    /// Pick the best installed voice for an AAC language.
+    func applyVoice(for language: AppLanguage) {
+        selectedVoice = Self.bestVoice(for: language)
+    }
+
+    static func bestVoice(for language: AppLanguage) -> AVSpeechSynthesisVoice? {
+        let voices = AVSpeechSynthesisVoice.speechVoices()
+        for code in language.ttsLanguageCodes {
+            if let exact = voices.first(where: { $0.language.caseInsensitiveCompare(code) == .orderedSame }) {
+                return exact
+            }
+            let lowered = code.lowercased()
+            if let prefix = voices.first(where: { $0.language.lowercased().hasPrefix(lowered) }) {
+                return prefix
+            }
+        }
+        return AVSpeechSynthesisVoice(language: language.ttsLanguageCodes.first)
+    }
+
     /// Set voice by identifier
     func setVoice(identifier: String) {
         selectedVoice = AVSpeechSynthesisVoice(identifier: identifier)

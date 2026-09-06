@@ -155,7 +155,7 @@ struct EditCategoryDetailView: View {
                         Image(systemName: "plus")
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Add Phrase")
+                    .accessibilityLabel(L("Add Phrase"))
                 }
             }
             
@@ -221,7 +221,7 @@ struct EditCategoryDetailView: View {
                 deleteCategory()
             }
         } message: {
-            Text("This will permanently delete '\(category.name)' and all its phrases.")
+            Text(L("This will permanently delete '%@' and all its phrases.", category.name))
         }
         .sheet(isPresented: $showingAddPhrase) {
             AddPhraseView(categoryId: category.id) {

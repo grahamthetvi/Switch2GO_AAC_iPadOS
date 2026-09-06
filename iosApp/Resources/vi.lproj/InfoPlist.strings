@@ -1,0 +1,5 @@
+"NSCameraUsageDescription" = "Switch2Go cần quyền camera để theo dõi ánh nhìn, giúp giao tiếp không dùng tay. Hình ảnh camera được xử lý trên thiết bị, không bao giờ lưu hay gửi đi.";
+"NSMicrophoneUsageDescription" = "Switch2Go có thể dùng micro để nhập bằng nhận dạng giọng nói.";
+"NSPhotoLibraryUsageDescription" = "Switch2Go cần quyền thư viện ảnh để gắn ảnh tùy chỉnh lên nút cụm từ, giúp giao tiếp bằng hình ảnh tốt hơn.";
+"NSBluetoothAlwaysUsageDescription" = "Switch2GO dùng Bluetooth để gửi xung ngõ ra công tắc tới ESP32 cho điều khiển môi trường (PowerLink).";
+"NSBluetoothPeripheralUsageDescription" = "Switch2GO dùng Bluetooth để gửi xung ngõ ra công tắc tới ESP32 cho điều khiển môi trường (PowerLink).";

@@ -32,6 +32,7 @@ class AppSettings: ObservableObject {
         static let headSensitivityY = "headSensitivityY"
         static let selectionMode = "selectionMode"
         static let appBorderColor = "appBorderColor"
+        static let appLanguageOverride = "appLanguageOverride"
         
         // Switch Control
         static let switchControlEnabled = "switchControlEnabled"
@@ -258,6 +259,24 @@ class AppSettings: ObservableObject {
         }
     }
 
+    /// Empty string means follow the iPad language. Otherwise an `AppLanguage.rawValue`.
+    @Published var appLanguageOverride: String {
+        didSet {
+            defaults.set(appLanguageOverride, forKey: Keys.appLanguageOverride)
+            LocalizationHelper.invalidateCache()
+            TTSManager.shared.applyVoice(for: resolvedLanguage)
+            NotificationCenter.default.post(name: .appLanguageDidChange, object: nil)
+        }
+    }
+
+    var resolvedLanguage: AppLanguage {
+        AppLanguage.from(id: appLanguageOverride) ?? AppLanguage.fromSystem()
+    }
+
+    var followsSystemLanguage: Bool {
+        appLanguageOverride.isEmpty
+    }
+
     // MARK: - Switch Control Settings
 
     /// Whether external keyboard/BLE switch control is enabled
@@ -386,6 +405,7 @@ class AppSettings: ObservableObject {
         self.selectionMode = defaults.string(forKey: Keys.selectionMode) ?? "none"
         let borderHex = defaults.object(forKey: Keys.appBorderColor) as? UInt32 ?? 0xFF000000
         self.appBorderColor = Color(hex: borderHex)
+        self.appLanguageOverride = defaults.string(forKey: Keys.appLanguageOverride) ?? ""
 
         // Switch Control
         self.switchControlEnabled = defaults.object(forKey: Keys.switchControlEnabled) as? Bool ?? false
@@ -434,6 +454,7 @@ class AppSettings: ObservableObject {
         headSensitivityY = 2.5
         selectionMode = "none"
         appBorderColor = Color(hex: 0xFF000000)
+        appLanguageOverride = ""
         switchControlEnabled = false
         switchControlMode = SwitchControlMode.directPhrase.rawValue
         switchScanInterval = 1.5
@@ -485,6 +506,7 @@ class AppSettings: ObservableObject {
             Keys.headSensitivityY: .double(headSensitivityY),
             Keys.selectionMode: .string(selectionMode),
             Keys.appBorderColor: .int(Int(appBorderColor.toHex())),
+            Keys.appLanguageOverride: .string(appLanguageOverride),
             Keys.switchControlEnabled: .bool(switchControlEnabled),
             Keys.switchControlMode: .string(switchControlMode),
             Keys.switchScanInterval: .double(switchScanInterval),
@@ -532,6 +554,7 @@ class AppSettings: ObservableObject {
         if let v = snapshot[Keys.appBorderColor]?.intValue {
             appBorderColor = Color(hex: UInt32(bitPattern: Int32(truncatingIfNeeded: v)))
         }
+        if let v = snapshot[Keys.appLanguageOverride]?.stringValue { appLanguageOverride = v }
         if let v = snapshot[Keys.switchControlEnabled]?.boolValue { switchControlEnabled = v }
         if let v = snapshot[Keys.switchControlMode]?.stringValue {
             switchControlMode = SwitchControlMode.migrated(from: v).rawValue

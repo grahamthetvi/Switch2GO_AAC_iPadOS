@@ -8,17 +8,17 @@ struct EmptyPhrasesView: View {
                 .font(.system(size: 80))
                 .foregroundColor(.secondary)
             
-            Text("No phrases yet")
+            Text(l10n: "No phrases yet")
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Add phrases to this category from Settings")
+            Text(l10n: "Add phrases to this category from Settings")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             
             NavigationLink(destination: KeyboardView()) {
-                Label("Add Phrase", systemImage: "plus.circle.fill")
+                Label(L("Add Phrase"), systemImage: "plus.circle.fill")
                     .font(.headline)
                     .foregroundColor(.white)
                     .padding()

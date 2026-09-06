@@ -20,15 +20,17 @@ struct CategoriesView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 if viewModel.isLoading {
-                    ProgressView("Loading categories...")
+                    ProgressView {
+                        Text(l10n: "Loading categories...")
+                    }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let error = viewModel.errorMessage {
                     VStack {
-                        Text("Error")
+                        Text(l10n: "Error")
                             .font(.title)
                         Text(error)
                             .foregroundColor(.secondary)
-                        Button("Retry") {
+                        Button(L("Retry")) {
                             viewModel.loadCategories()
                         }
                         .padding()
@@ -79,6 +81,9 @@ struct CategoriesView: View {
         .toolbarBackground(settings.appBorderColor, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .tint(.blue)
+        // AAC tiles stay physical left-to-right so eye/arm/switch targeting
+        // is not mirrored when the UI language is Arabic.
+        .environment(\.layoutDirection, .leftToRight)
     }
     
     private var categoriesGrid: some View {
@@ -190,7 +195,7 @@ struct CategoryButton: View {
             .cornerRadius(16)
             .shadow(radius: 4)
         }
-        .accessibilityLabel("Category: \(category.name). Double tap to open.")
+        .accessibilityLabel(L("Category: %@. Double tap to open.", category.name))
     }
     
     private var iconName: String {

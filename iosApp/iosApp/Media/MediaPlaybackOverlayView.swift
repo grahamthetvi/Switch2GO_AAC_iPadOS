@@ -160,7 +160,7 @@ struct MediaPlaybackOverlayView: View {
                 .shadow(radius: 8)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(coordinator.isPaused ? "Play" : "Pause")
+        .accessibilityLabel(coordinator.isPaused ? L("Play") : L("Pause"))
     }
 
     private var exitButton: some View {
@@ -176,7 +176,7 @@ struct MediaPlaybackOverlayView: View {
                 }
                 .buttonStyle(.plain)
                 .padding(24)
-                .accessibilityLabel("Exit playback")
+                .accessibilityLabel(L("Exit playback"))
                 Spacer()
             }
             Spacer()

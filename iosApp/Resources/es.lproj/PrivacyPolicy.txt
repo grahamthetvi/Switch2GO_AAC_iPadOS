@@ -1,0 +1,136 @@
+POLÍTICA DE PRIVACIDAD
+Última actualización: 26 de enero de 2026
+Nuestro compromiso con la privacidad
+Esta app está diseñada con la privacidad como principio central. No recopilamos, almacenamos ni transmitimos información personal de su dispositivo. Todas las funciones operan por completo en su dispositivo, sin enviar datos a servidores externos.
+
+1. INFORMACIÓN QUE RECOPILAMOS
+Recopilamos CERO información. Esta app no:
+
+Recopila información personal
+Recopila datos faciales, geometría facial ni imágenes
+Hace seguimiento de analíticas de uso
+Envía informes de fallos
+Se conecta a servidores externos
+Usa cookies ni tecnologías de seguimiento
+Recopila identificadores publicitarios
+Accede a su ubicación
+Almacena ni transmite datos de cámara o micrófono
+
+
+2. CÓMO FUNCIONA LA APP
+Acceso a la cámara (seguimiento ocular y puntos faciales)
+
+Finalidad: La app usa la cámara frontal del dispositivo y tecnología MediaPipe para detectar puntos faciales y seguir el movimiento de los ojos. Así, las personas con movilidad limitada pueden controlar un puntero en pantalla e interactuar sin manos.
+Procesamiento: Todo el procesamiento de rostro, puntos faciales y seguimiento ocular ocurre estrictamente en local, en tiempo real, con visión por computador.
+Almacenamiento: Nunca se almacenan, guardan ni transmiten imágenes de cámara, vídeo, datos faciales, geometría facial ni datos de seguimiento ocular.
+Su control: Puede revocar el permiso de cámara en cualquier momento en los ajustes del dispositivo
+
+Acceso al micrófono (funciones de voz)
+
+Finalidad: La app puede solicitar el micrófono para funciones basadas en voz
+Procesamiento: Todo el procesamiento de voz ocurre en local en su dispositivo
+Almacenamiento: No se almacenan ni transmiten grabaciones de audio
+Su control: Puede revocar el permiso de micrófono en cualquier momento en los ajustes del dispositivo
+
+Almacenamiento local de datos
+
+La app guarda preferencias, frases personalizadas y ajustes de calibración en local en su dispositivo
+Estos datos nunca salen de su dispositivo
+Puede eliminarlos desinstalando la app o borrando los datos de la app en los ajustes del dispositivo
+
+
+3. COMPARTICIÓN DE DATOS
+No compartimos NINGÚN dato con nadie. Como no recopilamos datos, no hay nada que compartir con:
+
+Servicios de terceros
+Anunciantes
+Empresas de analítica
+Otros usuarios
+Cualquier otra persona
+
+
+4. PRIVACIDAD INFANTIL (CUMPLIMIENTO DE COPPA Y FERPA)
+Esta app es segura para niños y estudiantes de todas las edades:
+
+Sin recopilación de datos: No recopilamos información personal de nadie, incluidos menores de 13 años
+Uso educativo: Está diseñada para entornos educativos y cumple FERPA (Ley de derechos educativos y privacidad familiar)
+Control parental: Padres y educadores tienen control total mediante permisos a nivel de dispositivo
+Sin terceros: Los datos de menores nunca se comparten porque no se recopilan datos
+
+
+5. USUARIOS INTERNACIONALES (CUMPLIMIENTO DEL RGPD)
+Para usuarios del Espacio Económico Europeo (EEE), el Reino Unido y Suiza:
+
+Protección de datos desde el diseño: La app se construye con la privacidad como base
+Sus derechos: Como no recopilamos datos, no hay datos que acceder, corregir, borrar o transferir
+No se necesita consentimiento: No necesitamos consentimiento para recopilar datos porque no recopilamos ninguno
+Base jurídica: No aplicable: no hay tratamiento de datos personales
+
+
+6. DERECHOS DE PRIVACIDAD ESTATALES EN EE. UU.
+Para residentes de California, Virginia, Colorado, Connecticut y otros estados con leyes de privacidad:
+
+Derecho a saber: No recopilamos información personal
+Derecho a eliminar: No aplicable: no se recopilan datos
+Derecho a excluirse de la venta: No aplicable: no vendemos datos
+No discriminación: No aplicable: no hay prácticas de datos de las que excluirse
+
+
+7. ACCESIBILIDAD Y TECNOLOGÍA DE APOYO
+Esta app está diseñada como herramienta de comunicación de apoyo:
+
+Todas las funciones funcionan sin conexión
+No se requiere cuenta ni inicio de sesión
+Privacidad por diseño para usuarios con discapacidad
+Segura en escuelas, terapia y hogares
+
+
+8. SEGURIDAD DE LOS DATOS
+Como no se recopilan ni transmiten datos:
+
+No hay riesgo de filtraciones de datos
+No hay contraseñas ni cuentas que proteger
+Todo el procesamiento permanece en su dispositivo
+Su privacidad está protegida por diseño
+
+
+9. PERMISOS EXPLICADOS
+La app solo solicita permisos esenciales:
+PermisoFinalidadAlmacenamientoCámaraSeguimiento ocular para el punteroNinguno: solo procesamiento en tiempo realMicrófonoFunciones de voz opcionalesNinguno: solo procesamiento en tiempo real
+Puede revisar y cambiar permisos en Ajustes del dispositivo > Apps > [Nombre de la app] > Permisos.
+
+10. SERVICIOS DE TERCEROS
+Esta app no usa servicios de terceros, incluidos:
+
+Ninguna plataforma de analítica
+Ningún informe de fallos
+Ninguna red publicitaria
+Ningún servicio en la nube
+Ningún servicio de IA/ML que requiera transmitir datos
+
+
+11. CAMBIOS EN ESTA POLÍTICA
+Si alguna vez cambiamos nuestras prácticas de privacidad (por ejemplo, funciones opcionales en la nube), nosotros:
+
+Actualizaremos esta política con una nueva fecha de «Última actualización»
+Avisaremos a los usuarios dentro de la app
+Obtendremos consentimiento antes de recopilar cualquier dato
+Mantendremos requisitos de consentimiento explícito para cualquier recopilación de datos
+
+
+12. CÓDIGO ABIERTO Y TRANSPARENCIA
+Esta app se basa en código abierto, modificado para reforzar la privacidad. Puede revisar cómo funciona examinando el código fuente o consultando a expertos técnicos.
+
+13. INFORMACIÓN DE CONTACTO
+Si tiene preguntas sobre esta política de privacidad o las prácticas de privacidad de la app:
+Nombre: Addison Graham
+Correo: grahamthetvi@icloud.com
+Ubicación: Illinois
+
+14. SU CONSENTIMIENTO
+Al usar esta app, usted reconoce que:
+
+Ha leído esta política de privacidad
+Entiende que no se recopilan datos personales
+Concede permiso de cámara/micrófono solo para procesamiento local en el dispositivo
+Puede revocar estos permisos en cualquier momento

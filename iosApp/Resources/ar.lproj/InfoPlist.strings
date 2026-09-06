@@ -1,0 +1,5 @@
+"NSCameraUsageDescription" = "يحتاج Switch2Go إلى الكاميرا لتتبع نظرة العين وتمكين التواصل دون استخدام اليدين. تُعالَج تغذية الكاميرا على الجهاز ولا تُخزَّن ولا تُرسل أبدًا.";
+"NSMicrophoneUsageDescription" = "قد يستخدم Switch2Go الميكروفون لإدخال التعرف على الكلام.";
+"NSPhotoLibraryUsageDescription" = "يحتاج Switch2Go إلى مكتبة الصور لوضع صور مخصصة على أزرار العبارات لتحسين التواصل البصري.";
+"NSBluetoothAlwaysUsageDescription" = "يستخدم Switch2GO البلوتوث لإرسال نبضة خرج مفتاح إلى ESP32 للتحكم البيئي (PowerLink).";
+"NSBluetoothPeripheralUsageDescription" = "يستخدم Switch2GO البلوتوث لإرسال نبضة خرج مفتاح إلى ESP32 للتحكم البيئي (PowerLink).";

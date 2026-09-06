@@ -24,15 +24,17 @@ struct PhrasesView: View {
     var body: some View {
         VStack(spacing: 0) {
             if viewModel.isLoading {
-                ProgressView("Loading phrases...")
+                ProgressView {
+                    Text(l10n: "Loading phrases...")
+                }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let error = viewModel.errorMessage {
                 VStack {
-                    Text("Error")
+                    Text(l10n: "Error")
                         .font(.title)
                     Text(error)
                         .foregroundColor(.secondary)
-                    Button("Retry") {
+                    Button(L("Retry")) {
                         viewModel.loadPhrases()
                     }
                     .padding()
@@ -49,7 +51,7 @@ struct PhrasesView: View {
                 Button(action: { dismiss() }) {
                     HStack {
                         Image(systemName: "chevron.left")
-                        Text("Back")
+                        Text(l10n: "Back")
                     }
                 }
             }
@@ -58,6 +60,7 @@ struct PhrasesView: View {
         .toolbarBackground(settings.appBorderColor, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .tint(.blue)
+        .environment(\.layoutDirection, .leftToRight)
         .onAppear {
             gazeManager.dwellManager.unregisterButtons(withPrefix: "cat_")
             // Don't replay activations that happened before this screen appeared.
@@ -137,7 +140,7 @@ struct PhrasesView: View {
                 .id(settings.symbolCount)
 
                 if totalPages > 1 {
-                    Text("Page \(currentPage + 1) of \(totalPages)")
+                    Text(L("Page %d of %d", currentPage + 1, totalPages))
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 12)
@@ -168,20 +171,20 @@ struct PhrasesView: View {
         return VStack(spacing: 8) {
             if binarySelectionActive && !binarySelectionReady(for: page) {
                 Text(armRaiseActive
-                    ? "Arm raise selection works with 2 phrases per page (left and right). Change layout in Settings → CVI Display."
-                    : "Hand gesture selection works with 2 phrases per page (left and right). Change layout in Settings → CVI Display.")
+                    ? L("Arm raise selection works with 2 phrases per page (left and right). Change layout in Settings → CVI Display.")
+                    : L("Hand gesture selection works with 2 phrases per page (left and right). Change layout in Settings → CVI Display."))
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, padding)
             } else if armRaiseActive && binarySelectionReady(for: page) {
-                Text("Raise your left arm for the left phrase, or your right arm for the right phrase.")
+                Text(l10n: "Raise your left arm for the left phrase, or your right arm for the right phrase.")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, padding)
             } else if handGestureActive && binarySelectionReady(for: page) {
-                Text("Open then close your left hand (or close then open) for the left phrase. Use your right hand for the right phrase.")
+                Text(l10n: "Open then close your left hand (or close then open) for the left phrase. Use your right hand for the right phrase.")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -329,7 +332,7 @@ struct PhraseButton: View {
             .shadow(radius: 4)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Phrase: \(phrase.text). Double tap to speak.")
+        .accessibilityLabel(L("Phrase: %@. Double tap to speak.", phrase.text))
     }
     
     // MARK: - Style Properties

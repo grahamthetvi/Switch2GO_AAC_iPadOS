@@ -1,5 +1,4 @@
 import SwiftUI
-import AVFoundation
 
 /// Main AAC phrase grid view with dwell selection support.
 struct AACGridView: View {
@@ -75,14 +74,7 @@ struct AACGridView: View {
     }
 
     private func speakPhrase(_ phrase: String) {
-        guard !phrase.isEmpty else { return }
-
-        let utterance = AVSpeechUtterance(string: phrase)
-        utterance.rate = AVSpeechUtteranceDefaultSpeechRate
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-
-        let synthesizer = AVSpeechSynthesizer()
-        synthesizer.speak(utterance)
+        TTSManager.shared.speak(phrase)
     }
 }
 
@@ -120,7 +112,7 @@ struct PhraseButtonView: View {
         .buttonStyle(.plain)
         .frame(height: 100)
         .accessibilityLabel(phrase)
-        .accessibilityHint("Double tap to speak")
+        .accessibilityHint(L("Double tap to speak"))
     }
 
     private var backgroundColor: Color {

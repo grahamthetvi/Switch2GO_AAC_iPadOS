@@ -192,7 +192,7 @@ struct PhraseStyleEditorView: View {
                     
                     // Border Thickness
                     styleButton(
-                        title: "Border Thickness: \(borderWidthLabel)",
+                        title: L("Border Thickness: %@", borderWidthLabel),
                         icon: "line.3.horizontal",
                         color: .blue
                     ) {
@@ -529,7 +529,7 @@ struct PhraseStyleEditorView: View {
                     .foregroundColor(color)
                     .frame(width: 30)
                 
-                Text(title)
+                Text(l10n: title)
                     .font(.headline)
                     .foregroundColor(.primary)
                 
@@ -549,48 +549,48 @@ struct PhraseStyleEditorView: View {
     private var borderWidthLabel: String {
         let width = currentStyle.borderWidthDp ?? 0
         switch width {
-        case 0: return "None"
-        case 6: return "Thin"
-        case 10: return "Medium"
-        case 14: return "Thick"
-        case 20: return "XL"
-        case 28: return "XXL"
+        case 0: return L("None")
+        case 6: return L("Thin")
+        case 10: return L("Medium")
+        case 14: return L("Thick")
+        case 20: return L("XL")
+        case 28: return L("XXL")
         default: return "\(Int(truncating: width))dp"
         }
     }
     
     private var imageLabel: String {
         guard let imageRef = currentStyle.imageRef, !imageRef.isEmpty else {
-            return "Image/Emoji: None"
+            return L("Image/Emoji: None")
         }
         
         if let emoji = PhraseStyle.extractEmoji(ref: imageRef) {
-            return "Image/Emoji: \(emoji)"
+            return L("Image/Emoji: %@", emoji)
         }
         
         if imageRef.hasPrefix("content://")
             || imageRef.hasPrefix("file://")
             || imageRef.hasPrefix("/")
             || MediaStorage.isRelativeFileRef(imageRef) {
-            return "Image/Emoji: Custom"
+            return L("Image/Emoji: Custom")
         }
         
-        return "Image/Emoji: Symbol"
+        return L("Image/Emoji: Symbol")
     }
 
     private var videoMediaLabel: String {
-        if currentStyle.isVideo() { return "Video: Attached" }
-        return "Video: None"
+        if currentStyle.isVideo() { return L("Video: Attached") }
+        return L("Video: None")
     }
 
     private var audioMediaLabel: String {
-        if currentStyle.isAudio() { return "Audio: Attached" }
-        return "Audio: None"
+        if currentStyle.isAudio() { return L("Audio: Attached") }
+        return L("Audio: None")
     }
 
     private var youtubeMediaLabel: String {
         if currentStyle.isYouTube(), let ref = currentStyle.mediaRef {
-            return "YouTube: \(ref)"
+            return L("YouTube: %@", ref)
         }
         return "YouTube: None"
     }

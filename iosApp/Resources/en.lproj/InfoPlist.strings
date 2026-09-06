@@ -1,0 +1,5 @@
+"NSCameraUsageDescription" = "Switch2Go needs camera access for eye gaze tracking to enable hands-free communication. Your camera feed is processed on-device and is never stored or transmitted.";
+"NSMicrophoneUsageDescription" = "Switch2Go may use the microphone for speech recognition input.";
+"NSPhotoLibraryUsageDescription" = "Switch2Go needs access to your photo library to allow custom images on phrase buttons for better visual communication.";
+"NSBluetoothAlwaysUsageDescription" = "Switch2GO uses Bluetooth to send a switch-output pulse to the ESP32 for environmental control (PowerLink).";
+"NSBluetoothPeripheralUsageDescription" = "Switch2GO uses Bluetooth to send a switch-output pulse to the ESP32 for environmental control (PowerLink).";
