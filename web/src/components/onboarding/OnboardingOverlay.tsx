@@ -3,7 +3,7 @@ import { useTranslation } from '../../i18n/useTranslation'
 import { useSettings } from '../../settings/settingsStore'
 import { OnboardingSlide } from './OnboardingSlide'
 
-const TOTAL_PAGES = 8
+const TOTAL_PAGES = 10
 
 export function OnboardingOverlay() {
   const { t } = useTranslation()
@@ -46,6 +46,19 @@ export function OnboardingOverlay() {
       ]}
     />,
     <OnboardingSlide
+      key="bodySelection"
+      icon="🙋"
+      iconClass="onboarding-icon-mint"
+      title={t('onboarding.bodySelectionTitle')}
+      paragraphs={[
+        t('onboarding.bodySelectionP1'),
+        t('onboarding.bodySelectionP2'),
+        t('onboarding.bodySelectionP3'),
+        t('onboarding.bodySelectionP4'),
+        t('onboarding.bodySelectionP5'),
+      ]}
+    />,
+    <OnboardingSlide
       key="imageTool"
       icon="🖼"
       iconClass="onboarding-icon-purple"
@@ -75,7 +88,24 @@ export function OnboardingOverlay() {
       icon="🔲"
       iconClass="onboarding-icon-teal"
       title={t('onboarding.cviDisplayTitle')}
-      paragraphs={[t('onboarding.cviDisplayP1'), t('onboarding.cviDisplayP2'), t('onboarding.cviDisplayP3')]}
+      paragraphs={[
+        t('onboarding.cviDisplayP1'),
+        t('onboarding.cviDisplayP2'),
+        t('onboarding.cviDisplayP3'),
+        t('onboarding.cviDisplayP4'),
+      ]}
+    />,
+    <OnboardingSlide
+      key="phraseContent"
+      icon="✨"
+      iconClass="onboarding-icon-indigo"
+      title={t('onboarding.phraseContentTitle')}
+      paragraphs={[
+        t('onboarding.phraseContentP1'),
+        t('onboarding.phraseContentP2'),
+        t('onboarding.phraseContentP3'),
+        t('onboarding.phraseContentP4'),
+      ]}
     />,
     <OnboardingSlide
       key="switch"
@@ -136,4 +166,3 @@ export function OnboardingOverlay() {
     </div>
   )
 }
-

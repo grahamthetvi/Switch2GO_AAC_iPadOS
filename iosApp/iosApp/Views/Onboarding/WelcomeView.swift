@@ -6,7 +6,7 @@ struct WelcomeView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var currentPage = 0
-    private let totalPages = 8
+    private let totalPages = 10
 
     var body: some View {
         ZStack {
@@ -18,11 +18,13 @@ struct WelcomeView: View {
                     welcomePage.tag(0)
                     orientationPage.tag(1)
                     navigationPage.tag(2)
-                    imageToolPage.tag(3)
-                    cviFriendlyPage.tag(4)
-                    cviDisplayPage.tag(5)
-                    switchModePage.tag(6)
-                    readyPage.tag(7)
+                    bodySelectionPage.tag(3)
+                    imageToolPage.tag(4)
+                    cviFriendlyPage.tag(5)
+                    cviDisplayPage.tag(6)
+                    phraseContentPage.tag(7)
+                    switchModePage.tag(8)
+                    readyPage.tag(9)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 // Page style TabView otherwise expands under sibling chrome.
@@ -86,8 +88,8 @@ struct WelcomeView: View {
             title: "Welcome to Switch2GO",
             paragraphs: [
                 "Switch2GO is an Augmentative and Alternative Communication (AAC) app designed for people with Cerebral Visual Impairment (CVI) and others who need accessible communication.",
-                "Choose phrases organized into categories, then tap or select them to speak out loud. The app works with touch, eye gaze, head tracking, and Bluetooth switch control — use whatever works best.",
-                "The interface uses high-contrast, customizable layouts with fewer symbols per page to reduce visual complexity. Every phrase can be individually styled with custom colors, images, borders, and text sizes."
+                "Choose phrases organized into categories, then tap or select them to speak out loud. The app works with touch, eye gaze, head tracking, arm raises, hand gestures, and Bluetooth switch control — use whatever works best.",
+                "Every phrase can be individually styled with custom colors, images, borders, and text sizes. You can also attach videos, audio, YouTube clips, or simple games, share phrase packs with teachers, and back up your whole board."
             ]
         )
     }
@@ -99,7 +101,7 @@ struct WelcomeView: View {
             title: "iPad Orientation",
             paragraphs: [
                 "You can use Switch2GO in almost any orientation. The only unsupported position is when the front camera is upside down.",
-                "If the camera is upside down, eye and head tracking pause automatically and a message prompts you to rotate back. Touch and switch controls still work.",
+                "If the camera is upside down, eye and head tracking pause automatically and a message prompts you to rotate back. Touch, switches, arm raises, and hand gestures still work.",
                 "Tip: If tracking seems off, rotate to a supported orientation and hold the iPad steady for a moment so tracking can recover."
             ]
         )
@@ -115,8 +117,23 @@ struct WelcomeView: View {
                 "Eye Gaze mode: keep your head as still as possible and move only your eyes. Look at a button and hold your gaze until the dwell ring completes to select it.",
                 "Head Tracking mode: move your head in the direction you want the cursor to go. Moving your head left moves the cursor left, right moves right, up moves up, and down moves down.",
                 "In both tracking modes, the blue cursor shows the current pointer location and the green progress ring fills while you dwell.",
-                "To change your input method, open Settings (gear icon, top right) and go to Selection Mode. You can choose Touch Only, Face Tracking (head movements), or Eye Gaze.",
-                "You can add, edit, reorder, and delete categories and phrases from Settings → Edit Categories & Phrases."
+                "To change your input method, open Settings (gear icon, top right) and go to Selection Mode. Choose Touch Only, Head Tracking, Eye Gaze, Arm Raise Selection, or Hand Gesture Selection.",
+                "You can add, edit, reorder, and delete categories and phrases from Settings → Edit Categories & Phrases. Export a category as a phrase pack to share with others."
+            ]
+        )
+    }
+
+    private var bodySelectionPage: some View {
+        OnboardingPageView(
+            icon: "figure.wave",
+            iconColor: .mint,
+            title: "Arm Raise & Hand Gestures",
+            paragraphs: [
+                "Arm Raise Selection and Hand Gesture Selection are camera-based modes that work without moving a cursor — great when fine eye or head control is difficult.",
+                "Arm Raise: raise your left arm to choose the left phrase, or your right arm for the right phrase. Hold the raise briefly until it registers.",
+                "Hand Gesture: open then close your left hand (or close then open) for the left phrase, and use your right hand for the right phrase.",
+                "Both modes require exactly 2 phrases on screen. Set Symbols per page to 2 under Settings → Categories Display → CVI Display Settings.",
+                "Stand or sit where your upper body and hands are visible to the front camera. Good lighting helps. Touch and external switches still work alongside these modes."
             ]
         )
     }
@@ -131,7 +148,7 @@ struct WelcomeView: View {
                 "Search Wikimedia Commons for thousands of free images — real photographs, not abstract icons — which are much better for users with CVI.",
                 "The tool can automatically remove the background from any image, isolating just the subject. This makes the image cleaner and easier to recognize against your phrase's background color.",
                 "You can also add a high-contrast colored outline around the object. Choose from colors like red, yellow, black, white, blue, green, and more, and adjust the outline thickness. This helps the subject stand out clearly.",
-                "Once you're happy with the result, download the image and assign it to your phrase."
+                "Once you're happy with the result, download the image and assign it to your phrase. You can also open the Image Tool from Settings."
             ]
         )
     }
@@ -159,9 +176,25 @@ struct WelcomeView: View {
             title: "CVI Display Settings",
             paragraphs: [
                 "The CVI Display Settings let you control how many phrase symbols appear on each page. Fewer symbols means less visual clutter — choose between 2, 3, or 4 symbols per page.",
+                "Use 2 symbols per page for Arm Raise and Hand Gesture selection — left phrase on the left, right phrase on the right.",
                 "You can also assign a specific background color to each symbol position (e.g. red for top-left, blue for top-right). Consistent position colors help users learn where to look.",
                 "Find these settings at: Settings → Categories Display → CVI Display Settings.",
                 "Combined with per-phrase styling (black background, bold colored text, real images), these layout options create an interface optimized for users with visual impairments."
+            ]
+        )
+    }
+
+    private var phraseContentPage: some View {
+        OnboardingPageView(
+            icon: "sparkles.rectangle.stack.fill",
+            iconColor: .indigo,
+            title: "Phrase Packs, Media & Backup",
+            paragraphs: [
+                "Phrase Packs (.switch2go files) let teachers share whole categories by email, AirDrop, or Files. Import from Settings → Phrase Packs. Export from Edit Categories & Phrases → choose a category → Export Category.",
+                "When a phrase is selected, you can play a short video (20 seconds or less), audio clip, YouTube video, or a built-in game. Media starts after a short delay so another phrase can be chosen first — adjust the delay in Settings → Timing & Sensitivity.",
+                "Edit phrase content in Settings → Edit Categories & Phrases → Edit Style on any phrase.",
+                "Backup & Restore saves all categories, phrases, images, and settings to a file on this iPad. Nothing is uploaded to the cloud. Find it under Settings → Backup & Restore.",
+                "Send switch output: in the Phrase Style Editor, turn on “Send switch output” on a phrase to pulse a paired ESP32 and toggle a fan or light through a PowerLink. Set up the connection under Settings → Selection Mode → Switch Control."
             ]
         )
     }
@@ -173,9 +206,10 @@ struct WelcomeView: View {
             title: "Switch Control",
             paragraphs: [
                 "Switch2GO works with the ESP32 Bluetooth switch interface (firmware in the ESP32 folder). Pair Switch2GO-XXXX in iPad Settings → Bluetooth, then enable Switch Control in the app.",
-                "Scan & Select uses two switches: one moves a highlight across phrases, one selects. Switch to Phrase uses two to four switches — each switch speaks one phrase on the page.",
-                "Enable switches under Settings → Selection Mode → Switch Control. Default keys 1–4 must match the ESP32 firmware.",
-                "Touch, eye gaze, and head tracking still work when switches are enabled."
+                "Scan & Select uses two switches: one moves a highlight across phrases, one selects. Switch to Phrase uses two to four switches — each switch speaks one phrase on the page (matching your symbols-per-page setting).",
+                "Customize scan speed, control mode, and key mapping under Settings → Selection Mode → Switch Control. Default keys 1–4 must match the ESP32 firmware.",
+                "Environmental control: wire GPIO 26 on the ESP32 through a relay or optocoupler to a PowerLink jack. Connect ESP32 output in Switch Control, then enable “Send switch output” on the phrase that should toggle the device.",
+                "Touch, eye gaze, head tracking, arm raises, and hand gestures still work when switches are enabled."
             ]
         )
     }
@@ -206,7 +240,7 @@ struct WelcomeView: View {
                 }
                 .padding(.horizontal, 32)
 
-                Text("Our support website (under Settings) also lets you create custom phrase images: pick from Wikimedia or upload your own, then download a version with the background removed and a colored outline—great for making CVI-friendly symbols.")
+                Text("Our support website (under Settings) also lets you create custom phrase images: pick from Wikimedia or upload your own, then download a version with the background removed and a colored outline — great for making CVI-friendly symbols.")
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
