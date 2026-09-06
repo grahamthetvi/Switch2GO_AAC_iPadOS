@@ -108,11 +108,12 @@ struct MediaPickerView: View {
             }
 
             var posterRef: String?
+            let imageMissing = currentImageRef == nil || currentImageRef?.isEmpty == true
             let needsPoster = mediaType == PhraseStyle.companion.MEDIA_TYPE_VIDEO
-                && (currentImageRef == nil || currentImageRef?.isEmpty == true)
+                && (imageMissing || MediaStorage.isVideoPosterRef(currentImageRef))
             if needsPoster, let videoURL = MediaStorage.resolveURL(mediaRef: relativeRef),
                let posterData = VideoPosterGenerator.jpegPoster(from: videoURL) {
-                posterRef = MediaStorage.saveImage(data: posterData, preferredExtension: "jpg")
+                posterRef = MediaStorage.savePosterImage(data: posterData)
             }
 
             await MainActor.run {

@@ -6,6 +6,7 @@ enum MediaStorage {
     static let maxFileBytes: Int64 = 100 * 1024 * 1024 // 100 MB
     static let imagesFolderName = "Images"
     static let mediaFolderName = "Media"
+    static let videoPosterFilePrefix = "video_poster_"
 
     static var documentsDirectory: URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -36,7 +37,15 @@ enum MediaStorage {
 
     /// Saves a custom tile image; returns a relative ref (`Images/…`).
     static func saveImage(data: Data, preferredExtension: String) -> String? {
-        let fileName = "custom_image_\(UUID().uuidString).\(preferredExtension)"
+        writeImageFile(data: data, fileName: "custom_image_\(UUID().uuidString).\(preferredExtension)")
+    }
+
+    /// Saves a generated video still; returns a relative ref (`Images/video_poster_…`).
+    static func savePosterImage(data: Data) -> String? {
+        writeImageFile(data: data, fileName: "\(videoPosterFilePrefix)\(UUID().uuidString).jpg")
+    }
+
+    private static func writeImageFile(data: Data, fileName: String) -> String? {
         let dest = imagesDirectory.appendingPathComponent(fileName)
         do {
             try data.write(to: dest)
@@ -113,6 +122,12 @@ enum MediaStorage {
 
     static func isRelativeFileRef(_ ref: String) -> Bool {
         ref.hasPrefix("\(imagesFolderName)/") || ref.hasPrefix("\(mediaFolderName)/")
+    }
+
+    /// True when `imageRef` was saved as a generated video still (`video_poster_…`).
+    static func isVideoPosterRef(_ ref: String?) -> Bool {
+        guard let ref, !ref.isEmpty else { return false }
+        return (ref as NSString).lastPathComponent.hasPrefix(videoPosterFilePrefix)
     }
 
     /// Resolves a stored ref (relative, absolute path, or file://) to a file URL if it exists.
