@@ -169,6 +169,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       eyeSelection: settings.eyeSelection,
       enableDoubleBlinkRecenter: settings.enableDoubleBlinkRecenter,
       enableAutoRecenter: settings.enableAutoRecenter,
+      enableHeadPoseCompensation: settings.enableHeadPoseCompensation,
       enableOutOfBoundsHiding: settings.enableOutOfBoundsHiding,
       showTrackingErrorBanner: settings.showTrackingErrorBanner,
     })

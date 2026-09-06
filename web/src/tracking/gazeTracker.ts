@@ -56,6 +56,11 @@ export class GazeTracker {
     this.gazeCalculator.offsetY = Math.min(1, Math.max(-1, offsetY))
   }
 
+  setHeadPoseCompensationEnabled(enabled: boolean): void {
+    this.gazeCalculator.headPoseCompensationEnabled = enabled
+    this.eyeball3DCalculator.headPoseCompensationEnabled = enabled
+  }
+
   updateScreenDimensions(width: number, height: number): void {
     if (width === this.screenWidth && height === this.screenHeight) return
     this.screenWidth = width
