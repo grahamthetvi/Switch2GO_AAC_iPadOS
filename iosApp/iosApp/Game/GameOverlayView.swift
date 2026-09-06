@@ -125,7 +125,7 @@ struct GameOverlayView: View {
                 }
                 .buttonStyle(.plain)
                 .padding(24)
-                .accessibilityLabel("Exit game")
+                .accessibilityLabel(L("Exit game"))
                 Spacer()
             }
             Spacer()

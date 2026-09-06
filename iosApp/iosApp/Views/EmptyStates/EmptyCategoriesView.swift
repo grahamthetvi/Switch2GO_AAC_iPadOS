@@ -8,17 +8,17 @@ struct EmptyCategoriesView: View {
                 .font(.system(size: 80))
                 .foregroundColor(.secondary)
             
-            Text("All categories are hidden")
+            Text(l10n: "All categories are hidden")
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Go to Settings to show categories")
+            Text(l10n: "Go to Settings to show categories")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             
             NavigationLink(destination: MainSettingsView()) {
-                Label("Open Settings", systemImage: "gear")
+                Label(L("Open Settings"), systemImage: "gear")
                     .padding()
                     .background(Color.blue)
                     .foregroundColor(.white)

@@ -104,7 +104,7 @@ struct DebugLogView: View {
                     Image(systemName: autoScroll ? "arrow.down.circle.fill" : "arrow.down.circle")
                         .foregroundColor(autoScroll ? .blue : .secondary)
                 }
-                .accessibilityLabel(autoScroll ? "Auto-scroll on" : "Auto-scroll off")
+                .accessibilityLabel(autoScroll ? L("Auto-scroll on") : L("Auto-scroll off"))
 
                 // Share / Copy
                 Menu {

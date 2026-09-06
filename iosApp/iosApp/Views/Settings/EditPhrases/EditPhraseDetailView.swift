@@ -100,7 +100,7 @@ struct EditPhraseDetailView: View {
                 deletePhrase()
             }
         } message: {
-            Text("This will permanently delete '\(phrase.text)'.")
+            Text(L("This will permanently delete '%@'.", phrase.text))
         }
         .toolbarBackground(settings.appBorderColor, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)

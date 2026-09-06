@@ -35,38 +35,6 @@ enum CoreVocabulary {
         "preset_recents"
     ]
 
-    static let presetCategoryNames: [String: String] = [
-        "preset_routine_activity": "Daily Activities",
-        "preset_food_drink": "Food & Drinks",
-        "preset_comfort_state": "How I Feel",
-        "preset_play_leisure": "Fun & Games",
-        "preset_positioning": "Move Me",
-        "preset_recents": "Recently Said"
-    ]
-
-    static let presetPhraseTexts: [String: String] = [
-        "preset_need_help": "I need help",
-        "preset_all_done": "I'm all done",
-        "preset_want_more": "I want more",
-        "preset_take_break": "I need a break",
-        "preset_eat_food": "I want to eat",
-        "preset_drink_water": "I want a drink",
-        "preset_more_please": "More please",
-        "preset_no_more": "No more",
-        "preset_it_hurts": "It hurts",
-        "preset_feel_good": "I feel good",
-        "preset_i_am_hot": "I'm hot",
-        "preset_i_am_cold": "I'm cold",
-        "preset_go_now": "Let's go",
-        "preset_stop_now": "Stop",
-        "preset_my_turn": "My turn",
-        "preset_your_turn": "Your turn",
-        "preset_move_me": "Move me",
-        "preset_stay_here": "Stay here",
-        "preset_sit_up": "Sit me up",
-        "preset_lay_back": "Lay me back"
-    ]
-
     static let defaultCategoryColors: [String: UInt32] = [
         "preset_routine_activity": 0xFFE53935,
         "preset_food_drink": 0xFF1E88E5,
@@ -85,6 +53,24 @@ enum CoreVocabulary {
         "preset_recents": "clock.arrow.circlepath"
     ]
 
+    /// English names used to match imported packs regardless of current AAC language.
+    static let englishCategoryNames: [String: String] = [
+        "preset_routine_activity": "Daily Activities",
+        "preset_food_drink": "Food & Drinks",
+        "preset_comfort_state": "How I Feel",
+        "preset_play_leisure": "Fun & Games",
+        "preset_positioning": "Move Me",
+        "preset_recents": "Recently Said"
+    ]
+
+    static var presetCategoryNames: [String: String] {
+        Dictionary(uniqueKeysWithValues: presetCategoryIds.map { ($0, categoryName(for: $0)) })
+    }
+
+    static func categoryName(for categoryId: String) -> String {
+        L(categoryId, default: englishCategoryNames[categoryId] ?? categoryId)
+    }
+
     static func isProtectedCategoryId(_ id: String) -> Bool {
         id.hasPrefix("preset_")
     }
@@ -95,7 +81,11 @@ enum CoreVocabulary {
 
     static func presetDisplayName(matching name: String) -> String? {
         let key = normalizeName(name)
-        return presetCategoryNames.first { normalizeName($0.value) == key }?.value
+        for id in presetCategoryIds {
+            if normalizeName(categoryName(for: id)) == key { return categoryName(for: id) }
+            if normalizeName(englishCategoryNames[id] ?? "") == key { return categoryName(for: id) }
+        }
+        return nil
     }
 
     static func normalizeName(_ name: String) -> String {
@@ -103,7 +93,8 @@ enum CoreVocabulary {
     }
 
     static func phraseText(for phraseId: String, fallback: String) -> String {
-        presetPhraseTexts[phraseId] ?? fallback
+        let text = L(phraseId)
+        return text == phraseId ? fallback : text
     }
 }
 

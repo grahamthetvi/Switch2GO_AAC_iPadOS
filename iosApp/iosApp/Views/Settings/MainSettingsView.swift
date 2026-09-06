@@ -24,7 +24,7 @@ struct MainSettingsView: View {
                             Image(systemName: "crosshair")
                                 .font(.title3)
                                 .foregroundColor(.white)
-                            Text("Recenter Cursor")
+                            Text(l10n: "Recenter Cursor")
                                 .font(.headline)
                                 .foregroundColor(.white)
                         }
@@ -42,6 +42,17 @@ struct MainSettingsView: View {
                                 title: "Edit Categories & Phrases",
                                 icon: "folder.fill",
                                 color: .blue
+                            )
+                        }
+
+                        NavigationLink(destination: LanguageSettingsView()) {
+                            settingsRow(
+                                title: "Language",
+                                icon: "globe",
+                                color: .mint,
+                                subtitle: settings.followsSystemLanguage
+                                    ? L("Use iPad language")
+                                    : settings.resolvedLanguage.nativeName
                             )
                         }
 
@@ -227,7 +238,7 @@ struct MainSettingsView: View {
                                     NotificationCenter.default.post(name: NSNotification.Name("DebugCameraRotationChanged"), object: nil)
                                 }
                                 
-                                Text("Current Device Orientation: \(currentOrientationString())")
+                                Text(L("Current Device Orientation: %@", currentOrientationString()))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                     .padding(.top, 4)
@@ -240,7 +251,7 @@ struct MainSettingsView: View {
                     .padding(.horizontal)
                     
                     // App Version
-                    Text("Version \(appVersion)")
+                    Text(L("Version %@", appVersion))
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding()
@@ -250,11 +261,11 @@ struct MainSettingsView: View {
             .scrollContentBackground(.hidden)
             .background(settings.appBorderColor)
             .environment(\.colorScheme, settings.preferredColorScheme)
-            .navigationTitle("Settings")
+            .navigationTitle(Text(l10n: "Settings"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Settings")
+                    Text(l10n: "Settings")
                         .font(.system(size: 28, weight: .bold))
                         .foregroundColor(navigationColorScheme == .dark ? .white : .black)
                         .onTapGesture {
@@ -274,7 +285,7 @@ struct MainSettingsView: View {
                     Button(action: {
                         settingsHomeAction?() ?? dismiss()
                     }) {
-                        Label("Home", systemImage: "house.fill")
+                        Label(L("Home"), systemImage: "house.fill")
                     }
                 }
             }
@@ -293,15 +304,15 @@ struct MainSettingsView: View {
 
             if let subtitle = subtitle {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
+                    Text(l10n: title)
                         .font(.headline)
                         .foregroundColor(.primary)
-                    Text(subtitle)
+                    Text(l10n: subtitle)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             } else {
-                Text(title)
+                Text(l10n: title)
                     .font(.headline)
                     .foregroundColor(.primary)
             }

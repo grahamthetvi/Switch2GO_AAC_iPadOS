@@ -1,0 +1,5 @@
+"NSCameraUsageDescription" = "Switch2Goはハンズフリーのコミュニケーションのため、視線追跡にカメラを使います。映像は端末内だけで処理し、保存も送信もしません。";
+"NSMicrophoneUsageDescription" = "Switch2Goは音声認識の入力にマイクを使うことがあります。";
+"NSPhotoLibraryUsageDescription" = "Switch2Goはフレーズボタンに好きな画像を付け、視覚的なコミュニケーションをしやすくするため、写真ライブラリへのアクセスが必要です。";
+"NSBluetoothAlwaysUsageDescription" = "Switch2GOはBluetoothでESP32にスイッチ出力パルスを送り、環境制御（PowerLink）に使います。";
+"NSBluetoothPeripheralUsageDescription" = "Switch2GOはBluetoothでESP32にスイッチ出力パルスを送り、環境制御（PowerLink）に使います。";

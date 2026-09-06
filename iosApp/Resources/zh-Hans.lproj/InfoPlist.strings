@@ -1,0 +1,5 @@
+"NSCameraUsageDescription" = "Switch2Go 需要相机权限以进行眼动追踪，实现免手沟通。摄像头画面仅在设备上处理，绝不会存储或传输。";
+"NSMicrophoneUsageDescription" = "Switch2Go 可能会使用麦克风进行语音识别输入。";
+"NSPhotoLibraryUsageDescription" = "Switch2Go 需要访问照片图库，以便在语句按钮上使用自定义图片，改善视觉沟通。";
+"NSBluetoothAlwaysUsageDescription" = "Switch2GO 使用蓝牙向 ESP32 发送开关输出脉冲，用于环境控制（PowerLink）。";
+"NSBluetoothPeripheralUsageDescription" = "Switch2GO 使用蓝牙向 ESP32 发送开关输出脉冲，用于环境控制（PowerLink）。";

@@ -37,7 +37,7 @@ struct WelcomeView: View {
                             Button {
                                 withAnimation { currentPage -= 1 }
                             } label: {
-                                Text("Back")
+                                Text(l10n: "Back")
                                     .font(.headline)
                                     .foregroundColor(.secondary)
                                     .frame(maxWidth: .infinity)
@@ -56,7 +56,7 @@ struct WelcomeView: View {
                                 dismiss()
                             }
                         } label: {
-                            Text(currentPage < totalPages - 1 ? "Next" : "I Agree — Get Started")
+                            Text(currentPage < totalPages - 1 ? L("Next") : L("I Agree — Get Started"))
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .lineLimit(1)
@@ -188,7 +188,7 @@ struct WelcomeView: View {
                     .foregroundColor(.green)
                     .padding(.top, 24)
 
-                Text("Your Privacy Is Protected")
+                Text(l10n: "Your Privacy Is Protected")
                     .font(.largeTitle.bold())
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
@@ -206,7 +206,7 @@ struct WelcomeView: View {
                 }
                 .padding(.horizontal, 32)
 
-                Text("Our support website (under Settings) also lets you create custom phrase images: pick from Wikimedia or upload your own, then download a version with the background removed and a colored outline—great for making CVI-friendly symbols.")
+                Text(l10n: "Our support website (under Settings) also lets you create custom phrase images: pick from Wikimedia or upload your own, then download a version with the background removed and a colored outline—great for making CVI-friendly symbols.")
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -227,7 +227,7 @@ struct WelcomeView: View {
                 .fill(Color.green.opacity(0.6))
                 .frame(width: 3)
 
-            Text(text)
+            Text(l10n: text)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -265,14 +265,14 @@ struct OnboardingPageView: View {
                     .foregroundColor(iconColor)
                     .padding(.top, 30)
 
-                Text(title)
+                Text(l10n: title)
                     .font(.largeTitle.bold())
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
 
                 VStack(spacing: 16) {
                     ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, paragraph in
-                        Text(paragraph)
+                        Text(l10n: paragraph)
                             .font(.body)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)

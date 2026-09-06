@@ -244,11 +244,11 @@ struct SwitchControlSettingsView: View {
 
     private var directPhraseModeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Switch to Phrase (\(phraseSlotCount) switches)")
+            Text(L("Switch to Phrase (%d switches)", phraseSlotCount))
                 .font(.headline)
                 .padding(.horizontal)
 
-            Text("Uses \(phraseSlotCount) phrases per page from Display settings. Each switch speaks one tile (left-to-right, top-to-bottom).")
+            Text(L("Uses %d phrases per page from Display settings. Each switch speaks one tile (left-to-right, top-to-bottom).", phraseSlotCount))
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
@@ -259,11 +259,11 @@ struct SwitchControlSettingsView: View {
                         Image(systemName: "\(slot).circle.fill")
                             .font(.title2)
                             .foregroundColor(.blue)
-                        Text("Switch \(slot)")
+                        Text(L("Switch %d", slot))
                             .font(.subheadline.bold())
                         Image(systemName: "arrow.right")
                             .foregroundColor(.secondary)
-                        Text("Phrase \(slot) (\(positionName(slot)))")
+                        Text(L("Phrase %d (%@)", slot, positionName(slot)))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         Spacer()
@@ -279,11 +279,11 @@ struct SwitchControlSettingsView: View {
 
     private func positionName(_ position: Int) -> String {
         switch position {
-        case 1: return "top-left"
-        case 2: return "top-right"
-        case 3: return "bottom-left"
-        case 4: return "bottom-right"
-        default: return "position \(position)"
+        case 1: return L("top-left")
+        case 2: return L("top-right")
+        case 3: return L("bottom-left")
+        case 4: return L("bottom-right")
+        default: return L("position %d", position)
         }
     }
 

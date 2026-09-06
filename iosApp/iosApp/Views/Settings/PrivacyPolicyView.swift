@@ -20,18 +20,18 @@ struct PrivacyPolicyView: View {
         }
         .background(settings.appBorderColor)
         .environment(\.colorScheme, settings.preferredColorScheme)
-        .navigationTitle("Privacy Policy")
+        .navigationTitle(Text(l10n: "Privacy Policy"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
                     settingsHomeAction?() ?? dismiss()
                 }) {
-                    Label("Home", systemImage: "house.fill")
+                    Label(L("Home"), systemImage: "house.fill")
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Done") {
+                Button(L("Done")) {
                     dismiss()
                 }
             }
@@ -42,11 +42,11 @@ struct PrivacyPolicyView: View {
 
     private func loadLocalPolicy() {
         guard localPolicyText.isEmpty else { return }
-        if let url = Bundle.main.url(forResource: "PrivacyPolicy", withExtension: "txt"),
+        if let url = LocalizationHelper.localizedURL(forResource: "PrivacyPolicy", withExtension: "txt"),
            let text = try? String(contentsOf: url, encoding: .utf8) {
             localPolicyText = text
         } else {
-            localPolicyText = "Privacy policy is unavailable offline."
+            localPolicyText = L("Privacy policy is unavailable offline.")
         }
     }
 }

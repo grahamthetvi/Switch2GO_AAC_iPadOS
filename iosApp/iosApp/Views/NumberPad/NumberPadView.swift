@@ -26,9 +26,9 @@ struct NumberPadView: View {
                     
                     // Yes button
                     Button(action: {
-                        ttsManager.speak("Yes")
+                        ttsManager.speak(L("Yes"))
                     }) {
-                        Text("Yes")
+                        Text(l10n: "Yes")
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
@@ -40,9 +40,9 @@ struct NumberPadView: View {
                     
                     // No button
                     Button(action: {
-                        ttsManager.speak("No")
+                        ttsManager.speak(L("No"))
                     }) {
-                        Text("No")
+                        Text(l10n: "No")
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
@@ -55,13 +55,14 @@ struct NumberPadView: View {
                 .padding(padding)
             }
         }
+        .environment(\.layoutDirection, .leftToRight)
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: { dismiss() }) {
                     HStack {
                         Image(systemName: "chevron.left")
-                        Text("Back")
+                        Text(l10n: "Back")
                     }
                 }
             }
@@ -85,7 +86,7 @@ struct NumberButton: View {
                 .cornerRadius(16)
                 .shadow(radius: 4)
         }
-        .accessibilityLabel("Number \(number)")
+        .accessibilityLabel(L("Number %@", number))
     }
 }
 

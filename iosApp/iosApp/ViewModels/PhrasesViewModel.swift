@@ -18,6 +18,10 @@ class PhrasesViewModel: ObservableObject {
         self.categoryId = categoryId
         self.database = database
         loadPhrases()
+        NotificationCenter.default.publisher(for: .appLanguageDidChange)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.loadPhrases() }
+            .store(in: &cancellables)
     }
     
     /// Load phrases for category
@@ -200,36 +204,7 @@ class PhrasesViewModel: ObservableObject {
     
     /// Get localized phrase text (natural, conversational)
     private func getPhraseText(for phraseId: String) -> String {
-        // Map of phrase IDs to text
-        let phraseTexts: [String: String] = [
-            // Daily Activities
-            "preset_need_help": "I need help",
-            "preset_all_done": "I'm all done",
-            "preset_want_more": "I want more",
-            "preset_take_break": "I need a break",
-            // Food & Drinks
-            "preset_eat_food": "I want to eat",
-            "preset_drink_water": "I want a drink",
-            "preset_more_please": "More please",
-            "preset_no_more": "No more",
-            // How I Feel
-            "preset_it_hurts": "It hurts",
-            "preset_feel_good": "I feel good",
-            "preset_i_am_hot": "I'm hot",
-            "preset_i_am_cold": "I'm cold",
-            // Fun & Games
-            "preset_go_now": "Let's go",
-            "preset_stop_now": "Stop",
-            "preset_my_turn": "My turn",
-            "preset_your_turn": "Your turn",
-            // Move Me
-            "preset_move_me": "Move me",
-            "preset_stay_here": "Stay here",
-            "preset_sit_up": "Sit me up",
-            "preset_lay_back": "Lay me back"
-        ]
-        
-        return phraseTexts[phraseId] ?? phraseId
+        CoreVocabulary.phraseText(for: phraseId, fallback: phraseId)
     }
     
     /// Parse PhraseStyle from JSON string
