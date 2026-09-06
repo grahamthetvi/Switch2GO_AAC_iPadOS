@@ -397,12 +397,37 @@ class DwellSelectionManager: ObservableObject {
         hasActivatedCurrentDwell = true
     }
 
-    /// Get the ordered list of registered button IDs (for scanning mode).
+    /// Phrase/category tiles in on-screen reading order (top-to-bottom, left-to-right).
+    /// Registration order from LazyVGrid is not reliable and can invert Switch 1/2.
     func getOrderedButtonIds() -> [String] {
+        let ids: [String]
         if let allowedButtonIds {
-            return orderedButtonIds.filter { allowedButtonIds.contains($0) }
+            ids = orderedButtonIds.filter { allowedButtonIds.contains($0) }
+        } else {
+            ids = orderedButtonIds
         }
-        return orderedButtonIds
+        return Self.idsInReadingOrder(ids, frames: buttonFrames)
+    }
+
+    /// Sorts button IDs by frame position: rows first (minY), then left-to-right (minX).
+    /// If any ID is missing a frame, returns `ids` unchanged so the comparator stays a
+    /// strict weak ordering (mixing frame-sort with registration-order can trap).
+    static func idsInReadingOrder(
+        _ ids: [String],
+        frames: [String: CGRect],
+        rowTolerance: CGFloat = 8
+    ) -> [String] {
+        guard ids.allSatisfy({ frames[$0] != nil }) else { return ids }
+        return ids.sorted { a, b in
+            guard let fa = frames[a], let fb = frames[b] else { return false }
+            if abs(fa.minY - fb.minY) > rowTolerance {
+                return fa.minY < fb.minY
+            }
+            if fa.minX != fb.minX {
+                return fa.minX < fb.minX
+            }
+            return ids.firstIndex(of: a) ?? 0 < ids.firstIndex(of: b) ?? 0
+        }
     }
 
     private func isButtonAllowed(_ id: String) -> Bool {

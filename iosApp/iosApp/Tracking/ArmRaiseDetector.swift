@@ -21,6 +21,33 @@ struct ArmRaiseDetectorConfig {
     var margin: Float
     var holdMs: Double
     var cooldownMs: Double
+    /// iOS front-camera buffers are selfie-mirrored, which inverts MediaPipe's
+    /// anatomical left/right labels relative to the user. Flip so user-left
+    /// drives the left UI option. Web webcam frames are not mirrored.
+    var flipMediaPipeLaterality: Bool = true
+}
+
+/// Maps MediaPipe pose/hand laterality onto the user's left/right.
+enum UserFacingLaterality {
+    static func side(_ mediaPipeSide: ArmSide, flip: Bool) -> ArmSide {
+        guard flip else { return mediaPipeSide }
+        return mediaPipeSide == .left ? .right : .left
+    }
+
+    static func armState(_ state: ArmRaiseState, flip: Bool) -> ArmRaiseState {
+        guard flip else { return state }
+        return ArmRaiseState(leftRaised: state.rightRaised, rightRaised: state.leftRaised)
+    }
+
+    static func handSide(fromMediaPipeLabel label: String, flip: Bool) -> ArmSide {
+        let labeled: ArmSide = label.lowercased() == "right" ? .right : .left
+        return side(labeled, flip: flip)
+    }
+
+    /// Two-choice layouts: user-left → index 0 (left option), user-right → index 1.
+    static func phraseIndex(for side: ArmSide) -> Int {
+        side == .left ? 0 : 1
+    }
 }
 
 /// Detects sustained left/right arm raises from pose landmarks.
@@ -50,22 +77,23 @@ final class ArmRaiseDetector {
     ) -> (activation: ArmSide?, state: ArmRaiseState) {
         let leftRaised = isArmRaised(landmarks: landmarks, visibilities: visibilities, side: .left, margin: config.margin)
         let rightRaised = isArmRaised(landmarks: landmarks, visibilities: visibilities, side: .right, margin: config.margin)
-        let state = ArmRaiseState(leftRaised: leftRaised, rightRaised: rightRaised)
+        let mediaState = ArmRaiseState(leftRaised: leftRaised, rightRaised: rightRaised)
+        let state = UserFacingLaterality.armState(mediaState, flip: config.flipMediaPipeLaterality)
 
         if now - lastActivationTime < config.cooldownMs {
             updateHoldTimers(leftRaised: leftRaised, rightRaised: rightRaised, now: now)
             return (nil, state)
         }
 
-        guard let side = pickDominantSide(leftRaised: leftRaised, rightRaised: rightRaised, landmarks: landmarks) else {
+        guard let mediaSide = pickDominantSide(leftRaised: leftRaised, rightRaised: rightRaised, landmarks: landmarks) else {
             leftHeldSince = nil
             rightHeldSince = nil
             return (nil, state)
         }
 
-        let heldSince = side == .left ? leftHeldSince : rightHeldSince
+        let heldSince = mediaSide == .left ? leftHeldSince : rightHeldSince
         if heldSince == nil {
-            if side == .left {
+            if mediaSide == .left {
                 leftHeldSince = now
             } else {
                 rightHeldSince = now
@@ -77,6 +105,7 @@ final class ArmRaiseDetector {
             lastActivationTime = now
             leftHeldSince = nil
             rightHeldSince = nil
+            let side = UserFacingLaterality.side(mediaSide, flip: config.flipMediaPipeLaterality)
             return (side, state)
         }
 

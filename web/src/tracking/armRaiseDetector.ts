@@ -1,4 +1,5 @@
 import type { LandmarkPoint } from './types'
+import { userFacingArmState, userFacingSide } from './userFacingLaterality'
 
 export type ArmSide = 'left' | 'right'
 
@@ -22,6 +23,11 @@ export interface ArmRaiseDetectorConfig {
   margin: number
   holdMs: number
   cooldownMs: number
+  /**
+   * iOS front-camera buffers are selfie-mirrored and invert MediaPipe left/right.
+   * Web getUserMedia frames are not mirrored, so this stays false.
+   */
+  flipMediaPipeLaterality?: boolean
 }
 
 /** Detects sustained left/right arm raises from pose landmarks. */
@@ -43,23 +49,25 @@ export class ArmRaiseDetector {
   ): { activation: ArmSide | null; state: ArmRaiseState } {
     const leftRaised = this.isArmRaised(landmarks, visibilities, 'left', config.margin)
     const rightRaised = this.isArmRaised(landmarks, visibilities, 'right', config.margin)
-    const state: ArmRaiseState = { leftRaised, rightRaised }
+    const flip = config.flipMediaPipeLaterality === true
+    const mediaState: ArmRaiseState = { leftRaised, rightRaised }
+    const state = userFacingArmState(mediaState, flip)
 
     if (now - this.lastActivationTime < config.cooldownMs) {
       this.updateHoldTimers(leftRaised, rightRaised, now)
       return { activation: null, state }
     }
 
-    const side = this.pickDominantSide(leftRaised, rightRaised, landmarks)
-    if (!side) {
+    const mediaSide = this.pickDominantSide(leftRaised, rightRaised, landmarks)
+    if (!mediaSide) {
       this.leftHeldSince = null
       this.rightHeldSince = null
       return { activation: null, state }
     }
 
-    const heldSince = side === 'left' ? this.leftHeldSince : this.rightHeldSince
+    const heldSince = mediaSide === 'left' ? this.leftHeldSince : this.rightHeldSince
     if (heldSince == null) {
-      if (side === 'left') this.leftHeldSince = now
+      if (mediaSide === 'left') this.leftHeldSince = now
       else this.rightHeldSince = now
       return { activation: null, state }
     }
@@ -68,7 +76,7 @@ export class ArmRaiseDetector {
       this.lastActivationTime = now
       this.leftHeldSince = null
       this.rightHeldSince = null
-      return { activation: side, state }
+      return { activation: userFacingSide(mediaSide, flip), state }
     }
 
     return { activation: null, state }
