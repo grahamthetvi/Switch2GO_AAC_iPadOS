@@ -387,16 +387,21 @@ final class SwitchControlManager: NSObject, ObservableObject {
         }
     }
 
+    /// Switch 1 (index 0) → first/left phrase, Switch 2 → second/right, etc.
+    static func phraseButtonId(forSwitchIndex switchIndex: Int, phraseButtonIds: [String]) -> String? {
+        guard phraseButtonIds.indices.contains(switchIndex) else { return nil }
+        return phraseButtonIds[switchIndex]
+    }
+
     private func handleDirectPhrasePress(switchIndex: Int) {
         guard switchIndex < configuration.clampedPhraseSlotCount,
-              switchIndex < phraseButtonIds.count else {
+              let buttonId = Self.phraseButtonId(forSwitchIndex: switchIndex, phraseButtonIds: phraseButtonIds) else {
             DebugLog.warn(
                 "Direct phrase: slot \(switchIndex + 1) has no phrase (count=\(phraseButtonIds.count))",
                 tag: "Switch"
             )
             return
         }
-        let buttonId = phraseButtonIds[switchIndex]
         DebugLog.info("Direct phrase: slot \(switchIndex + 1) → \(buttonId)", tag: "Switch")
         DispatchQueue.main.async {
             self.directActivateAction.send(buttonId)

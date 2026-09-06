@@ -399,7 +399,8 @@ class GazeTrackingManager: ObservableObject {
         let config = ArmRaiseDetectorConfig(
             margin: armRaiseMargin,
             holdMs: settings.dwellTime * 1000,
-            cooldownMs: armRaiseCooldownMs
+            cooldownMs: armRaiseCooldownMs,
+            flipMediaPipeLaterality: true
         )
         let result = armRaiseDetector.process(
             landmarks: landmarks,

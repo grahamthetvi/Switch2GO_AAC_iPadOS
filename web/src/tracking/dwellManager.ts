@@ -23,6 +23,7 @@ export class DwellSelectionManager {
   private progressListeners = new Set<DwellProgressListener>()
 
   private readonly hitTestPadding = 16
+  private readonly exitMargin = 35
   private readonly exitGracePeriod = 250
   private readonly activationCooldown = 500
 
@@ -113,27 +114,61 @@ export class DwellSelectionManager {
     return this.allowedButtonIds.has(id)
   }
 
+  private contains(frame: DOMRect, point: Point, pad = 0): boolean {
+    return (
+      point.x >= frame.x - pad &&
+      point.x <= frame.x + frame.width + pad &&
+      point.y >= frame.y - pad &&
+      point.y <= frame.y + frame.height + pad
+    )
+  }
+
+  private nearestId(
+    hits: { id: string; frame: DOMRect }[],
+    point: Point,
+  ): string | null {
+    if (hits.length === 0) return null
+    let best = hits[0]
+    let bestDist = Number.POSITIVE_INFINITY
+    for (const hit of hits) {
+      const cx = hit.frame.x + hit.frame.width / 2
+      const cy = hit.frame.y + hit.frame.height / 2
+      const d = (point.x - cx) ** 2 + (point.y - cy) ** 2
+      if (d < bestDist) {
+        bestDist = d
+        best = hit
+      }
+    }
+    return best.id
+  }
+
+  /** Unpadded containment wins so the left tile cannot steal the right-hand choice. */
   private hitTest(point: Point): string | null {
+    const unpadded: { id: string; frame: DOMRect }[] = []
+    const padded: { id: string; frame: DOMRect }[] = []
+
     for (const id of this.orderedButtonIds) {
       if (!this.isButtonAllowed(id)) continue
       const frame = this.buttonFrames.get(id)
       if (!frame) continue
-      const padded = new DOMRect(
-        frame.x - this.hitTestPadding,
-        frame.y - this.hitTestPadding,
-        frame.width + this.hitTestPadding * 2,
-        frame.height + this.hitTestPadding * 2,
-      )
-      if (
-        point.x >= padded.left &&
-        point.x <= padded.right &&
-        point.y >= padded.top &&
-        point.y <= padded.bottom
-      ) {
-        return id
+      if (this.contains(frame, point)) {
+        unpadded.push({ id, frame })
+      } else if (this.contains(frame, point, this.hitTestPadding)) {
+        padded.push({ id, frame })
       }
     }
-    return null
+
+    const unpaddedId = this.nearestId(unpadded, point)
+    if (unpaddedId) return unpaddedId
+
+    if (this.hoveredButtonId && this.isButtonAllowed(this.hoveredButtonId)) {
+      const current = this.buttonFrames.get(this.hoveredButtonId)
+      if (current && this.contains(current, point, this.exitMargin)) {
+        return this.hoveredButtonId
+      }
+    }
+
+    return this.nearestId(padded, point)
   }
 
   private scheduleExitGrace(): void {

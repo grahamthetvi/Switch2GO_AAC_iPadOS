@@ -315,7 +315,10 @@ struct PhraseStyleEditorView: View {
         ImagePickerView(
                 selectedImage: currentStyle.imageRef,
                 onImageSelected: { imageRef in
-                    currentStyle = cloneCurrentStyle(imageRef: imageRef)
+                    if imageRef != currentStyle.imageRef {
+                        MediaStorage.deleteMedia(mediaRef: currentStyle.imageRef)
+                    }
+                    currentStyle = cloneCurrentStyle(imageRef: imageRef, clearImage: imageRef == nil)
                     saveStyle()
                     showingImagePicker = false
                 },
@@ -330,14 +333,23 @@ struct PhraseStyleEditorView: View {
             currentImageRef: currentStyle.imageRef,
             onMediaSelected: { mediaRef, mediaType, posterRef in
                 clearPreviousLocalMedia(oldRef: currentStyle.mediaRef, newRef: mediaRef)
-                if mediaRef == nil {
-                    clearPreviousLocalMedia(oldRef: currentStyle.mediaRef, newRef: nil)
+
+                let removingVideo = mediaRef == nil && currentStyle.isVideo()
+                let currentImageIsPoster = MediaStorage.isVideoPosterRef(currentStyle.imageRef)
+                let imageMissing = currentStyle.imageRef == nil || currentStyle.imageRef?.isEmpty == true
+                let shouldApplyPoster = posterRef != nil && (imageMissing || currentImageIsPoster)
+                // Only generated `video_poster_` stills; keep user photos, emoji, and symbols.
+                let shouldClearStill = removingVideo && currentImageIsPoster
+
+                if shouldClearStill || (shouldApplyPoster && currentImageIsPoster) {
+                    MediaStorage.deleteMedia(mediaRef: currentStyle.imageRef)
                 }
-                let shouldApplyPoster = posterRef != nil && (currentStyle.imageRef == nil || currentStyle.imageRef?.isEmpty == true)
+
                 currentStyle = cloneCurrentStyle(
                     imageRef: shouldApplyPoster ? posterRef : nil,
                     mediaRef: mediaRef,
                     mediaType: mediaType,
+                    clearImage: shouldClearStill,
                     clearMedia: mediaRef == nil,
                     clearGame: mediaRef != nil
                 )
@@ -388,6 +400,7 @@ struct PhraseStyleEditorView: View {
         mediaRef: String? = nil,
         mediaType: String? = nil,
         gameType: String? = nil,
+        clearImage: Bool = false,
         clearMedia: Bool = false,
         clearGame: Bool = false,
         sendSwitchOutput: Bool? = nil
@@ -399,7 +412,7 @@ struct PhraseStyleEditorView: View {
             isBold: isBold ?? currentStyle.isBold,
             borderColor: borderColor ?? currentStyle.borderColor,
             borderWidthDp: borderWidthDp ?? currentStyle.borderWidthDp,
-            imageRef: imageRef ?? currentStyle.imageRef,
+            imageRef: clearImage ? nil : (imageRef ?? currentStyle.imageRef),
             mediaRef: clearMedia ? nil : (mediaRef ?? currentStyle.mediaRef),
             mediaType: clearMedia ? nil : (mediaType ?? currentStyle.mediaType),
             gameType: clearGame ? nil : (gameType ?? currentStyle.gameType)
@@ -626,6 +639,7 @@ struct PhraseStyleEditorView: View {
     
     private func resetToDefault() {
         MediaStorage.deleteMedia(mediaRef: currentStyle.mediaRef)
+        MediaStorage.deleteMedia(mediaRef: currentStyle.imageRef)
         let reset = PhraseStyle(
             backgroundColor: nil,
             textColor: nil,

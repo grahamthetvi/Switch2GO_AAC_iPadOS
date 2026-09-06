@@ -6,6 +6,7 @@ final class ArmRaiseDetectorTests: XCTestCase {
     private let holdMs: Double = 1000
     private let cooldownMs: Double = 1200
 
+    /// MediaPipe-index landmarks. `leftRaised` raises indices 11/13/15.
     private func makeLandmarks(leftRaised: Bool, rightRaised: Bool) -> [LandmarkPoint] {
         var points = Array(repeating: LandmarkPoint(x: 0.5, y: 0.5, z: 0), count: 17)
         points[11] = LandmarkPoint(x: 0.3, y: 0.4, z: 0) // left shoulder
@@ -17,40 +18,82 @@ final class ArmRaiseDetectorTests: XCTestCase {
         return points
     }
 
+    private func config(flip: Bool) -> ArmRaiseDetectorConfig {
+        ArmRaiseDetectorConfig(
+            margin: margin,
+            holdMs: holdMs,
+            cooldownMs: cooldownMs,
+            flipMediaPipeLaterality: flip
+        )
+    }
+
     func testLeftArmRaiseActivatesAfterHold() {
         let detector = ArmRaiseDetector()
-        let config = ArmRaiseDetectorConfig(margin: margin, holdMs: holdMs, cooldownMs: cooldownMs)
+        let config = config(flip: false)
         let landmarks = makeLandmarks(leftRaised: true, rightRaised: false)
 
-        var result = detector.process(landmarks: landmarks, visibilities: nil, now: 0, config: config)
+        var result = detector.process(landmarks: landmarks, visibilities: nil, now: 2000, config: config)
         XCTAssertNil(result.activation)
         XCTAssertTrue(result.state.leftRaised)
 
-        result = detector.process(landmarks: landmarks, visibilities: nil, now: 500, config: config)
+        result = detector.process(landmarks: landmarks, visibilities: nil, now: 2500, config: config)
         XCTAssertNil(result.activation)
 
-        result = detector.process(landmarks: landmarks, visibilities: nil, now: 1000, config: config)
+        result = detector.process(landmarks: landmarks, visibilities: nil, now: 3000, config: config)
         XCTAssertEqual(result.activation, .left)
     }
 
     func testRightArmRaiseActivatesAfterHold() {
         let detector = ArmRaiseDetector()
-        let config = ArmRaiseDetectorConfig(margin: margin, holdMs: holdMs, cooldownMs: cooldownMs)
+        let config = config(flip: false)
         let landmarks = makeLandmarks(leftRaised: false, rightRaised: true)
 
-        _ = detector.process(landmarks: landmarks, visibilities: nil, now: 0, config: config)
-        let result = detector.process(landmarks: landmarks, visibilities: nil, now: 1000, config: config)
+        _ = detector.process(landmarks: landmarks, visibilities: nil, now: 2000, config: config)
+        let result = detector.process(landmarks: landmarks, visibilities: nil, now: 3000, config: config)
         XCTAssertEqual(result.activation, .right)
     }
 
     func testCooldownPreventsImmediateReactivation() {
         let detector = ArmRaiseDetector()
-        let config = ArmRaiseDetectorConfig(margin: margin, holdMs: holdMs, cooldownMs: cooldownMs)
+        let config = config(flip: false)
         let landmarks = makeLandmarks(leftRaised: true, rightRaised: false)
 
-        _ = detector.process(landmarks: landmarks, visibilities: nil, now: 0, config: config)
-        _ = detector.process(landmarks: landmarks, visibilities: nil, now: 1000, config: config)
-        let duringCooldown = detector.process(landmarks: landmarks, visibilities: nil, now: 1500, config: config)
+        _ = detector.process(landmarks: landmarks, visibilities: nil, now: 2000, config: config)
+        _ = detector.process(landmarks: landmarks, visibilities: nil, now: 3000, config: config)
+        let duringCooldown = detector.process(landmarks: landmarks, visibilities: nil, now: 3500, config: config)
         XCTAssertNil(duringCooldown.activation)
+    }
+
+    func testMirroredCaptureMapsMediaPipeRightArmToUserLeftOption() {
+        // Selfie-mirrored frames make MediaPipe label the user's left arm as RIGHT.
+        let detector = ArmRaiseDetector()
+        let config = config(flip: true)
+        let landmarks = makeLandmarks(leftRaised: false, rightRaised: true)
+
+        var result = detector.process(landmarks: landmarks, visibilities: nil, now: 2000, config: config)
+        XCTAssertNil(result.activation)
+        XCTAssertTrue(result.state.leftRaised)
+        XCTAssertFalse(result.state.rightRaised)
+
+        result = detector.process(landmarks: landmarks, visibilities: nil, now: 3000, config: config)
+        XCTAssertEqual(result.activation, .left)
+        XCTAssertEqual(UserFacingLaterality.phraseIndex(for: result.activation!), 0)
+    }
+
+    func testMirroredCaptureMapsMediaPipeLeftArmToUserRightOption() {
+        let detector = ArmRaiseDetector()
+        let config = config(flip: true)
+        let landmarks = makeLandmarks(leftRaised: true, rightRaised: false)
+
+        _ = detector.process(landmarks: landmarks, visibilities: nil, now: 2000, config: config)
+        let result = detector.process(landmarks: landmarks, visibilities: nil, now: 3000, config: config)
+        XCTAssertEqual(result.activation, .right)
+        XCTAssertTrue(result.state.rightRaised)
+        XCTAssertEqual(UserFacingLaterality.phraseIndex(for: result.activation!), 1)
+    }
+
+    func testUserLeftMapsToLeftPhraseIndex() {
+        XCTAssertEqual(UserFacingLaterality.phraseIndex(for: .left), 0)
+        XCTAssertEqual(UserFacingLaterality.phraseIndex(for: .right), 1)
     }
 }

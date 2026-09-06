@@ -6,6 +6,9 @@ import VocableShared
 class DatabaseManager: ObservableObject {
     private let database: VocableDatabase
     private let driverFactory: DatabaseDriverFactory
+    private let writeQueue = DispatchQueue(label: "com.switch2go.database.write", qos: .userInitiated)
+    private static let writeQueueKey = DispatchSpecificKey<UInt8>()
+    private let writeQueueContext: UInt8 = 1
 
     /// Bumps when preset category set changes (e.g. away from legacy `preset_general`).
     static let presetSchemaVersionKey = "presetSchemaVersion"
@@ -20,6 +23,7 @@ class DatabaseManager: ObservableObject {
     private init() {
         self.driverFactory = DatabaseDriverFactory()
         self.database = DatabaseKt.createDatabase(driverFactory: driverFactory)
+        writeQueue.setSpecific(key: Self.writeQueueKey, value: writeQueueContext)
 
         // Initialize preset data on first launch
         initializePresetsIfNeeded()
@@ -185,72 +189,93 @@ class DatabaseManager: ObservableObject {
         }
     }
 
-    /// Reset database to defaults (clear custom data, keep presets)
-    func resetToDefaults() {
-        // Clear all custom categories
-        let customCategories = database.categoryQueries.getAllCategories().executeAsList()
-        for category in customCategories {
-            database.categoryQueries.deleteCategory(category_id: category.category_id)
+    /// Perform database write operations asynchronously on the dedicated serial write queue.
+    func asyncWrite(_ block: @escaping () -> Void) {
+        writeQueue.async {
+            block()
         }
-
-        // Clear all custom phrases
-        let customPhrases = database.phraseQueries.getAllPhrases().executeAsList()
-        for phrase in customPhrases {
-            database.phraseQueries.deletePhrase(phrase_id: phrase.phrase_id)
-        }
-
-        // Reset preset categories to defaults (unhide all non-legacy)
-        let presetCategories = database.presetCategoryQueries.getAllPresetCategories().executeAsList()
-        for category in presetCategories {
-            // Keep legacy soft-deleted rows deleted so they never resurface.
-            if category.category_id == "preset_general" {
-                database.presetCategoryQueries.updatePresetCategoryDeleted(
-                    deleted: 1,
-                    category_id: category.category_id
-                )
-                continue
-            }
-            database.presetCategoryQueries.updatePresetCategoryHidden(
-                hidden: 0,
-                category_id: category.category_id
-            )
-            database.presetCategoryQueries.updatePresetCategoryDeleted(
-                deleted: 0,
-                category_id: category.category_id
-            )
-        }
-
-        // Clear last spoken dates from preset phrases
-        let presetPhrases = database.presetPhraseQueries.getAllPresetPhrases().executeAsList()
-        for phrase in presetPhrases {
-            database.presetPhraseQueries.updatePresetPhraseLastSpoken(
-                last_spoken_date: nil,
-                phrase_id: phrase.phrase_id
-            )
-        }
-
-        MediaStorage.deleteAllStoredMedia()
-        ImageCache.shared.clear()
-
-        presetSchemaVersion = Self.currentPresetSchemaVersion
-
-        DebugLog.info("Database reset to defaults", tag: "DatabaseManager")
     }
 
-    /// Runs work in a SQLite transaction. Throws and rolls back if [work] throws.
-    func transaction(_ work: @escaping () throws -> Void) throws {
-        var captured: Error?
-        DatabaseKt.runInTransaction(database) {
-            do {
-                try work()
-                return 1
-            } catch {
-                captured = error
-                return 0
-            }
+    /// Perform database write operations synchronously on the dedicated serial write queue.
+    func syncWrite<T>(_ block: () throws -> T) rethrows -> T {
+        if DispatchQueue.getSpecific(key: Self.writeQueueKey) != nil {
+            return try block()
         }
-        if let captured {
-            throw captured
+        return try writeQueue.sync {
+            try block()
+        }
+    }
+
+    /// Reset database to defaults (clear custom data, keep presets)
+    func resetToDefaults() {
+        syncWrite {
+            // Clear all custom categories
+            let customCategories = database.categoryQueries.getAllCategories().executeAsList()
+            for category in customCategories {
+                database.categoryQueries.deleteCategory(category_id: category.category_id)
+            }
+
+            // Clear all custom phrases
+            let customPhrases = database.phraseQueries.getAllPhrases().executeAsList()
+            for phrase in customPhrases {
+                database.phraseQueries.deletePhrase(phrase_id: phrase.phrase_id)
+            }
+
+            // Reset preset categories to defaults (unhide all non-legacy)
+            let presetCategories = database.presetCategoryQueries.getAllPresetCategories().executeAsList()
+            for category in presetCategories {
+                // Keep legacy soft-deleted rows deleted so they never resurface.
+                if category.category_id == "preset_general" {
+                    database.presetCategoryQueries.updatePresetCategoryDeleted(
+                        deleted: 1,
+                        category_id: category.category_id
+                    )
+                    continue
+                }
+                database.presetCategoryQueries.updatePresetCategoryHidden(
+                    hidden: 0,
+                    category_id: category.category_id
+                )
+                database.presetCategoryQueries.updatePresetCategoryDeleted(
+                    deleted: 0,
+                    category_id: category.category_id
+                )
+            }
+
+            // Clear last spoken dates from preset phrases
+            let presetPhrases = database.presetPhraseQueries.getAllPresetPhrases().executeAsList()
+            for phrase in presetPhrases {
+                database.presetPhraseQueries.updatePresetPhraseLastSpoken(
+                    last_spoken_date: nil,
+                    phrase_id: phrase.phrase_id
+                )
+            }
+
+            MediaStorage.deleteAllStoredMedia()
+            ImageCache.shared.clear()
+
+            presetSchemaVersion = Self.currentPresetSchemaVersion
+
+            DebugLog.info("Database reset to defaults", tag: "DatabaseManager")
+        }
+    }
+
+    /// Runs work in a SQLite transaction on the serial write queue. Throws and rolls back if [work] throws.
+    func transaction(_ work: @escaping () throws -> Void) throws {
+        try syncWrite {
+            var captured: Error?
+            DatabaseKt.runInTransaction(database) {
+                do {
+                    try work()
+                    return 1
+                } catch {
+                    captured = error
+                    return 0
+                }
+            }
+            if let captured {
+                throw captured
+            }
         }
     }
 }

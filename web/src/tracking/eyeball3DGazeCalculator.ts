@@ -7,6 +7,7 @@ export class Eyeball3DGazeCalculator {
   sensitivityY = 2.5
   offsetX = 0.0
   offsetY = 0.0
+  headPoseCompensationEnabled = true
 
   static readonly LEFT_EYE_OUTER = 33
   static readonly LEFT_EYE_INNER = 133
@@ -174,8 +175,12 @@ export class Eyeball3DGazeCalculator {
       return null
     }
 
-    const compensatedYaw = avgYaw - headYaw * 0.5
-    const compensatedPitch = avgPitch - headPitch * 0.5
+    const compensatedYaw = this.headPoseCompensationEnabled
+      ? avgYaw - headYaw * 0.5
+      : avgYaw
+    const compensatedPitch = this.headPoseCompensationEnabled
+      ? avgPitch - headPitch * 0.5
+      : avgPitch
     const maxGazeAngle = 30
     let gazeX = (compensatedYaw / maxGazeAngle) * this.sensitivityX + this.offsetX
     let gazeY = (compensatedPitch / maxGazeAngle) * this.sensitivityY + this.offsetY

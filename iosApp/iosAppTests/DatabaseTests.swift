@@ -146,6 +146,98 @@ class DatabaseTests: XCTestCase {
         }
     }
 
+    func testCustomPhraseLastSpokenUpdate() {
+        let phraseId = "test_custom_phrase_\(UUID().uuidString)"
+        let timestamp = Int64(Date().timeIntervalSince1970 * 1000)
+
+        do {
+            try database.phraseQueries.insertPhrase(
+                phrase_id: phraseId,
+                parent_category_id: "preset_routine_activity",
+                creation_date: 12345,
+                last_spoken_date: nil,
+                localized_utterance: "Custom Recents Test",
+                sort_order: 999,
+                style: nil
+            )
+
+            // Update spoken date
+            try database.phraseQueries.updatePhraseLastSpoken(
+                last_spoken_date: timestamp,
+                phrase_id: phraseId
+            )
+
+            let retrieved = try database.phraseQueries.getPhraseById(phrase_id: phraseId).executeAsOneOrNull()
+            XCTAssertNotNil(retrieved)
+            XCTAssertEqual(retrieved?.last_spoken_date?.int64Value, timestamp)
+
+            // Cleanup
+            try database.phraseQueries.deletePhrase(phrase_id: phraseId)
+        } catch {
+            XCTFail("Failed custom phrase last spoken test: \(error)")
+        }
+    }
+
+    func testMergedRecentsQueries() {
+        let customPhraseId = "test_recent_custom_\(UUID().uuidString)"
+        let presetPhraseId = "preset_yes"
+        let olderTimestamp = Int64(10000)
+        let newerTimestamp = Int64(20000)
+
+        do {
+            try database.phraseQueries.insertPhrase(
+                phrase_id: customPhraseId,
+                parent_category_id: "preset_routine_activity",
+                creation_date: 12345,
+                last_spoken_date: newerTimestamp,
+                localized_utterance: "Custom Most Recent",
+                sort_order: 1,
+                style: nil
+            )
+
+            try database.presetPhraseQueries.updatePresetPhraseLastSpoken(
+                last_spoken_date: olderTimestamp,
+                phrase_id: presetPhraseId
+            )
+
+            // Query both
+            let spokenPresets = try database.presetPhraseQueries.getAllPresetPhrases().executeAsList()
+                .filter { $0.last_spoken_date != nil && $0.deleted == 0 }
+            let spokenCustoms = try database.phraseQueries.getAllPhrases().executeAsList()
+                .filter { $0.last_spoken_date != nil }
+
+            var merged: [(id: String, lastSpoken: Int64)] = []
+            for p in spokenPresets {
+                if let s = p.last_spoken_date?.int64Value {
+                    merged.append((id: p.phrase_id, lastSpoken: s))
+                }
+            }
+            for c in spokenCustoms {
+                if let s = c.last_spoken_date?.int64Value {
+                    merged.append((id: c.phrase_id, lastSpoken: s))
+                }
+            }
+
+            merged.sort { $0.lastSpoken > $1.lastSpoken }
+
+            // Custom phrase with newer timestamp should appear before preset with older timestamp
+            let customIndex = merged.firstIndex { $0.id == customPhraseId }
+            let presetIndex = merged.firstIndex { $0.id == presetPhraseId }
+            XCTAssertNotNil(customIndex)
+            XCTAssertNotNil(presetIndex)
+            XCTAssertTrue(customIndex! < presetIndex!)
+
+            // Cleanup
+            try database.phraseQueries.deletePhrase(phrase_id: customPhraseId)
+            try database.presetPhraseQueries.updatePresetPhraseLastSpoken(
+                last_spoken_date: nil,
+                phrase_id: presetPhraseId
+            )
+        } catch {
+            XCTFail("Failed merged recents test: \(error)")
+        }
+    }
+
     func testPresetSchemaVersionIsCurrentAfterInit() {
         XCTAssertGreaterThanOrEqual(
             DatabaseManager.shared.presetSchemaVersion,
