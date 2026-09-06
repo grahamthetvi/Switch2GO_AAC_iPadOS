@@ -62,6 +62,9 @@ struct PhrasesView: View {
             gazeManager.dwellManager.unregisterButtons(withPrefix: "cat_")
             // Don't replay activations that happened before this screen appeared.
             lastHandledActivationToken = gazeManager.dwellManager.activationToken
+            if categoryId == "preset_recents" {
+                viewModel.loadPhrases()
+            }
         }
         .onDisappear {
             gazeManager.dwellManager.unregisterButtons(withPrefix: "phrase_")
