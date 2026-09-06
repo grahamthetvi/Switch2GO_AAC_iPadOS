@@ -143,6 +143,7 @@ struct PhrasePackStyle: Codable, Equatable {
     var mediaType: String?
     var thumb: String?
     var gameType: String?
+    var sendSwitchOutput: Bool? = nil
 }
 
 enum PhrasePackError: LocalizedError, Equatable {

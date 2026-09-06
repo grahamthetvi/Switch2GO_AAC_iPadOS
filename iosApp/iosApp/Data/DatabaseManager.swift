@@ -149,6 +149,7 @@ class DatabaseManager: ObservableObject {
                     mediaType: style.mediaType,
                     gameType: style.gameType
                 )
+                updatedStyle.sendSwitchOutput = style.sendSwitchOutput
                 if let json = updatedStyle.toJSONString() {
                     database.presetPhraseQueries.updatePresetPhraseStyle(style: json, phrase_id: phrase.phrase_id)
                     updated += 1
@@ -175,6 +176,7 @@ class DatabaseManager: ObservableObject {
                     mediaType: style.mediaType,
                     gameType: style.gameType
                 )
+                updatedStyle.sendSwitchOutput = style.sendSwitchOutput
                 if let json = updatedStyle.toJSONString() {
                     database.phraseQueries.updatePhraseStyle(style: json, phrase_id: phrase.phrase_id)
                     updated += 1

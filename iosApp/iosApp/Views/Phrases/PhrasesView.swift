@@ -260,6 +260,9 @@ struct PhrasesView: View {
         TTSManager.shared.speak(phrase.text)
         mediaCoordinator.onPhraseSelected(phrase)
         gameCoordinator.onPhraseSelected(phrase)
+        if phrase.style?.sendSwitchOutput == true {
+            gazeManager.switchOutputManager.sendPulse()
+        }
     }
 
     private func dispatchDwellPhraseActivation(_ activation: DwellActivation) {

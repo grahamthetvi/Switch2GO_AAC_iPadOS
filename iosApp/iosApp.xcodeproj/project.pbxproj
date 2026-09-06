@@ -100,6 +100,7 @@
 		PACKB0062F7000PACK000001 /* PhrasePackSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0062F7000PACK000001 /* PhrasePackSession.swift */; };
 		PACKB0072F7000PACK000001 /* PhrasePackImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0072F7000PACK000001 /* PhrasePackImportView.swift */; };
 		PACKB0082F7000PACK000001 /* PhrasePackSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0082F7000PACK000001 /* PhrasePackSettingsView.swift */; };
+		SWOUT0022F700001000B97D1 /* ESP32SwitchOutputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = SWOUT0012F700001000B97D1 /* ESP32SwitchOutputManager.swift */; };
 		TPN0012F6000TPN00000001 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */; };
 		TPN0022F6000TPN00000002 /* ThirdPartyNoticesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */; };
 /* End PBXBuildFile section */
@@ -286,6 +287,7 @@
 		PACKF0062F7000PACK000001 /* PhrasePackSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackSession.swift; sourceTree = "<group>"; };
 		PACKF0072F7000PACK000001 /* PhrasePackImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackImportView.swift; sourceTree = "<group>"; };
 		PACKF0082F7000PACK000001 /* PhrasePackSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackSettingsView.swift; sourceTree = "<group>"; };
+		SWOUT0012F700001000B97D1 /* ESP32SwitchOutputManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESP32SwitchOutputManager.swift; sourceTree = "<group>"; };
 		TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
 		TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThirdPartyNoticesView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -577,6 +579,7 @@
 				AA1000002F400AA100000001 /* HeadPoseTracker.swift */,
 				AA1000022F400AA100000002 /* DwellSelectionManager.swift */,
 				AA1000042F400AA100000003 /* SwitchControlManager.swift */,
+				SWOUT0012F700001000B97D1 /* ESP32SwitchOutputManager.swift */,
 				BODYARM0012F700001000B97D1 /* ArmRaiseDetector.swift */,
 				BODYHAND0012F700001000B97D5 /* HandGestureDetector.swift */,
 			);
@@ -1447,6 +1450,7 @@
 				AA1000012F400AA100000001 /* HeadPoseTracker.swift in Sources */,
 				AA1000032F400AA100000002 /* DwellSelectionManager.swift in Sources */,
 				AA1000052F400AA100000003 /* SwitchControlManager.swift in Sources */,
+				SWOUT0022F700001000B97D1 /* ESP32SwitchOutputManager.swift in Sources */,
 				DCE330522F304AC900ED4C53 /* AACGridView.swift in Sources */,
 				DCDD8AC22F3185E9000B97D2 /* PhraseStyleExtensions.swift in Sources */,
 				DCDD8AC32F3185E9000B97D2 /* DatabaseManager.swift in Sources */,
@@ -1706,6 +1710,7 @@
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Switch2GO AAC";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Switch2GO uses Bluetooth to send a switch-output pulse to the ESP32 for environmental control (PowerLink).";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Switch2Go needs camera access for eye gaze tracking to enable hands-free communication. Your camera feed is processed on-device and is never stored or transmitted.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Switch2Go may use the microphone for speech recognition input.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Switch2Go needs access to your photo library to allow custom images on phrase buttons for better visual communication.";
@@ -1772,6 +1777,7 @@
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Switch2GO AAC";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Switch2GO uses Bluetooth to send a switch-output pulse to the ESP32 for environmental control (PowerLink).";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Switch2Go needs camera access for eye gaze tracking to enable hands-free communication. Your camera feed is processed on-device and is never stored or transmitted.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Switch2Go may use the microphone for speech recognition input.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Switch2Go needs access to your photo library to allow custom images on phrase buttons for better visual communication.";

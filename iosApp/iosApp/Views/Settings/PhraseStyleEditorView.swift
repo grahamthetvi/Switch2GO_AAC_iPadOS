@@ -37,7 +37,7 @@ struct PhraseStyleEditorView: View {
             mediaType: nil,
             gameType: nil
         )
-        _currentStyle = State(initialValue: PhraseStyle(
+        let initialStyle = PhraseStyle(
             backgroundColor: baseStyle.backgroundColor,
             textColor: baseStyle.textColor,
             textSizeSp: baseStyle.textSizeSp,
@@ -48,8 +48,20 @@ struct PhraseStyleEditorView: View {
             mediaRef: baseStyle.mediaRef,
             mediaType: baseStyle.mediaType,
             gameType: baseStyle.gameType
-        ))
+        )
+        initialStyle.sendSwitchOutput = phrase.style?.sendSwitchOutput ?? false
+        _currentStyle = State(initialValue: initialStyle)
         _isBold = State(initialValue: phrase.style?.isBold ?? false)
+    }
+
+    private var sendSwitchOutputBinding: Binding<Bool> {
+        Binding(
+            get: { currentStyle.sendSwitchOutput },
+            set: { newValue in
+                currentStyle.sendSwitchOutput = newValue
+                saveStyle()
+            }
+        )
     }
     
     var body: some View {
@@ -227,6 +239,19 @@ struct PhraseStyleEditorView: View {
                     ) {
                         showingGamePicker = true
                     }
+
+                    Toggle(isOn: sendSwitchOutputBinding) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Label("Send switch output", systemImage: "poweroutlet.type.b")
+                                .font(.headline)
+                            Text("When this phrase is selected, pulse the paired ESP32 so a PowerLink can toggle a device (fan, light).")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(12)
                     
                     // Reset to Default
                     Button(action: resetToDefault) {
@@ -377,9 +402,10 @@ struct PhraseStyleEditorView: View {
         gameType: String? = nil,
         clearImage: Bool = false,
         clearMedia: Bool = false,
-        clearGame: Bool = false
+        clearGame: Bool = false,
+        sendSwitchOutput: Bool? = nil
     ) -> PhraseStyle {
-        PhraseStyle(
+        let style = PhraseStyle(
             backgroundColor: backgroundColor ?? currentStyle.backgroundColor,
             textColor: textColor ?? currentStyle.textColor,
             textSizeSp: textSizeSp ?? currentStyle.textSizeSp,
@@ -391,6 +417,8 @@ struct PhraseStyleEditorView: View {
             mediaType: clearMedia ? nil : (mediaType ?? currentStyle.mediaType),
             gameType: clearGame ? nil : (gameType ?? currentStyle.gameType)
         )
+        style.sendSwitchOutput = sendSwitchOutput ?? currentStyle.sendSwitchOutput
+        return style
     }
     
     // MARK: - Computed Properties
@@ -583,9 +611,10 @@ struct PhraseStyleEditorView: View {
     // MARK: - Actions
     
     private func saveStyle() {
+        // Clone on the main thread so associated fields (e.g. sendSwitchOutput) are captured
+        // before hopping to a background queue for JSON + DB writes.
+        let styleToSave = cloneCurrentStyle()
         DispatchQueue.global(qos: .background).async {
-            // Serialize style to JSON using PhraseStyle extension
-            let styleToSave = cloneCurrentStyle()
             let styleString = styleToSave.toJSONString()
             
             // Update in database
@@ -611,7 +640,7 @@ struct PhraseStyleEditorView: View {
     private func resetToDefault() {
         MediaStorage.deleteMedia(mediaRef: currentStyle.mediaRef)
         MediaStorage.deleteMedia(mediaRef: currentStyle.imageRef)
-        currentStyle = PhraseStyle(
+        let reset = PhraseStyle(
             backgroundColor: nil,
             textColor: nil,
             textSizeSp: nil,
@@ -623,6 +652,8 @@ struct PhraseStyleEditorView: View {
             mediaType: nil,
             gameType: nil
         )
+        reset.sendSwitchOutput = false
+        currentStyle = reset
         isBold = false
         saveStyle()
     }

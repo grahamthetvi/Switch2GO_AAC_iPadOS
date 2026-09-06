@@ -34,6 +34,9 @@ class GazeTrackingManager: ObservableObject {
 
     /// External HID switch control (USB or Bluetooth keyboard)
     let switchManager = SwitchControlManager()
+
+    /// iPad → ESP32 switch OUTPUT (PowerLink pulse). Independent of HID input.
+    let switchOutputManager = ESP32SwitchOutputManager()
     
     // Raw gaze values for calibration (normalized -1 to 1)
     var rawGazeX: Float = 0.0
@@ -146,6 +149,11 @@ class GazeTrackingManager: ObservableObject {
         setupLandmarkSubscriptions()
         setupBodyGestureCallbacks()
         setupSwitchControl()
+        // Only spin up Core Bluetooth if this iPad already paired ESP32 output.
+        // Creating CBCentralManager always prompts for Bluetooth permission.
+        if AppSettings.shared.switchOutputPeripheralUUID != nil {
+            switchOutputManager.start()
+        }
         
         NotificationCenter.default.addObserver(
             forName: NSNotification.Name("DebugCameraRotationChanged"),
