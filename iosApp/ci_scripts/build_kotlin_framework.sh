@@ -73,6 +73,11 @@ if [ "${PLATFORM_NAME:-}" = "iphonesimulator" ]; then
   esac
 fi
 
+# iCloud Desktop copies Gradle accessor metadata as "HASH 2". Those filenames
+# contain a space, which makes :build-logic:compileKotlin fail with:
+#   Unable to parse script-resolver-environment argument HASH 2="..."
+find build-logic/build/kotlin-dsl -type f -name '* *' -delete 2>/dev/null || true
+
 ./gradlew ":shared:link${KOTLIN_CONFIG}Framework${TARGET}"
 
 # The Xcode project file-references VocableShared at the device debugFramework

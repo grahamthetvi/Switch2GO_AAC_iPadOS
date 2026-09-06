@@ -14,7 +14,10 @@ enum PhrasePackArchive {
         let fm = FileManager.default
         try fm.createDirectory(at: extractRoot, withIntermediateDirectories: true)
 
-        guard let archive = Archive(url: packURL, accessMode: .read) else {
+        let archive: Archive
+        do {
+            archive = try Archive(url: packURL, accessMode: .read)
+        } catch {
             throw PhrasePackError.invalidArchive
         }
 
