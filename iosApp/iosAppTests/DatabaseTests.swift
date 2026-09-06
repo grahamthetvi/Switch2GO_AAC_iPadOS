@@ -237,4 +237,38 @@ class DatabaseTests: XCTestCase {
             XCTFail("Failed merged recents test: \(error)")
         }
     }
+
+    func testPresetSchemaVersionIsCurrentAfterInit() {
+        XCTAssertGreaterThanOrEqual(
+            DatabaseManager.shared.presetSchemaVersion,
+            DatabaseManager.currentPresetSchemaVersion
+        )
+    }
+
+    func testInitializePresetsIfNeededDoesNotWipeWhenSchemaCurrent() {
+        let db = DatabaseManager.shared.db
+        let phraseId = "preset_need_help"
+        let styleJson = "{\"isBold\":true,\"backgroundColor\":4293456181}"
+
+        db.presetPhraseQueries.updatePresetPhraseStyle(style: styleJson, phrase_id: phraseId)
+        DatabaseManager.shared.presetSchemaVersion = DatabaseManager.currentPresetSchemaVersion
+
+        // Soft-deleted legacy sentinel must not trigger a wipe when schema is current.
+        db.presetCategoryQueries.insertPresetCategory(
+            category_id: "preset_general",
+            hidden: 0,
+            sort_order: 99,
+            deleted: 1,
+            color_hex: nil,
+            symbol_name: nil
+        )
+
+        DatabaseManager.shared.initializePresetsIfNeeded()
+
+        let phrase = db.presetPhraseQueries.getPresetPhraseById(phrase_id: phraseId).executeAsOneOrNull()
+        XCTAssertEqual(phrase?.style, styleJson)
+
+        // Cleanup
+        db.presetPhraseQueries.updatePresetPhraseStyle(style: nil, phrase_id: phraseId)
+    }
 }

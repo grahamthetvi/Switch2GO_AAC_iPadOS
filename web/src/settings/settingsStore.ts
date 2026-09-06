@@ -25,6 +25,7 @@ export interface SettingsState {
   showTrackingErrorBanner: boolean
   enableDoubleBlinkRecenter: boolean
   enableAutoRecenter: boolean
+  enableHeadPoseCompensation: boolean
   enableRepeatDwell: boolean
   repeatDwellDelay: number
   mediaPlaybackDelay: number
@@ -55,6 +56,7 @@ export interface SettingsState {
   setShowTrackingErrorBanner: (v: boolean) => void
   setEnableDoubleBlinkRecenter: (v: boolean) => void
   setEnableAutoRecenter: (v: boolean) => void
+  setEnableHeadPoseCompensation: (v: boolean) => void
   setEnableRepeatDwell: (v: boolean) => void
   setRepeatDwellDelay: (t: number) => void
   setMediaPlaybackDelay: (t: number) => void
@@ -91,6 +93,7 @@ const defaultSettings = {
   showTrackingErrorBanner: true,
   enableDoubleBlinkRecenter: true,
   enableAutoRecenter: true,
+  enableHeadPoseCompensation: true,
   enableRepeatDwell: false,
   repeatDwellDelay: 1.0,
   mediaPlaybackDelay: 5.0,
@@ -127,6 +130,7 @@ export const useSettings = create<SettingsState>()(
       setShowTrackingErrorBanner: (v) => set({ showTrackingErrorBanner: v }),
       setEnableDoubleBlinkRecenter: (v) => set({ enableDoubleBlinkRecenter: v }),
       setEnableAutoRecenter: (v) => set({ enableAutoRecenter: v }),
+      setEnableHeadPoseCompensation: (v) => set({ enableHeadPoseCompensation: v }),
       setEnableRepeatDwell: (v) => set({ enableRepeatDwell: v }),
       setRepeatDwellDelay: (t) => set({ repeatDwellDelay: Math.min(5, Math.max(0.5, t)) }),
       setMediaPlaybackDelay: (t) => set({ mediaPlaybackDelay: Math.min(30, Math.max(2, t)) }),
@@ -154,7 +158,14 @@ export const useSettings = create<SettingsState>()(
       setEnableTrackingDiagnostics: (v) => set({ enableTrackingDiagnostics: v }),
       setDebugCameraRotation: (v) => set({ debugCameraRotation: v }),
     }),
-    { name: 'switch2go-settings' },
+    { name: 'switch2go-settings', merge: (persisted, current) => {
+      const p = (persisted ?? {}) as Partial<SettingsState>
+      return {
+        ...current,
+        ...p,
+        enableHeadPoseCompensation: p.enableHeadPoseCompensation ?? true,
+      }
+    } },
   ),
 )
 

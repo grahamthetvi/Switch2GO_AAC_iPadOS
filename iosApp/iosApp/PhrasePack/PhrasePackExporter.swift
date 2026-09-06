@@ -128,7 +128,8 @@ enum PhrasePackExporter {
         if let imageRef = style.imageRef, !imageRef.isEmpty {
             if imageRef.hasPrefix(PhraseStyle.EMOJI_PREFIX) {
                 pack.image = imageRef
-            } else if let fileURL = PhraseImageStore.resolveLocalFile(imageRef) {
+            } else if let fileURL = MediaStorage.resolveImageURL(imageRef: imageRef)
+                ?? PhraseImageStore.resolveLocalFile(imageRef) {
                 pack.image = try copyNormalizedImage(fileURL, into: staging, name: "p\(index + 1)")
             }
         }

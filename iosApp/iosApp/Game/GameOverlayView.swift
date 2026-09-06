@@ -61,7 +61,6 @@ struct GameOverlayView: View {
             )
             .onAppear {
                 dwellManager.setAllowedButtonIds(gameAllowedButtons)
-                dwellManager.clearAllButtons()
             }
             .onDisappear {
                 dwellManager.setAllowedButtonIds(nil)
@@ -164,7 +163,7 @@ private struct GameGazeZoneRegistrar: View {
     var body: some View {
         Color.clear
             .onAppear { register() }
-            .onReceive(Timer.publish(every: 0.15, on: .main, in: .common).autoconnect()) { _ in
+            .onChange(of: frame) { _, _ in
                 register()
             }
             .onChange(of: dwellManager.hoveredButtonId) { _, hovered in

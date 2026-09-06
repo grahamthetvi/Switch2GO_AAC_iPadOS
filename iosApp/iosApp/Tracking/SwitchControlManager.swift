@@ -168,10 +168,16 @@ final class SwitchControlManager: NSObject, ObservableObject {
     private var phraseButtonIds: [String] = []
     private var scanIndex = 0
     private var scanTimer: Timer?
+    private var lastScanAdvanceTime: TimeInterval = 0
+    private var lastScanSelectTime: TimeInterval = 0
 
     // MARK: - Input
 
     private var isListening = false
+    /// Deduplicate GCKeyboard + UIKit delivering the same HID event.
+    private var lastHIDKey: (code: Int, pressed: Bool, time: TimeInterval)?
+    static let hidDedupeWindow: TimeInterval = 0.05
+    static let scanActionDebounce: TimeInterval = 0.05
 
     // MARK: - Lifecycle
 
@@ -296,18 +302,43 @@ final class SwitchControlManager: NSObject, ObservableObject {
     }
 
     func handleUIKitKeyPress(hidUsageCode: Int, pressed: Bool) {
+        // Prefer GCKeyboard when available; UIKit is the ESP32 fallback.
+        if GCKeyboard.coalesced != nil {
+            return
+        }
         handleHIDKey(hidUsageCode, pressed: pressed, source: "UIKit")
+    }
+
+    /// Returns true if this event should be ignored as a duplicate of a recent one.
+    static func isDuplicateHIDEvent(
+        code: Int,
+        pressed: Bool,
+        now: TimeInterval,
+        previous: (code: Int, pressed: Bool, time: TimeInterval)?,
+        window: TimeInterval = hidDedupeWindow
+    ) -> Bool {
+        guard let previous else { return false }
+        return previous.code == code
+            && previous.pressed == pressed
+            && now - previous.time < window
     }
 
     private func handleHIDKey(_ hidCode: Int, pressed: Bool, source: String) {
         guard let switchIndex = configuration.activeKeyHIDs.firstIndex(of: hidCode) else { return }
+
+        let now = CACurrentMediaTime()
+        if Self.isDuplicateHIDEvent(code: hidCode, pressed: pressed, now: now, previous: lastHIDKey) {
+            DebugLog.debug("Ignoring duplicate HID \(hidCode) from \(source)", tag: "Switch")
+            return
+        }
+        lastHIDKey = (hidCode, pressed, now)
 
         markConnected()
 
         let event = SwitchEvent(
             switchIndex: switchIndex,
             isPress: pressed,
-            timestamp: CACurrentMediaTime()
+            timestamp: now
         )
 
         let role = roleLabel(for: switchIndex)
@@ -341,14 +372,17 @@ final class SwitchControlManager: NSObject, ObservableObject {
     private func handleScanningPress(switchIndex: Int) {
         guard switchIndex < SwitchControlConfiguration.scanningSwitchCount else { return }
 
+        let now = CACurrentMediaTime()
         if switchIndex == 0 {
+            if now - lastScanSelectTime < Self.scanActionDebounce { return }
+            lastScanSelectTime = now
             pauseScanTimerBriefly()
             DispatchQueue.main.async {
                 self.selectAction.send()
             }
         } else if switchIndex == 1 {
             DispatchQueue.main.async {
-                self.advanceScan()
+                self.advanceScan(fromUser: true)
             }
         }
     }
@@ -375,7 +409,7 @@ final class SwitchControlManager: NSObject, ObservableObject {
         guard configuration.mode == .scanning, !phraseButtonIds.isEmpty else { return }
         scanTimer?.invalidate()
         scanTimer = Timer.scheduledTimer(withTimeInterval: configuration.scanInterval, repeats: true) { [weak self] _ in
-            self?.advanceScan()
+            self?.advanceScan(fromUser: false)
         }
     }
 
@@ -386,8 +420,14 @@ final class SwitchControlManager: NSObject, ObservableObject {
         }
     }
 
-    private func advanceScan() {
+    private func advanceScan(fromUser _: Bool) {
         guard !phraseButtonIds.isEmpty else { return }
+        let now = CACurrentMediaTime()
+        // Debounce so a dual-path key press (or key + timer) cannot skip a tile.
+        if now - lastScanAdvanceTime < Self.scanActionDebounce {
+            return
+        }
+        lastScanAdvanceTime = now
         scanIndex = (scanIndex + 1) % phraseButtonIds.count
         updateScanHighlight()
         restartScanTimerIfNeeded()

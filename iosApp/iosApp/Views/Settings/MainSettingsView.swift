@@ -85,6 +85,14 @@ struct MainSettingsView: View {
                             )
                         }
                         
+                        NavigationLink(destination: DataBackupView()) {
+                            settingsRow(
+                                title: "Backup & Restore",
+                                icon: "externaldrive.fill",
+                                color: .teal
+                            )
+                        }
+
                         NavigationLink(destination: ResetAppView()) {
                             settingsRow(
                                 title: "Reset App",

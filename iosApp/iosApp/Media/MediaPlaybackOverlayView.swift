@@ -65,7 +65,6 @@ struct MediaPlaybackOverlayView: View {
             )
             .onAppear {
                 dwellManager.setAllowedButtonIds(mediaPlaybackAllowedButtons)
-                dwellManager.clearAllButtons()
                 preparePlayback(for: phrase)
             }
             .onDisappear {
@@ -235,7 +234,7 @@ private struct MediaGazeZoneRegistrar: View {
     var body: some View {
         Color.clear
             .onAppear { register() }
-            .onReceive(Timer.publish(every: 0.15, on: .main, in: .common).autoconnect()) { _ in
+            .onChange(of: frame) { _, _ in
                 register()
             }
             .onChange(of: dwellManager.hoveredButtonId) { _, hovered in

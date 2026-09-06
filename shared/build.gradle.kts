@@ -94,3 +94,14 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 }
+
+/**
+ * Regenerates web/src/data/presets.json from PresetData.kt (and Category.kt ids).
+ * Run: ./gradlew :shared:exportWebPresets
+ */
+tasks.register<Exec>("exportWebPresets") {
+    group = "build"
+    description = "Export PresetData.kt into web/src/data/presets.json"
+    workingDir = rootProject.projectDir
+    commandLine("node", "scripts/export-presets.mjs")
+}

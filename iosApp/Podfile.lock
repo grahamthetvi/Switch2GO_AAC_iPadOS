@@ -2,19 +2,23 @@ PODS:
   - MediaPipeTasksCommon (0.10.21)
   - MediaPipeTasksVision (0.10.21):
     - MediaPipeTasksCommon (= 0.10.21)
+  - ZIPFoundation (0.9.20)
 
 DEPENDENCIES:
   - MediaPipeTasksVision (~> 0.10.14)
+  - ZIPFoundation (~> 0.9)
 
 SPEC REPOS:
   trunk:
     - MediaPipeTasksCommon
     - MediaPipeTasksVision
+    - ZIPFoundation
 
 SPEC CHECKSUMS:
   MediaPipeTasksCommon: 6cfa29170d4900f04d250ad95ec058f14a741f38
   MediaPipeTasksVision: 7b1c0f5a5820e87e9d96926f5e65d8cd3744fac2
+  ZIPFoundation: dfd3d681c4053ff7e2f7350bc4e53b5dba3f5351
 
-PODFILE CHECKSUM: eca84a01dad4c2fbf33f937fd1a9defc6099edf8
+PODFILE CHECKSUM: 884676af2977e18eba5efafdb321b86a9cdccccb
 
 COCOAPODS: 1.16.2
