@@ -15,7 +15,8 @@ class Eyeball3DGazeCalculator(
     var sensitivityX: Float = 2.0f,
     var sensitivityY: Float = 2.5f,
     var offsetX: Float = 0.0f,
-    var offsetY: Float = 0.0f
+    var offsetY: Float = 0.0f,
+    var headPoseCompensationEnabled: Boolean = true
 ) {
     companion object {
         // Eyeball anatomical constants (relative to eye width)
@@ -209,9 +210,8 @@ class Eyeball3DGazeCalculator(
             }
         }
 
-        // Compensate for head pose
-        val compensatedYaw = avgYaw - headYaw * 0.5f
-        val compensatedPitch = avgPitch - headPitch * 0.5f
+        val compensatedYaw = if (headPoseCompensationEnabled) avgYaw - headYaw * 0.5f else avgYaw
+        val compensatedPitch = if (headPoseCompensationEnabled) avgPitch - headPitch * 0.5f else avgPitch
 
         // Convert to normalized screen coordinates
         val maxGazeAngle = 30f
