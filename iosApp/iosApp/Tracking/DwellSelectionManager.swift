@@ -94,11 +94,6 @@ class DwellSelectionManager: ObservableObject {
     /// Restrict hit-testing to a subset of buttons (nil = all registered buttons).
     func setAllowedButtonIds(_ ids: Set<String>?) {
         allowedButtonIds = ids
-        if let ids {
-            for id in buttonFrames.keys where !ids.contains(id) {
-                unregisterButton(id: id)
-            }
-        }
         if let hovered = hoveredButtonId, !isButtonAllowed(hovered) {
             cancelDwell()
         }
@@ -109,12 +104,6 @@ class DwellSelectionManager: ObservableObject {
     /// Ignores zero-size frames (layout not yet complete).
     func registerButton(id: String, frame: CGRect) {
         guard frame.width > 1 && frame.height > 1 else { return }
-        guard isButtonAllowed(id) else {
-            if buttonFrames[id] != nil {
-                unregisterButton(id: id)
-            }
-            return
-        }
         let isNew = buttonFrames[id] == nil
         buttonFrames[id] = frame
         if isNew {
@@ -166,11 +155,7 @@ class DwellSelectionManager: ObservableObject {
         // Cooldown after activation — only block re-activation, not hover tracking.
         let inActivationCooldown = now - lastActivationTime < activationCooldown
 
-        // Walk registration order (matches web) so overlapping padded regions pick predictably.
-        let hitButtonId = orderedButtonIds.first { id in
-            guard isButtonAllowed(id), let frame = buttonFrames[id] else { return false }
-            return frame.insetBy(dx: -hitTestPadding, dy: -hitTestPadding).contains(position)
-        }
+        let hitButtonId = hitTestButtonId(at: position)
 
         if let hitId = hitButtonId {
             // Cursor is on a button — cancel any pending exit grace timer
@@ -187,32 +172,58 @@ class DwellSelectionManager: ObservableObject {
                 DebugLog.debug("Dwell: entered \(hitId)", tag: "Dwell")
                 startDwell(buttonId: hitId, now: now)
             }
-        } else {
-            // Not directly on any button
-            if let currentId = hoveredButtonId,
-               let frame = buttonFrames[currentId] {
-                // Check with a larger exit margin to avoid flicker at edges
-                let expandedFrame = frame.insetBy(dx: -exitMargin, dy: -exitMargin)
-                if expandedFrame.contains(position) {
-                    // Still within exit margin — keep dwelling, don't reset
-                    if !inActivationCooldown || !hasActivatedCurrentDwell {
-                        updateDwellProgress(now: now)
-                    }
-                } else if exitGraceTimer == nil {
-                    // Just exited — start grace period before cancelling.
-                    // This prevents jitter-caused resets: if the cursor returns
-                    // within grace period the dwell continues uninterrupted.
-                    exitGraceTimer = Timer.scheduledTimer(withTimeInterval: exitGracePeriod, repeats: false) { [weak self] _ in
-                        self?.exitGraceTimer = nil
-                        DebugLog.debug("Dwell: cancelled (exited outside margin)", tag: "Dwell")
-                        self?.cancelDwell()
-                    }
+        } else if hoveredButtonId != nil {
+            // Left the sticky region — grace period before cancelling so brief
+            // jitter off all tiles does not reset dwell.
+            if exitGraceTimer == nil {
+                exitGraceTimer = Timer.scheduledTimer(withTimeInterval: exitGracePeriod, repeats: false) { [weak self] _ in
+                    self?.exitGraceTimer = nil
+                    DebugLog.debug("Dwell: cancelled (exited outside margin)", tag: "Dwell")
+                    self?.cancelDwell()
                 }
-                // else: grace timer already running, just wait
-            } else {
-                cancelDwell()
+            }
+        } else {
+            cancelDwell()
+        }
+    }
+
+    /// Pick the tile under the gaze point.
+    /// Unpadded containment wins (so the left tile's padding cannot steal the
+    /// right-hand choice). While hovering, stay on that tile until the cursor
+    /// leaves its exit margin unless another tile's real frame contains the point.
+    private func hitTestButtonId(at position: CGPoint) -> String? {
+        var unpadded: [(id: String, frame: CGRect)] = []
+        var padded: [(id: String, frame: CGRect)] = []
+
+        for id in orderedButtonIds {
+            guard isButtonAllowed(id), let frame = buttonFrames[id] else { continue }
+            if frame.contains(position) {
+                unpadded.append((id, frame))
+            } else if frame.insetBy(dx: -hitTestPadding, dy: -hitTestPadding).contains(position) {
+                padded.append((id, frame))
             }
         }
+
+        if let id = nearestButtonId(unpadded, to: position) {
+            return id
+        }
+
+        if let current = hoveredButtonId,
+           isButtonAllowed(current),
+           let frame = buttonFrames[current],
+           frame.insetBy(dx: -exitMargin, dy: -exitMargin).contains(position) {
+            return current
+        }
+
+        return nearestButtonId(padded, to: position)
+    }
+
+    private func nearestButtonId(_ hits: [(id: String, frame: CGRect)], to position: CGPoint) -> String? {
+        guard !hits.isEmpty else { return nil }
+        return hits.min { a, b in
+            hypot(position.x - a.frame.midX, position.y - a.frame.midY)
+                < hypot(position.x - b.frame.midX, position.y - b.frame.midY)
+        }?.id
     }
 
     // MARK: - Dwell Logic
@@ -405,7 +416,7 @@ class DwellSelectionManager: ObservableObject {
 /// Attach this to any button to make it dwell-selectable.
 /// It registers the button's frame and shows dwell progress.
 ///
-/// Uses a short retry timer on appear to handle lazy containers (e.g. TabView)
+/// Uses a one-shot delayed retry on appear to handle lazy containers (e.g. TabView)
 /// where the frame may be zero on the initial layout pass.
 struct DwellSelectableModifier: ViewModifier {
     let id: String
@@ -423,6 +434,10 @@ struct DwellSelectableModifier: ViewModifier {
                     Color.clear
                         .onAppear {
                             registerIfValid(geo: geo)
+                            // One-shot retry for lazy containers where frame is zero on first pass
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                registerIfValid(geo: geo)
+                            }
                         }
                         .onChange(of: geo.frame(in: .named(GazeCoordinateSpace.name))) { _, newFrame in
                             guard isActive else { return }
@@ -433,14 +448,6 @@ struct DwellSelectableModifier: ViewModifier {
                                 registerIfValid(geo: geo)
                             } else {
                                 dwellManager.unregisterButton(id: id)
-                            }
-                        }
-                        .onReceive(
-                            Timer.publish(every: 0.1, on: .main, in: .common)
-                                .autoconnect()
-                        ) { _ in
-                            if isActive {
-                                registerIfValid(geo: geo)
                             }
                         }
                 }

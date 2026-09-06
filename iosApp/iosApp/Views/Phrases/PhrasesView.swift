@@ -64,7 +64,7 @@ struct PhrasesView: View {
             lastHandledActivationToken = gazeManager.dwellManager.activationToken
         }
         .onDisappear {
-            gazeManager.dwellManager.clearAllButtons()
+            gazeManager.dwellManager.unregisterButtons(withPrefix: "phrase_")
             mediaCoordinator.cancelPending()
             gameCoordinator.cancelPending()
         }
