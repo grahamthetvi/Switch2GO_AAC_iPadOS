@@ -38,22 +38,25 @@ class TTSManager: NSObject, ObservableObject, @unchecked Sendable, AVSpeechSynth
               let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
               let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
 
-        switch type {
-        case .began:
-            if synthesizer.isSpeaking {
-                synthesizer.pauseSpeaking(at: .word)
-            }
-        case .ended:
-            guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
-            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
-            if options.contains(.shouldResume) {
-                configureAudioSession()
-                if synthesizer.isPaused {
-                    synthesizer.continueSpeaking()
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            switch type {
+            case .began:
+                if self.synthesizer.isSpeaking {
+                    self.synthesizer.pauseSpeaking(at: .word)
                 }
+            case .ended:
+                guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
+                let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+                if options.contains(.shouldResume) {
+                    self.configureAudioSession()
+                    if self.synthesizer.isPaused {
+                        self.synthesizer.continueSpeaking()
+                    }
+                }
+            @unknown default:
+                break
             }
-        @unknown default:
-            break
         }
     }
     
@@ -94,37 +97,48 @@ class TTSManager: NSObject, ObservableObject, @unchecked Sendable, AVSpeechSynth
     
     /// Add text to queue (speaks after current finishes)
     func enqueue(_ text: String) {
-        guard !text.isEmpty else { return }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
 
-        configureAudioSession()
-        
-        phraseQueue.append(text)
-        
-        if !synthesizer.isSpeaking {
-            speakNextInQueue()
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.configureAudioSession()
+            self.phraseQueue.append(trimmed)
+            if !self.synthesizer.isSpeaking {
+                self.speakNextInQueue()
+            }
         }
     }
     
     /// Stop speaking immediately
     func stop() {
-        utteranceGeneration &+= 1
-        synthesizer.stopSpeaking(at: .immediate)
-        phraseQueue.removeAll()
-        isSpeaking = false
-        currentText = ""
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.utteranceGeneration &+= 1
+            self.synthesizer.stopSpeaking(at: .immediate)
+            self.phraseQueue.removeAll()
+            self.isSpeaking = false
+            self.currentText = ""
+        }
     }
     
     /// Pause speaking
     func pause() {
-        if synthesizer.isSpeaking {
-            synthesizer.pauseSpeaking(at: .word)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            if self.synthesizer.isSpeaking {
+                self.synthesizer.pauseSpeaking(at: .word)
+            }
         }
     }
     
     /// Resume speaking
     func resume() {
-        if synthesizer.isPaused {
-            synthesizer.continueSpeaking()
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            if self.synthesizer.isPaused {
+                self.synthesizer.continueSpeaking()
+            }
         }
     }
     

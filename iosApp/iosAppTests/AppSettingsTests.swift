@@ -79,5 +79,20 @@ class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.sensitivity, 1)
         XCTAssertEqual(settings.trackingMode, "2D")
         XCTAssertEqual(settings.smoothingMode, "adaptive")
+        XCTAssertTrue(settings.enableHeadPoseCompensation)
+    }
+
+    func testColorToHexClamping() {
+        // Extreme and wide-gamut Display P3 colors with out-of-range components
+        let p3Color = Color(.displayP3, red: 1.5, green: -0.5, blue: 0.5, opacity: 1.0)
+        let hex = p3Color.toHex()
+        // Should not crash and should clamp cleanly
+        XCTAssertTrue(hex > 0)
+
+        let black = Color.black.toHex()
+        XCTAssertEqual(black, 0xFF000000)
+
+        let white = Color.white.toHex()
+        XCTAssertEqual(white, 0xFFFFFFFF)
     }
 }

@@ -159,6 +159,8 @@ class HeadPoseTracker {
         let screenX = clamp((smoothedX + 1) / 2 * screenWidth, 0, screenWidth)
         let screenY = clamp((smoothedY + 1) / 2 * screenHeight, 0, screenHeight)
 
+        guard screenX.isFinite && screenY.isFinite else { return nil }
+
         return TrackingResult(
             screenX: screenX,
             screenY: screenY,

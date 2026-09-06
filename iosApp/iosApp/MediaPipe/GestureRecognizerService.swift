@@ -17,6 +17,8 @@ final class GestureRecognizerService: NSObject, ObservableObject {
     @Published private(set) var isTracking = false
 
     private let detectionQueue = DispatchQueue(label: "com.switch2go.mediapipe.gesture")
+    private static let detectionQueueKey = DispatchSpecificKey<UInt8>()
+    private let detectionQueueContext: UInt8 = 1
     /// Retain only the pixel buffer — never the CMSampleBuffer from AVCapture's pool.
     private var latestPixelBuffer: CVPixelBuffer?
     private var latestOrientation: UIImage.Orientation = .up
@@ -30,9 +32,17 @@ final class GestureRecognizerService: NSObject, ObservableObject {
 
     override init() {
         super.init()
+        detectionQueue.setSpecific(key: Self.detectionQueueKey, value: detectionQueueContext)
     }
 
     func initialize(useGpu: Bool = false) -> Bool {
+        if DispatchQueue.getSpecific(key: Self.detectionQueueKey) != nil {
+            return initializeOnQueue(useGpu: useGpu)
+        }
+        return detectionQueue.sync { initializeOnQueue(useGpu: useGpu) }
+    }
+
+    private func initializeOnQueue(useGpu: Bool) -> Bool {
         if isInitialized && lastUseGpu == useGpu && gestureRecognizer != nil {
             pendingRequest = false
             isDetecting = false
@@ -42,7 +52,7 @@ final class GestureRecognizerService: NSObject, ObservableObject {
         }
 
         if gestureRecognizer != nil {
-            close()
+            closeOnQueue()
         }
 
         lastUseGpu = useGpu
@@ -113,13 +123,21 @@ final class GestureRecognizerService: NSObject, ObservableObject {
         let useGpu = lastUseGpu
         detectionQueue.async { [weak self] in
             guard let self else { return }
-            self.close()
-            let success = self.initialize(useGpu: useGpu)
+            self.closeOnQueue()
+            let success = self.initializeOnQueue(useGpu: useGpu)
             DebugLog.log("GestureRecognizer reinitialize: \(success ? "success" : "FAILED")", tag: "MediaPipe", level: success ? .info : .error)
         }
     }
 
     func close() {
+        if DispatchQueue.getSpecific(key: Self.detectionQueueKey) != nil {
+            closeOnQueue()
+            return
+        }
+        detectionQueue.sync { closeOnQueue() }
+    }
+
+    private func closeOnQueue() {
         gestureRecognizer = nil
         isInitialized = false
         pendingRequest = false
@@ -169,7 +187,7 @@ final class GestureRecognizerService: NSObject, ObservableObject {
 
     private func notifyHands(_ hands: [DetectedHandGesture]) {
         detectionQueue.async { [weak self] in
-            guard let self else { return }
+            guard let self, self.isInitialized else { return }
             DispatchQueue.main.async {
                 self.currentHands = hands
                 self.isTracking = !hands.isEmpty
@@ -182,7 +200,7 @@ final class GestureRecognizerService: NSObject, ObservableObject {
 
     private func notifyNoGestures() {
         detectionQueue.async { [weak self] in
-            guard let self else { return }
+            guard let self, self.isInitialized else { return }
             DispatchQueue.main.async {
                 self.currentHands = []
                 self.isTracking = false

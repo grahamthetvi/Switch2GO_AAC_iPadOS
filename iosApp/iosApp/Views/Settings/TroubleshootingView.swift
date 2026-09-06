@@ -35,10 +35,9 @@ struct TroubleshootingView: View {
                     icon: "rectangle.landscape.rotate",
                     color: .blue,
                     steps: [
-                        "Eye and head tracking require landscape orientation.",
-                        "Hold your iPad horizontally with the home button (or USB-C port) on the right side.",
-                        "The front-facing camera should be on the left side, facing you.",
-                        "If you rotate to portrait or the wrong landscape direction, tracking will pause and the app will switch to touch-only mode.",
+                        "Eye and head tracking work in portrait and either landscape direction.",
+                        "The only unsupported position is portrait upside-down, with the front camera at the bottom.",
+                        "If the camera is upside down, tracking pauses and the app switches to touch and switch only.",
                         "A banner will appear when you rotate, telling you which modes are available in the current orientation."
                     ]
                 )
@@ -51,7 +50,7 @@ struct TroubleshootingView: View {
                     steps: [
                         "Make sure your face is clearly visible to the front camera -- avoid covering your face or wearing reflective glasses.",
                         "Ensure you have good, even lighting. Avoid backlighting (bright light behind you) as it makes your face harder to detect.",
-                        "Check that you are in the correct landscape orientation (home button / USB-C on the right).",
+                        "Check that the front camera is not at the bottom of the iPad (portrait upside-down pauses tracking).",
                         "Try tapping the Recenter Cursor button at the top of Settings if the cursor seems offset.",
                         "If tracking was working before but stopped, try closing and reopening the app.",
                         "For eye gaze tracking, keep your iPad at a comfortable arm's length distance (roughly 40-60 cm / 16-24 inches)."

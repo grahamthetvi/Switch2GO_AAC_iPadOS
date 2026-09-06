@@ -165,6 +165,19 @@ struct AdvancedEyeTrackingView: View {
                     .padding()
                     .background(Color(UIColor.tertiarySystemBackground))
                     .cornerRadius(10)
+
+                    Toggle(isOn: $settings.enableHeadPoseCompensation) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Head Pose Compensation")
+                                .font(.headline)
+                            Text("Corrects eye gaze when you turn your head. Turn off if you look by moving your head. Eye gaze mode only.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding()
+                    .background(Color(UIColor.tertiarySystemBackground))
+                    .cornerRadius(10)
                 }
                 .padding()
                 .background(Color(UIColor.secondarySystemBackground))

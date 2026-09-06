@@ -34,6 +34,33 @@ final class PhrasePackArchiveTests: XCTestCase {
         XCTAssertEqual(loaded.phrases.first?.text, "Hello")
     }
 
+    func testManifestVersionCheck() throws {
+        let extract = FileManager.default.temporaryDirectory.appendingPathComponent("s2g-version-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: extract, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: extract) }
+
+        // Future version should throw unsupportedVersion
+        let futureManifest = PhrasePackManifest(
+            formatVersion: 99,
+            packId: "pack-future",
+            displayName: "Future",
+            createdAt: 1,
+            source: "future",
+            category: PhrasePackCategory(id: "c1", name: "Future", colorHex: nil, symbolName: nil),
+            phrases: []
+        )
+        let futureData = try JSONEncoder().encode(futureManifest)
+        try futureData.write(to: extract.appendingPathComponent("manifest.json"))
+
+        XCTAssertThrowsError(try PhrasePackArchive.loadManifest(fromExtractRoot: extract)) { error in
+            guard case PhrasePackError.unsupportedVersion(let version) = error as! PhrasePackError else {
+                XCTFail("Expected unsupportedVersion, got \(error)")
+                return
+            }
+            XCTAssertEqual(version, 99)
+        }
+    }
+
     func testCorruptZipFailsWithoutExtractRootLeftovers() {
         let packURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).switch2go")
         try? Data("not a zip".utf8).write(to: packURL)

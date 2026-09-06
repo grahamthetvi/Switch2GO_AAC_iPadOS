@@ -22,6 +22,7 @@ class AppSettings: ObservableObject {
         static let showTrackingErrorBanner = "showTrackingErrorBanner"
         static let enableDoubleBlinkRecenter = "enableDoubleBlinkRecenter"
         static let enableAutoRecenter = "enableAutoRecenter"
+        static let enableHeadPoseCompensation = "enableHeadPoseCompensation"
         static let enableRepeatDwell = "enableRepeatDwell"
         static let repeatDwellDelay = "repeatDwellDelay"
         static let mediaPlaybackDelay = "mediaPlaybackDelay"
@@ -181,6 +182,13 @@ class AppSettings: ObservableObject {
     @Published var enableAutoRecenter: Bool {
         didSet {
             defaults.set(enableAutoRecenter, forKey: Keys.enableAutoRecenter)
+        }
+    }
+
+    /// Compensate iris gaze for head rotation. Default on; turn off if the user aims with their head.
+    @Published var enableHeadPoseCompensation: Bool {
+        didSet {
+            defaults.set(enableHeadPoseCompensation, forKey: Keys.enableHeadPoseCompensation)
         }
     }
 
@@ -355,6 +363,7 @@ class AppSettings: ObservableObject {
         self.showTrackingErrorBanner = defaults.object(forKey: Keys.showTrackingErrorBanner) as? Bool ?? true
         self.enableDoubleBlinkRecenter = defaults.object(forKey: Keys.enableDoubleBlinkRecenter) as? Bool ?? true
         self.enableAutoRecenter = defaults.object(forKey: Keys.enableAutoRecenter) as? Bool ?? true
+        self.enableHeadPoseCompensation = defaults.object(forKey: Keys.enableHeadPoseCompensation) as? Bool ?? true
         self.enableRepeatDwell = defaults.object(forKey: Keys.enableRepeatDwell) as? Bool ?? false
         self.repeatDwellDelay = defaults.object(forKey: Keys.repeatDwellDelay) as? Double ?? 1.0
         self.mediaPlaybackDelay = defaults.object(forKey: Keys.mediaPlaybackDelay) as? Double ?? 5.0
@@ -401,6 +410,7 @@ class AppSettings: ObservableObject {
         showTrackingErrorBanner = true
         enableDoubleBlinkRecenter = true
         enableAutoRecenter = true
+        enableHeadPoseCompensation = true
         enableRepeatDwell = false
         repeatDwellDelay = 1.0
         mediaPlaybackDelay = 5.0
@@ -478,6 +488,11 @@ extension Color {
             a = components.count > 3 ? Double(components[3]) : 1.0
         }
 
-        return (UInt32(a * 255) << 24) | (UInt32(r * 255) << 16) | (UInt32(g * 255) << 8) | UInt32(b * 255)
+        let rClamped = min(max(r, 0.0), 1.0)
+        let gClamped = min(max(g, 0.0), 1.0)
+        let bClamped = min(max(b, 0.0), 1.0)
+        let aClamped = min(max(a, 0.0), 1.0)
+
+        return (UInt32(aClamped * 255) << 24) | (UInt32(rClamped * 255) << 16) | (UInt32(gClamped * 255) << 8) | UInt32(bClamped * 255)
     }
 }

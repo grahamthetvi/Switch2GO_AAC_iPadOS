@@ -52,6 +52,7 @@ class CameraManager: NSObject, ObservableObject {
 
     private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
     private var rotationObservation: NSKeyValueObservation?
+    private var debugRotationObserver: NSObjectProtocol?
 
     override init() {
         super.init()
@@ -60,7 +61,7 @@ class CameraManager: NSObject, ObservableObject {
         // access in init interrupts first-launch onboarding with a system alert.
         syncExistingAuthorization()
 
-        NotificationCenter.default.addObserver(
+        debugRotationObserver = NotificationCenter.default.addObserver(
             forName: NSNotification.Name("DebugCameraRotationChanged"),
             object: nil,
             queue: .main
@@ -96,6 +97,9 @@ class CameraManager: NSObject, ObservableObject {
 
     deinit {
         rotationObservation?.invalidate()
+        if let token = debugRotationObserver {
+            NotificationCenter.default.removeObserver(token)
+        }
         NotificationCenter.default.removeObserver(self)
     }
 
@@ -299,12 +303,14 @@ class CameraManager: NSObject, ObservableObject {
         captureSession.commitConfiguration()
     }
 
-    /// Whether the device is currently in the tracking-supported orientation
-    /// (landscape right — home button on RIGHT, camera on LEFT).
+    /// Whether tracking is allowed in the current interface orientation.
+    /// Supported: portrait and both landscapes. Unsupported: portrait upside-down
+    /// (front camera at the bottom). Touch and switch still work in that orientation.
     ///
     /// UIInterfaceOrientation naming note:
-    ///   .landscapeRight  → home button on the RIGHT  (what the user wants)
-    ///   .landscapeLeft   → home button on the LEFT
+    ///   .landscapeRight  → home button / USB-C on the RIGHT, camera on the LEFT
+    ///   .landscapeLeft   → home button / USB-C on the LEFT, camera on the RIGHT
+    ///   .portraitUpsideDown → front camera at the bottom (tracking off)
     static var isTrackingSupportedOrientation: Bool {
         guard let scene = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene }).first else {
@@ -318,7 +324,6 @@ class CameraManager: NSObject, ObservableObject {
             orientation = scene.interfaceOrientation
         }
 
-        // Explicitly disable tracking in portrait upside-down.
         return orientation != .portraitUpsideDown
     }
 
@@ -353,9 +358,11 @@ class CameraManager: NSObject, ObservableObject {
     /// Stop camera capture.
     func stop() {
         sessionQueue.async { [weak self] in
-            guard let self = self, self.captureSession.isRunning else { return }
+            guard let self = self else { return }
 
-            self.captureSession.stopRunning()
+            if self.captureSession.isRunning {
+                self.captureSession.stopRunning()
+            }
 
             DispatchQueue.main.async {
                 self.isRunning = false

@@ -100,7 +100,16 @@ class GazeTrackingManager: ObservableObject {
 
     /// When true, tracking must stay stopped (e.g. settings or onboarding sheet is open).
     /// Prevents orientation change from re-enabling tracking while a modal is presented.
-    var isModalOpen: Bool = false
+    var isModalOpen: Bool = false {
+        didSet {
+            if !isModalOpen {
+                lastSuccessfulDetectionTime = CACurrentMediaTime()
+            }
+        }
+    }
+
+    private var currentScenePhase: String = "active"
+    private var watchdogTimer: Timer?
 
     /// Bumped on every `stopTracking()` and on each `startTracking()` attempt so async gaze
     /// completions cannot resurrect `isTracking` after the camera has stopped.
@@ -172,7 +181,7 @@ class GazeTrackingManager: ObservableObject {
     
     func startTracking() {
         // Recover from stale state: async callbacks can leave isTracking true after the camera stopped.
-        if isTracking && !cameraManager.captureSession.isRunning {
+        if isTracking && !cameraManager.isRunning {
             DebugLog.warn("Recovering inconsistent tracking state (isTracking=true, camera not running)", tag: "Tracking")
             stopTracking()
         }
@@ -233,6 +242,7 @@ class GazeTrackingManager: ObservableObject {
         eyeSkippedCount = 0
 
         configureDiagnosticsIfNeeded()
+        startWatchdogTimer()
 
         let screenBounds = currentScreenBounds()
         DebugLog.info("Started — mode=\(mode), screen=\(Int(screenBounds.width))x\(Int(screenBounds.height)), GPU=\(settings.useGPU)", tag: "Tracking")
@@ -303,6 +313,7 @@ class GazeTrackingManager: ObservableObject {
         gazeTracker?.smoothingMode = mapSmoothingMode(settings.smoothingMode)
         gazeTracker?.trackingMethod = mapTrackingMethod(settings.trackingMode)
         gazeTracker?.setLerpFactor(factor: mapSensitivityToLerp(settings.sensitivity))
+        gazeTracker?.setHeadPoseCompensationEnabled(enabled: settings.enableHeadPoseCompensation)
         applyGazeCameraOffset(settings)
         _ = gazeTracker?.loadCalibration()
 
@@ -336,6 +347,7 @@ class GazeTrackingManager: ObservableObject {
         if wasTracking {
             DebugLog.info("Stopping tracking", tag: "Tracking")
         }
+        stopWatchdogTimer()
         updateTimer?.invalidate()
         updateTimer = nil
         processingLock.lock()
@@ -384,24 +396,9 @@ class GazeTrackingManager: ObservableObject {
         if now - lastSuccessfulDetectionTime > trackingLossResetThreshold {
             armRaiseDetector.reset()
         }
-        lastSuccessfulDetectionTime = now
-
-        let nowMs = now * 1000
-
-        let config = ArmRaiseDetectorConfig(
-            margin: armRaiseMargin,
-            holdMs: settings.dwellTime * 1000,
-            cooldownMs: armRaiseCooldownMs
-        )
-        let result = armRaiseDetector.process(
-            landmarks: landmarks,
-            visibilities: nil,
-            now: nowMs,
-            config: config
-        )
-
         DispatchQueue.main.async { [weak self] in
             guard let self, AppSettings.shared.selectionMode == "armRaise" else { return }
+            self.lastSuccessfulDetectionTime = now
             self.armState = result.state
             self.bodyTrackingErrorMessage = nil
             self.showTrackingError = false
@@ -419,7 +416,6 @@ class GazeTrackingManager: ObservableObject {
         if now - lastSuccessfulDetectionTime > trackingLossResetThreshold {
             handGestureDetector.reset()
         }
-        lastSuccessfulDetectionTime = now
 
         let nowMs = now * 1000
 
@@ -436,6 +432,7 @@ class GazeTrackingManager: ObservableObject {
 
         DispatchQueue.main.async { [weak self] in
             guard let self, AppSettings.shared.selectionMode == "handGesture" else { return }
+            self.lastSuccessfulDetectionTime = now
             self.handState = result.state
             self.bodyTrackingErrorMessage = nil
             self.showTrackingError = false
@@ -489,7 +486,7 @@ class GazeTrackingManager: ObservableObject {
         let settings = AppSettings.shared
         guard settings.selectionMode == "face" else { return }
         // Keep user intent (`isTracking`); face loss must not disable recovery.
-        guard isTracking, cameraManager.captureSession.isRunning else { return }
+        guard isTracking, cameraManager.isRunning else { return }
 
         let now = CACurrentMediaTime()
         let isWarmingUp = (now - trackingStartTime) < warmupDuration
@@ -555,6 +552,7 @@ class GazeTrackingManager: ObservableObject {
         let outOfBounds = result.isOutOfBounds && settings.enableOutOfBoundsHiding
 
         let target = CGPoint(x: CGFloat(result.screenX), y: CGFloat(result.screenY))
+        guard target.x.isFinite && target.y.isFinite else { return }
         
         isFaceDetected = true
         showTrackingError = false
@@ -580,7 +578,10 @@ class GazeTrackingManager: ObservableObject {
     }
 
     private func clampPoint(_ point: CGPoint, bounds: CGRect) -> CGPoint {
-        CGPoint(
+        guard point.x.isFinite && point.y.isFinite else {
+            return CGPoint(x: bounds.midX, y: bounds.midY)
+        }
+        return CGPoint(
             x: min(max(point.x, bounds.minX), bounds.maxX),
             y: min(max(point.y, bounds.minY), bounds.maxY)
         )
@@ -673,19 +674,6 @@ class GazeTrackingManager: ObservableObject {
         let now = CACurrentMediaTime()
         if AppSettings.shared.enableTrackingDiagnostics {
             diagnosticsInputFrameCount += 1
-        }
-        
-        // Watchdog timer check: if we haven't seen a detection for a while, recover
-        // MediaPipe and restart capture if the session died (watchdog used to only
-        // reinit MediaPipe, leaving a dead capture session stuck).
-        if (now - lastSuccessfulDetectionTime) > watchdogTimeout {
-            reinitializeIfAllowed(reason: "watchdog")
-            if !cameraManager.captureSession.isRunning && isTracking && !isModalOpen {
-                DebugLog.warn("Watchdog: capture session not running — restarting camera", tag: "Tracking")
-                cameraManager.start()
-            }
-            lastSuccessfulDetectionTime = now
-            return
         }
 
         let settings = AppSettings.shared
@@ -934,6 +922,7 @@ class GazeTrackingManager: ObservableObject {
 
         let bounds = currentScreenBounds()
         let rawTarget = CGPoint(x: CGFloat(screenX), y: CGFloat(screenY))
+        guard rawTarget.x.isFinite && rawTarget.y.isFinite else { return }
         let clampedTarget = clampPoint(rawTarget, bounds: bounds)
 
         // Screen-level lerp: only for SIMPLE_LERP mode (matches Android's double-layer smoothing)
@@ -950,6 +939,7 @@ class GazeTrackingManager: ObservableObject {
             finalPosition = clampedTarget
         }
 
+        guard finalPosition.x.isFinite && finalPosition.y.isFinite else { return }
         guard epoch == trackingEpoch else { return }
 
         lastLandmarkTime = now
@@ -971,8 +961,8 @@ class GazeTrackingManager: ObservableObject {
     static let orientationTrackingChanged = Notification.Name("OrientationTrackingChanged")
 
     /// Called when the camera manager detects a device orientation change.
-    /// Tracking is only supported in landscape right (home button RIGHT, camera LEFT).
-    /// In all other orientations tracking is stopped and only touch/switch input works.
+    /// Tracking runs in portrait and both landscape directions. It is stopped only
+    /// in portrait upside-down (front camera at the bottom); touch and switch still work.
     private func handleOrientationChange() {
         orientationDebounceTimer?.invalidate()
         orientationDebounceTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
@@ -1049,7 +1039,7 @@ class GazeTrackingManager: ObservableObject {
                 handGestureDetector.reset()
             }
             
-            if !isTracking || !cameraManager.captureSession.isRunning {
+            if !isTracking || !cameraManager.isRunning {
                 startTracking()
             }
         } else if !supported && isTracking {
@@ -1137,6 +1127,7 @@ class GazeTrackingManager: ObservableObject {
         gazeTracker.smoothingMode = mapSmoothingMode(settings.smoothingMode)
         gazeTracker.trackingMethod = mapTrackingMethod(settings.trackingMode)
         gazeTracker.setLerpFactor(factor: mapSensitivityToLerp(settings.sensitivity))
+        gazeTracker.setHeadPoseCompensationEnabled(enabled: settings.enableHeadPoseCompensation)
     }
 
     /// Map the integer sensitivity setting (0/1/2) to a lerp factor (0-1).
@@ -1341,10 +1332,48 @@ class GazeTrackingManager: ObservableObject {
         }
     }
 
+    // MARK: - Watchdog Timer
+
+    private func startWatchdogTimer() {
+        stopWatchdogTimer()
+        let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.checkWatchdog()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        watchdogTimer = timer
+    }
+
+    private func stopWatchdogTimer() {
+        watchdogTimer?.invalidate()
+        watchdogTimer = nil
+    }
+
+    private func checkWatchdog() {
+        guard isTracking,
+              !isModalOpen,
+              currentScenePhase == "active",
+              CameraManager.isTrackingSupportedOrientation else {
+            return
+        }
+
+        let now = CACurrentMediaTime()
+        // If we haven't seen a detection for a while, recover MediaPipe and restart camera if needed
+        if (now - lastSuccessfulDetectionTime) > watchdogTimeout {
+            DebugLog.warn("Watchdog check: no detection for \(String(format: "%.1f", now - lastSuccessfulDetectionTime))s — recovering", tag: "Tracking")
+            reinitializeIfAllowed(reason: "watchdog")
+            if !cameraManager.isRunning {
+                DebugLog.warn("Watchdog: capture session not running — restarting camera", tag: "Tracking")
+                cameraManager.start()
+            }
+            lastSuccessfulDetectionTime = now
+        }
+    }
+
     // MARK: - Capture interruption / background recovery
 
     /// Call from the app when scene moves to background/inactive.
     func handleScenePhase(_ phase: String) {
+        currentScenePhase = phase
         switch phase {
         case "background", "inactive":
             if isTracking {
@@ -1358,7 +1387,7 @@ class GazeTrackingManager: ObservableObject {
                 gestureRecognizerService.resetProcessingState()
             }
         case "active":
-            if isTracking && !isModalOpen && !cameraManager.captureSession.isRunning {
+            if isTracking && !isModalOpen && !cameraManager.isRunning {
                 DebugLog.info("Scene active — resuming capture", tag: "Tracking")
                 lastSuccessfulDetectionTime = CACurrentMediaTime()
                 trackingStartTime = CACurrentMediaTime()
@@ -1379,7 +1408,7 @@ class GazeTrackingManager: ObservableObject {
     private func handleCaptureResumed() {
         DebugLog.info("Capture session interruption ended", tag: "Tracking")
         lastSuccessfulDetectionTime = CACurrentMediaTime()
-        if isTracking && !isModalOpen && !cameraManager.captureSession.isRunning {
+        if isTracking && !isModalOpen && !cameraManager.isRunning {
             cameraManager.start()
         }
     }

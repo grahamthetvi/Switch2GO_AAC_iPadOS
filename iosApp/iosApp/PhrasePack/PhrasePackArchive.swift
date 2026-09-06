@@ -70,7 +70,7 @@ enum PhrasePackArchive {
         let data = try Data(contentsOf: manifestURL)
         let decoder = JSONDecoder()
         let manifest = try decoder.decode(PhrasePackManifest.self, from: data)
-        if manifest.formatVersion < PhrasePackFormat.currentVersion {
+        if manifest.formatVersion > PhrasePackFormat.currentVersion {
             throw PhrasePackError.unsupportedVersion(manifest.formatVersion)
         }
         return manifest

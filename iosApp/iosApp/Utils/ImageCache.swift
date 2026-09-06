@@ -11,6 +11,14 @@ class ImageCache {
     private init() {
         cache.countLimit = 100
         cache.totalCostLimit = 50 * 1024 * 1024 // 50MB
+
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.clear()
+        }
     }
     
     /// Get cached image
