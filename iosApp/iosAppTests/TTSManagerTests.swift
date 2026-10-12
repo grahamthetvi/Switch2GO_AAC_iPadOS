@@ -1,3 +1,4 @@
+import AVFoundation
 import XCTest
 @testable import iosApp
 
@@ -26,6 +27,27 @@ class TTSManagerTests: XCTestCase {
         ttsManager.speechRate = 0.5
         XCTAssertGreaterThanOrEqual(ttsManager.speechRate, 0.0)
         XCTAssertLessThanOrEqual(ttsManager.speechRate, 1.0)
+    }
+
+    func testAvSpeechRateFromMultiplier() {
+        let normal = TTSManager.avSpeechRate(fromMultiplier: 1.0)
+        XCTAssertEqual(normal, AVSpeechUtteranceDefaultSpeechRate, accuracy: 0.0001)
+
+        let slow = TTSManager.avSpeechRate(fromMultiplier: 0.6)
+        let fast = TTSManager.avSpeechRate(fromMultiplier: 1.4)
+        XCTAssertGreaterThanOrEqual(slow, AVSpeechUtteranceMinimumSpeechRate)
+        XCTAssertLessThanOrEqual(slow, AVSpeechUtteranceMaximumSpeechRate)
+        XCTAssertGreaterThanOrEqual(fast, AVSpeechUtteranceMinimumSpeechRate)
+        XCTAssertLessThanOrEqual(fast, AVSpeechUtteranceMaximumSpeechRate)
+        XCTAssertLessThan(slow, normal)
+        XCTAssertGreaterThan(fast, normal)
+
+        let belowMin = TTSManager.avSpeechRate(fromMultiplier: 0.1)
+        let aboveMax = TTSManager.avSpeechRate(fromMultiplier: 2.0)
+        XCTAssertEqual(belowMin, slow, accuracy: 0.0001)
+        XCTAssertEqual(aboveMax, fast, accuracy: 0.0001)
+        XCTAssertGreaterThanOrEqual(belowMin, AVSpeechUtteranceMinimumSpeechRate)
+        XCTAssertLessThanOrEqual(aboveMax, AVSpeechUtteranceMaximumSpeechRate)
     }
     
     func testVolumeRange() {

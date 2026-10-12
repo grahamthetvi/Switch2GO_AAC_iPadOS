@@ -1,4 +1,5 @@
 import type { Locale } from '../i18n/i18n'
+import { clampSpeechRate, voiceLangMatchesLocale, type DeviceVoiceInfo } from './speechVoice'
 
 const LOCALE_LANG: Record<Locale, string> = {
   en: 'en-US',
@@ -26,12 +27,21 @@ export function getNativeVoiceCount(): number {
   return speechSynthesis.getVoices().length
 }
 
+export function listNativeVoices(): DeviceVoiceInfo[] {
+  if (!isNativeSpeechSupported()) return []
+  return speechSynthesis.getVoices().map((voice) => ({
+    voiceURI: voice.voiceURI,
+    name: voice.name.trim() || voice.lang || voice.voiceURI,
+    lang: voice.lang,
+  }))
+}
+
 function clearVoiceCache(): void {
   voiceCache.clear()
 }
 
 if (typeof speechSynthesis !== 'undefined') {
-  speechSynthesis.onvoiceschanged = clearVoiceCache
+  speechSynthesis.addEventListener('voiceschanged', clearVoiceCache)
 }
 
 function safeResume(): void {
@@ -86,6 +96,14 @@ function pickVoice(locale: Locale): SpeechSynthesisVoice | null {
   return voice
 }
 
+function pickUtteranceVoice(locale: Locale, voiceURI?: string): SpeechSynthesisVoice | null {
+  if (voiceURI) {
+    const chosen = speechSynthesis.getVoices().find((voice) => voice.voiceURI === voiceURI)
+    if (chosen && voiceLangMatchesLocale(chosen.lang, locale)) return chosen
+  }
+  return pickVoice(locale)
+}
+
 /** Unlock browser speech during a user gesture (required on iOS Safari). */
 export function primeNativeSpeech(): void {
   if (!isNativeSpeechSupported()) return
@@ -104,7 +122,12 @@ export function shouldPreferNativeSpeech(): boolean {
   return getNativeVoiceCount() > 0 || !nativeDisabled
 }
 
-export function tryNativeSpeak(text: string, locale: Locale): boolean {
+export interface NativeSpeakOptions {
+  rate?: number
+  voiceURI?: string
+}
+
+export function tryNativeSpeak(text: string, locale: Locale, options?: NativeSpeakOptions): boolean {
   if (!isNativeSpeechSupported() || nativeDisabled) return false
 
   nativeStartedThisUtterance = false
@@ -116,10 +139,10 @@ export function tryNativeSpeak(text: string, locale: Locale): boolean {
 
   const utterance = new SpeechSynthesisUtterance(text)
   utterance.lang = LOCALE_LANG[locale]
-  utterance.rate = 0.95
+  utterance.rate = clampSpeechRate(options?.rate ?? 1)
   utterance.volume = 1
 
-  const voice = pickVoice(locale)
+  const voice = pickUtteranceVoice(locale, options?.voiceURI)
   if (voice) utterance.voice = voice
 
   utterance.onstart = () => {
@@ -143,10 +166,19 @@ export function nativeSpeakStarted(): boolean {
   return nativeStartedThisUtterance
 }
 
-export function disableNativeSpeech(): void {
-  nativeDisabled = true
+export function cancelNativeSpeech(): void {
   if (isNativeSpeechSupported() && (speechSynthesis.speaking || speechSynthesis.pending)) {
     speechSynthesis.cancel()
   }
   stopKeepAlive()
+}
+
+/** Choosing a device voice clears a previous failure that turned native speech off. */
+export function enableNativeSpeech(): void {
+  nativeDisabled = false
+}
+
+export function disableNativeSpeech(): void {
+  nativeDisabled = true
+  cancelNativeSpeech()
 }

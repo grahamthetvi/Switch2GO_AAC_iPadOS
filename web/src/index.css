@@ -853,6 +853,33 @@ button.settings-hub-row {
   margin: 8px 0 0;
 }
 
+.speech-rate-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.speech-rate-slider {
+  width: 100%;
+  display: block;
+  margin-top: 6px;
+}
+
+.speech-voice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.speech-voice-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
 .settings-intro {
   padding: 0 16px 12px;
   text-align: center;

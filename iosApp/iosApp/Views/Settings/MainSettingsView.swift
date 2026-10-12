@@ -72,6 +72,14 @@ struct MainSettingsView: View {
                             )
                         }
 
+                        NavigationLink(destination: SpeechSettingsView()) {
+                            settingsRow(
+                                title: "Speech",
+                                icon: "waveform",
+                                color: .cyan
+                            )
+                        }
+
                         NavigationLink(destination: AppBorderColorView()) {
                             settingsRow(
                                 title: "App Border Color",

@@ -25,6 +25,8 @@ class AppSettings: ObservableObject {
         static let enableRepeatDwell = "enableRepeatDwell"
         static let repeatDwellDelay = "repeatDwellDelay"
         static let mediaPlaybackDelay = "mediaPlaybackDelay"
+        static let speechRate = "speechRate"
+        static let speechVoiceIdentifier = "speechVoiceIdentifier"
         static let headCameraPosition = "headCameraPosition"
         static let headCameraOffsetYaw = "headCameraOffsetYaw"
         static let headCameraOffsetPitch = "headCameraOffsetPitch"
@@ -206,6 +208,31 @@ class AppSettings: ObservableObject {
         didSet {
             defaults.set(mediaPlaybackDelay, forKey: Keys.mediaPlaybackDelay)
         }
+    }
+
+    /// Speech pace multiplier. 1.0 is the normal pace; stored values stay in 0.6...1.4.
+    @Published var speechRate: Double {
+        didSet {
+            let clamped = Self.clampSpeechRate(speechRate)
+            if speechRate != clamped {
+                speechRate = clamped
+                return
+            }
+            defaults.set(speechRate, forKey: Keys.speechRate)
+        }
+    }
+
+    /// AVSpeechSynthesisVoice identifier. Empty means the system en-US voice.
+    @Published var speechVoiceIdentifier: String {
+        didSet {
+            defaults.set(speechVoiceIdentifier, forKey: Keys.speechVoiceIdentifier)
+        }
+    }
+
+    static let speechRateRange = 0.6...1.4
+
+    static func clampSpeechRate(_ value: Double) -> Double {
+        min(max(value, speechRateRange.lowerBound), speechRateRange.upperBound)
     }
 
     // MARK: - Head Tracking Settings
@@ -397,6 +424,13 @@ class AppSettings: ObservableObject {
         self.enableRepeatDwell = defaults.object(forKey: Keys.enableRepeatDwell) as? Bool ?? false
         self.repeatDwellDelay = defaults.object(forKey: Keys.repeatDwellDelay) as? Double ?? 1.0
         self.mediaPlaybackDelay = defaults.object(forKey: Keys.mediaPlaybackDelay) as? Double ?? 3.0
+        let storedSpeechRate = defaults.object(forKey: Keys.speechRate) as? Double ?? 1.0
+        let clampedSpeechRate = Self.clampSpeechRate(storedSpeechRate)
+        self.speechRate = clampedSpeechRate
+        if defaults.object(forKey: Keys.speechRate) != nil, storedSpeechRate != clampedSpeechRate {
+            defaults.set(clampedSpeechRate, forKey: Keys.speechRate)
+        }
+        self.speechVoiceIdentifier = defaults.string(forKey: Keys.speechVoiceIdentifier) ?? ""
         self.headCameraPosition = defaults.string(forKey: Keys.headCameraPosition) ?? "left"
         self.headCameraOffsetYaw = defaults.object(forKey: Keys.headCameraOffsetYaw) as? Double ?? 4.0
         self.headCameraOffsetPitch = defaults.object(forKey: Keys.headCameraOffsetPitch) as? Double ?? 0.0
@@ -447,6 +481,8 @@ class AppSettings: ObservableObject {
         enableRepeatDwell = false
         repeatDwellDelay = 1.0
         mediaPlaybackDelay = 3.0
+        speechRate = 1.0
+        speechVoiceIdentifier = ""
         headCameraPosition = "left"
         headCameraOffsetYaw = 4.0
         headCameraOffsetPitch = 0.0
@@ -499,6 +535,8 @@ class AppSettings: ObservableObject {
             Keys.enableRepeatDwell: .bool(enableRepeatDwell),
             Keys.repeatDwellDelay: .double(repeatDwellDelay),
             Keys.mediaPlaybackDelay: .double(mediaPlaybackDelay),
+            Keys.speechRate: .double(speechRate),
+            Keys.speechVoiceIdentifier: .string(speechVoiceIdentifier),
             Keys.headCameraPosition: .string(headCameraPosition),
             Keys.headCameraOffsetYaw: .double(headCameraOffsetYaw),
             Keys.headCameraOffsetPitch: .double(headCameraOffsetPitch),
@@ -545,6 +583,8 @@ class AppSettings: ObservableObject {
         if let v = snapshot[Keys.enableRepeatDwell]?.boolValue { enableRepeatDwell = v }
         if let v = snapshot[Keys.repeatDwellDelay]?.doubleValue { repeatDwellDelay = v }
         if let v = snapshot[Keys.mediaPlaybackDelay]?.doubleValue { mediaPlaybackDelay = v }
+        if let v = snapshot[Keys.speechRate]?.doubleValue { speechRate = v }
+        if let v = snapshot[Keys.speechVoiceIdentifier]?.stringValue { speechVoiceIdentifier = v }
         if let v = snapshot[Keys.headCameraPosition]?.stringValue { headCameraPosition = v }
         if let v = snapshot[Keys.headCameraOffsetYaw]?.doubleValue { headCameraOffsetYaw = v }
         if let v = snapshot[Keys.headCameraOffsetPitch]?.doubleValue { headCameraOffsetPitch = v }

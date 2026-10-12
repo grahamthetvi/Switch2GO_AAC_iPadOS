@@ -11,7 +11,7 @@ class TTSManager: NSObject, ObservableObject, @unchecked Sendable, AVSpeechSynth
     @Published var isSpeaking = false
     @Published var currentText: String = ""
     
-    // TTS Settings
+    // TTS Settings. speak() takes rate and voice from AppSettings.
     @Published var speechRate: Float = AVSpeechUtteranceDefaultSpeechRate
     @Published var volume: Float = 1.0
     @Published var selectedVoice: AVSpeechSynthesisVoice?
@@ -167,13 +167,28 @@ class TTSManager: NSObject, ObservableObject, @unchecked Sendable, AVSpeechSynth
         selectedVoice = AVSpeechSynthesisVoice(identifier: identifier)
     }
     
+    /// Maps a 1.0-normal pace multiplier onto Apple's utterance rate, clamped to min/max.
+    static func avSpeechRate(fromMultiplier multiplier: Double) -> Float {
+        let clampedMultiplier = AppSettings.clampSpeechRate(multiplier)
+        let rate = AVSpeechUtteranceDefaultSpeechRate * Float(clampedMultiplier)
+        return min(max(rate, AVSpeechUtteranceMinimumSpeechRate), AVSpeechUtteranceMaximumSpeechRate)
+    }
+
     // MARK: - Private Methods
+
+    private func resolvedVoice() -> AVSpeechSynthesisVoice? {
+        let identifier = AppSettings.shared.speechVoiceIdentifier
+        if !identifier.isEmpty, let voice = AVSpeechSynthesisVoice(identifier: identifier) {
+            return voice
+        }
+        return AVSpeechSynthesisVoice(language: "en-US")
+    }
     
     private func createUtterance(from text: String) -> AVSpeechUtterance {
         let utterance = AVSpeechUtterance(string: text)
-        utterance.rate = speechRate
+        utterance.rate = Self.avSpeechRate(fromMultiplier: AppSettings.shared.speechRate)
         utterance.volume = volume
-        utterance.voice = selectedVoice
+        utterance.voice = resolvedVoice()
         utterance.preUtteranceDelay = 0.1
         utterance.postUtteranceDelay = 0.1
         return utterance

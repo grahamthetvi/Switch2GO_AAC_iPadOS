@@ -74,6 +74,7 @@ export function SettingsHubPage() {
           iconClass="icon-gray"
           subtitle={t('switchControlSubtitle')}
         />
+        <SettingsHubRow to="/settings/speech" title={t('speech')} icon="🔊" iconClass="icon-indigo" />
         <SettingsHubRow to="/settings/language" title={t('language')} icon="🌐" iconClass="icon-teal" />
         <SettingsHubRow
           to="/settings/reset"

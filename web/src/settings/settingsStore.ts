@@ -1,6 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Locale } from '../i18n/i18n'
+import {
+  AUTO_SPEECH_VOICE_ID,
+  DEFAULT_SPEECH_RATE,
+  canonicalSpeechVoiceId,
+  clampSpeechRate,
+} from '../tts/speechVoice'
 
 export type SelectionMode = 'none' | 'eyeGaze' | 'face' | 'armRaise' | 'handGesture'
 export type TrackingMode = '2D' | '3D'
@@ -40,6 +46,8 @@ export interface SettingsState {
   hasSeenOnboarding: boolean
   onboardingRequested: boolean
   locale: Locale
+  speechRate: number
+  speechVoiceId: string
   showDebugCameraPreview: boolean
   enableTrackingDiagnostics: boolean
   debugCameraRotation: number
@@ -75,6 +83,8 @@ export interface SettingsState {
   requestOnboarding: () => void
   clearOnboardingRequest: () => void
   setLocale: (locale: Locale) => void
+  setSpeechRate: (rate: number) => void
+  setSpeechVoiceId: (id: string) => void
   setShowDebugCameraPreview: (v: boolean) => void
   setEnableTrackingDiagnostics: (v: boolean) => void
   setDebugCameraRotation: (v: number) => void
@@ -108,6 +118,8 @@ const defaultSettings = {
   hasSeenOnboarding: false,
   onboardingRequested: false,
   locale: 'en' as Locale,
+  speechRate: DEFAULT_SPEECH_RATE,
+  speechVoiceId: AUTO_SPEECH_VOICE_ID,
   showDebugCameraPreview: false,
   enableTrackingDiagnostics: false,
   debugCameraRotation: -1,
@@ -154,6 +166,8 @@ export const useSettings = create<SettingsState>()(
       requestOnboarding: () => set({ onboardingRequested: true }),
       clearOnboardingRequest: () => set({ onboardingRequested: false }),
       setLocale: (locale) => set({ locale }),
+      setSpeechRate: (rate) => set({ speechRate: clampSpeechRate(rate) }),
+      setSpeechVoiceId: (id) => set({ speechVoiceId: canonicalSpeechVoiceId(id) }),
       setShowDebugCameraPreview: (v) => set({ showDebugCameraPreview: v }),
       setEnableTrackingDiagnostics: (v) => set({ enableTrackingDiagnostics: v }),
       setDebugCameraRotation: (v) => set({ debugCameraRotation: v }),

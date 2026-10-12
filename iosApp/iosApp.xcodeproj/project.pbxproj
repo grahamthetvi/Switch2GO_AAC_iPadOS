@@ -15,6 +15,7 @@
 		24A0B2B173E4C8EAE646CAB2 /* EditCategoriesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 860CAF3FD07D2402ACE6F17F /* EditCategoriesListView.swift */; };
 		26EEA166226F4D2223031C33 /* DebugLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA86A662996EFBF619D755C3 /* DebugLogView.swift */; };
 		4A9DC05F0FE1B4D91993E2C4 /* TimingSensitivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE16E773AC8FA0DE7CF723F /* TimingSensitivityView.swift */; };
+		7B2E9C14A6D853F0E1A4B8C2 /* SpeechSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2E9C14A6D853F0E1A4B8C3 /* SpeechSettingsView.swift */; };
 		6430199225781A2EC54B8A1C /* DebugLogManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4D64032C0CAC0236050700 /* DebugLogManager.swift */; };
 		6F9D8F677D7A99F4AF9D79CE /* Pods_iosApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DE5735DBAE593FDE41C7FB5 /* Pods_iosApp.framework */; };
 		76518EC051174E2BAFB97DCD /* PerformanceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13A5C1818C74A03B44B1F39 /* PerformanceMonitor.swift */; };
@@ -296,6 +297,7 @@
 		F3E3B42493B9E7A444BC1971 /* Pods_iosAppTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_iosAppTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA08BB048AEABF45838E4B73 /* EditPhraseDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = EditPhraseDetailView.swift; path = iosApp/Views/Settings/EditPhrases/EditPhraseDetailView.swift; sourceTree = "<group>"; };
 		FDE16E773AC8FA0DE7CF723F /* TimingSensitivityView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TimingSensitivityView.swift; sourceTree = "<group>"; };
+		7B2E9C14A6D853F0E1A4B8C3 /* SpeechSettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpeechSettingsView.swift; sourceTree = "<group>"; };
 		FE83199A4DC22BC7FEB77C1C /* Pods-iosAppUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosAppUITests.debug.xcconfig"; path = "Target Support Files/Pods-iosAppUITests/Pods-iosAppUITests.debug.xcconfig"; sourceTree = "<group>"; };
 		GAMEF0012F6000GAME000001 /* GamePlaybackCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamePlaybackCoordinator.swift; sourceTree = "<group>"; };
 		GAMEF0022F6000GAME000002 /* GameOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverlayView.swift; sourceTree = "<group>"; };
@@ -646,6 +648,7 @@
 				DCDD8B122F500005000B97D2 /* AppBorderColorView.swift */,
 				260908C7C80788094E37EFFF /* CategoriesDisplaySettingsView.swift */,
 				FDE16E773AC8FA0DE7CF723F /* TimingSensitivityView.swift */,
+				7B2E9C14A6D853F0E1A4B8C3 /* SpeechSettingsView.swift */,
 				8B0070FE64CCC4F111699C64 /* SelectionModeView.swift */,
 				A1B2C3D4E5F60718293A4B5C /* SwitchControlSettingsView.swift */,
 				6761A54E055C85B1954A60F1 /* AdvancedEyeTrackingView.swift */,
@@ -1520,6 +1523,7 @@
 				C1599DE7C948E7994E2BCC47 /* MainSettingsView.swift in Sources */,
 				BB8DD2255E5D649A50D78333 /* CategoriesDisplaySettingsView.swift in Sources */,
 				4A9DC05F0FE1B4D91993E2C4 /* TimingSensitivityView.swift in Sources */,
+				7B2E9C14A6D853F0E1A4B8C2 /* SpeechSettingsView.swift in Sources */,
 				B64C2A9116A78C4F3829B146 /* SelectionModeView.swift in Sources */,
 				A1B2C3D4E5F60718293A4B5D /* SwitchControlSettingsView.swift in Sources */,
 				0D8C3ED393F81935866947B9 /* AdvancedEyeTrackingView.swift in Sources */,
