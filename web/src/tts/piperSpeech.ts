@@ -1,12 +1,7 @@
 import type { TtsSession } from '@mintplex-labs/piper-tts-web'
 import type { Locale } from '../i18n/i18n'
 import { setTtsStatus } from './status'
-
-const PIPER_VOICE: Record<Locale, string> = {
-  en: 'en_US-lessac-medium',
-  fr: 'fr_FR-mls-medium',
-  es: 'es_ES-davefx-medium',
-}
+import { clampSpeechRate, defaultPiperVoiceId } from './speechVoice'
 
 const ORT_WASM_BASE = `${import.meta.env.BASE_URL}ort/`
 
@@ -40,11 +35,13 @@ function stopCurrentAudio(): void {
   currentAudio = null
 }
 
-async function playBlob(blob: Blob): Promise<void> {
+async function playBlob(blob: Blob, playbackRate: number): Promise<void> {
   stopCurrentAudio()
 
   const url = URL.createObjectURL(blob)
   const audio = new Audio(url)
+  audio.playbackRate = playbackRate
+  audio.preservesPitch = true
   currentAudio = audio
 
   await new Promise<void>((resolve, reject) => {
@@ -66,19 +63,32 @@ export function stopPiperSpeech(): void {
   stopCurrentAudio()
 }
 
-export function speakWithPiper(text: string, locale: Locale): Promise<void> {
+export interface PiperSpeakOptions {
+  voiceId?: string
+  playbackRate?: number
+}
+
+export function speakWithPiper(
+  text: string,
+  locale: Locale,
+  options?: PiperSpeakOptions,
+): Promise<void> {
   const trimmed = text.trim()
   if (!trimmed) return Promise.resolve()
+
+  const requestedVoiceId = options?.voiceId?.trim()
+  const voiceId = requestedVoiceId ? requestedVoiceId : defaultPiperVoiceId(locale)
+  const playbackRate = clampSpeechRate(options?.playbackRate ?? 1)
 
   speakQueue = speakQueue
     .catch(() => {})
     .then(async () => {
       setTtsStatus({ state: 'loading', message: 'Preparing speech…' })
       try {
-        const session = await getTtsSession(PIPER_VOICE[locale])
+        const session = await getTtsSession(voiceId)
         const blob = await session.predict(trimmed)
         setTtsStatus({ state: 'speaking', message: null })
-        await playBlob(blob)
+        await playBlob(blob, playbackRate)
         setTtsStatus({ state: 'idle', message: null })
       } catch (e) {
         const message =

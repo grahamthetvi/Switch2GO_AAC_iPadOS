@@ -22,6 +22,7 @@ import { SelectionModePage } from './pages/settings/SelectionModePage'
 import { SwitchControlPage } from './pages/settings/SwitchControlPage'
 import { TimingSensitivityPage } from './pages/settings/TimingSensitivityPage'
 import { LanguagePage } from './pages/settings/LanguagePage'
+import { SpeechPage } from './pages/settings/SpeechPage'
 import { PrivacyPolicyPage } from './pages/settings/PrivacyPolicyPage'
 import { ThirdPartyNoticesPage } from './pages/settings/ThirdPartyNoticesPage'
 import { DataBackupPage } from './pages/settings/DataBackupPage'
@@ -98,6 +99,7 @@ export default function App() {
           <Route path="/settings/head-tracking" element={<HeadTrackingPage />} />
           <Route path="/settings/switch-control" element={<SwitchControlPage />} />
           <Route path="/settings/language" element={<LanguagePage />} />
+          <Route path="/settings/speech" element={<SpeechPage />} />
           <Route path="/settings/backup" element={<DataBackupPage />} />
           <Route path="/settings/troubleshooting" element={<TroubleshootingPage />} />
           <Route path="/settings/privacy" element={<PrivacyPolicyPage />} />

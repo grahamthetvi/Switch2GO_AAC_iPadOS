@@ -25,6 +25,8 @@ class AppSettings: ObservableObject {
         static let enableRepeatDwell = "enableRepeatDwell"
         static let repeatDwellDelay = "repeatDwellDelay"
         static let mediaPlaybackDelay = "mediaPlaybackDelay"
+        static let speechRate = "speechRate"
+        static let speechVoiceIdentifier = "speechVoiceIdentifier"
         static let headCameraPosition = "headCameraPosition"
         static let headCameraOffsetYaw = "headCameraOffsetYaw"
         static let headCameraOffsetPitch = "headCameraOffsetPitch"
@@ -205,6 +207,31 @@ class AppSettings: ObservableObject {
         }
     }
 
+    /// Speech pace multiplier. 1.0 is the normal pace; stored values stay in 0.6...1.4.
+    @Published var speechRate: Double {
+        didSet {
+            let clamped = Self.clampSpeechRate(speechRate)
+            if speechRate != clamped {
+                speechRate = clamped
+                return
+            }
+            defaults.set(speechRate, forKey: Keys.speechRate)
+        }
+    }
+
+    /// AVSpeechSynthesisVoice identifier. Empty means the system en-US voice.
+    @Published var speechVoiceIdentifier: String {
+        didSet {
+            defaults.set(speechVoiceIdentifier, forKey: Keys.speechVoiceIdentifier)
+        }
+    }
+
+    static let speechRateRange = 0.6...1.4
+
+    static func clampSpeechRate(_ value: Double) -> Double {
+        min(max(value, speechRateRange.lowerBound), speechRateRange.upperBound)
+    }
+
     // MARK: - Head Tracking Settings
 
     /// Camera position preset: "center", "left", "right", "custom"
@@ -358,6 +385,13 @@ class AppSettings: ObservableObject {
         self.enableRepeatDwell = defaults.object(forKey: Keys.enableRepeatDwell) as? Bool ?? false
         self.repeatDwellDelay = defaults.object(forKey: Keys.repeatDwellDelay) as? Double ?? 1.0
         self.mediaPlaybackDelay = defaults.object(forKey: Keys.mediaPlaybackDelay) as? Double ?? 5.0
+        let storedSpeechRate = defaults.object(forKey: Keys.speechRate) as? Double ?? 1.0
+        let clampedSpeechRate = Self.clampSpeechRate(storedSpeechRate)
+        self.speechRate = clampedSpeechRate
+        if defaults.object(forKey: Keys.speechRate) != nil, storedSpeechRate != clampedSpeechRate {
+            defaults.set(clampedSpeechRate, forKey: Keys.speechRate)
+        }
+        self.speechVoiceIdentifier = defaults.string(forKey: Keys.speechVoiceIdentifier) ?? ""
         self.headCameraPosition = defaults.string(forKey: Keys.headCameraPosition) ?? "left"
         self.headCameraOffsetYaw = defaults.object(forKey: Keys.headCameraOffsetYaw) as? Double ?? 4.0
         self.headCameraOffsetPitch = defaults.object(forKey: Keys.headCameraOffsetPitch) as? Double ?? 0.0
@@ -404,6 +438,8 @@ class AppSettings: ObservableObject {
         enableRepeatDwell = false
         repeatDwellDelay = 1.0
         mediaPlaybackDelay = 5.0
+        speechRate = 1.0
+        speechVoiceIdentifier = ""
         headCameraPosition = "left"
         headCameraOffsetYaw = 4.0
         headCameraOffsetPitch = 0.0

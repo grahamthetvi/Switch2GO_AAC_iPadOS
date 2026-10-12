@@ -69,6 +69,8 @@ class AppSettingsTests: XCTestCase {
         settings.symbolCount = 7
         settings.dwellTime = 2.5
         settings.sensitivity = 2
+        settings.speechRate = 1.25
+        settings.speechVoiceIdentifier = "com.apple.voice.example"
         
         // Reset
         settings.resetToDefaults()
@@ -79,5 +81,51 @@ class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.sensitivity, 1)
         XCTAssertEqual(settings.trackingMode, "2D")
         XCTAssertEqual(settings.smoothingMode, "adaptive")
+        XCTAssertEqual(settings.speechRate, 1.0, accuracy: 0.0001)
+        XCTAssertEqual(settings.speechVoiceIdentifier, "")
+    }
+
+    func testClampSpeechRateHelper() {
+        XCTAssertEqual(AppSettings.clampSpeechRate(1.0), 1.0, accuracy: 0.0001)
+        XCTAssertEqual(AppSettings.clampSpeechRate(0.6), 0.6, accuracy: 0.0001)
+        XCTAssertEqual(AppSettings.clampSpeechRate(1.4), 1.4, accuracy: 0.0001)
+        XCTAssertEqual(AppSettings.clampSpeechRate(0.59), 0.6, accuracy: 0.0001)
+        XCTAssertEqual(AppSettings.clampSpeechRate(1.41), 1.4, accuracy: 0.0001)
+        XCTAssertEqual(AppSettings.speechRateRange.lowerBound, 0.6, accuracy: 0.0001)
+        XCTAssertEqual(AppSettings.speechRateRange.upperBound, 1.4, accuracy: 0.0001)
+    }
+
+    func testSpeechRateDefaultAndClamp() {
+        let originalRate = settings.speechRate
+        defer { settings.speechRate = originalRate }
+
+        settings.speechRate = 1.0
+        XCTAssertEqual(settings.speechRate, 1.0, accuracy: 0.0001)
+
+        settings.speechRate = 0.6
+        XCTAssertEqual(settings.speechRate, 0.6, accuracy: 0.0001)
+
+        settings.speechRate = 1.4
+        XCTAssertEqual(settings.speechRate, 1.4, accuracy: 0.0001)
+
+        settings.speechRate = 0.1
+        XCTAssertEqual(settings.speechRate, 0.6, accuracy: 0.0001)
+
+        settings.speechRate = 2.0
+        XCTAssertEqual(settings.speechRate, 1.4, accuracy: 0.0001)
+
+        settings.speechRate = 0.95
+        XCTAssertEqual(settings.speechRate, 0.95, accuracy: 0.0001)
+    }
+
+    func testSpeechVoiceIdentifierDefault() {
+        let originalVoice = settings.speechVoiceIdentifier
+        defer { settings.speechVoiceIdentifier = originalVoice }
+
+        settings.speechVoiceIdentifier = "com.apple.voice.example"
+        XCTAssertEqual(settings.speechVoiceIdentifier, "com.apple.voice.example")
+
+        settings.speechVoiceIdentifier = ""
+        XCTAssertEqual(settings.speechVoiceIdentifier, "")
     }
 }

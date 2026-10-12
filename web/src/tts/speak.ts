@@ -1,16 +1,19 @@
 import type { Locale } from '../i18n/i18n'
 import { useSettings } from '../settings/settingsStore'
 import {
+  cancelNativeSpeech,
   disableNativeSpeech,
   isNativeSpeechDisabled,
   isNativeSpeechSupported,
+  listNativeVoices,
   nativeSpeakStarted,
   primeNativeSpeech,
   shouldPreferNativeSpeech,
   tryNativeSpeak,
 } from './nativeSpeech'
-import { speakWithPiper, stopPiperSpeech } from './piperSpeech'
+import { speakWithPiper, stopPiperSpeech, type PiperSpeakOptions } from './piperSpeech'
 import { setTtsStatus } from './status'
+import { clampSpeechRate, defaultPiperVoiceId, resolveSpeechVoiceId } from './speechVoice'
 
 const NATIVE_START_TIMEOUT_MS = 450
 
@@ -29,18 +32,30 @@ export function speak(text: string, locale?: Locale): void {
   const trimmed = text.trim()
   if (!trimmed) return
 
-  const activeLocale = locale ?? useSettings.getState().locale
+  const settings = useSettings.getState()
+  const activeLocale = locale ?? settings.locale
+  const playbackRate = clampSpeechRate(settings.speechRate)
+  const choice = resolveSpeechVoiceId(settings.speechVoiceId, activeLocale, listNativeVoices())
+  const piperOptions: PiperSpeakOptions = {
+    playbackRate,
+    voiceId: choice.kind === 'piper' ? choice.voiceId : defaultPiperVoiceId(activeLocale),
+  }
+
   primeNativeSpeech()
   setTtsStatus({ state: 'speaking', message: null })
 
-  if (!shouldPreferNativeSpeech()) {
-    void speakWithPiper(trimmed, activeLocale).catch(() => {})
+  if (choice.kind === 'piper' || !shouldPreferNativeSpeech()) {
+    cancelNativeSpeech()
+    void speakWithPiper(trimmed, activeLocale, piperOptions).catch(() => {})
     return
   }
 
-  const nativeAttempted = tryNativeSpeak(trimmed, activeLocale)
+  const nativeAttempted = tryNativeSpeak(trimmed, activeLocale, {
+    rate: playbackRate,
+    voiceURI: choice.kind === 'device' ? choice.voiceURI : undefined,
+  })
   if (!nativeAttempted) {
-    void speakWithPiper(trimmed, activeLocale).catch(() => {})
+    void speakWithPiper(trimmed, activeLocale, piperOptions).catch(() => {})
     return
   }
 
@@ -53,14 +68,12 @@ export function speak(text: string, locale?: Locale): void {
     }
 
     disableNativeSpeech()
-    void speakWithPiper(trimmed, activeLocale).catch(() => {})
+    void speakWithPiper(trimmed, activeLocale, piperOptions).catch(() => {})
   }, NATIVE_START_TIMEOUT_MS)
 }
 
 export function stopSpeech(): void {
-  if (isNativeSpeechSupported() && (speechSynthesis.speaking || speechSynthesis.pending)) {
-    speechSynthesis.cancel()
-  }
+  cancelNativeSpeech()
   stopPiperSpeech()
   setTtsStatus({ state: 'idle', message: null })
 }
