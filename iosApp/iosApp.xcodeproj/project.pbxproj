@@ -106,6 +106,8 @@
 		PACKB0072F7000PACK000001 /* PhrasePackImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0072F7000PACK000001 /* PhrasePackImportView.swift */; };
 		PACKB0082F7000PACK000001 /* PhrasePackSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PACKF0082F7000PACK000001 /* PhrasePackSettingsView.swift */; };
 		SWOUT0022F700001000B97D1 /* ESP32SwitchOutputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = SWOUT0012F700001000B97D1 /* ESP32SwitchOutputManager.swift */; };
+		SCAN0022F800001000A5C01 /* AACScannerProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCAN0012F800001000A5C01 /* AACScannerProtocol.swift */; };
+		SCAN0042F800001000A5C01 /* AACScannerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCAN0032F800001000A5C01 /* AACScannerManager.swift */; };
 		TPN0012F6000TPN00000001 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */; };
 		TPN0022F6000TPN00000002 /* ThirdPartyNoticesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */; };
 /* End PBXBuildFile section */
@@ -312,6 +314,8 @@
 		PACKF0072F7000PACK000001 /* PhrasePackImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackImportView.swift; sourceTree = "<group>"; };
 		PACKF0082F7000PACK000001 /* PhrasePackSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasePackSettingsView.swift; sourceTree = "<group>"; };
 		SWOUT0012F700001000B97D1 /* ESP32SwitchOutputManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESP32SwitchOutputManager.swift; sourceTree = "<group>"; };
+		SCAN0012F800001000A5C01 /* AACScannerProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AACScannerProtocol.swift; sourceTree = "<group>"; };
+		SCAN0032F800001000A5C01 /* AACScannerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AACScannerManager.swift; sourceTree = "<group>"; };
 		TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
 		TPN0042F6000TPN00000004 /* ThirdPartyNoticesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThirdPartyNoticesView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -606,6 +610,8 @@
 				AA1000022F400AA100000002 /* DwellSelectionManager.swift */,
 				AA1000042F400AA100000003 /* SwitchControlManager.swift */,
 				SWOUT0012F700001000B97D1 /* ESP32SwitchOutputManager.swift */,
+				SCAN0012F800001000A5C01 /* AACScannerProtocol.swift */,
+				SCAN0032F800001000A5C01 /* AACScannerManager.swift */,
 				BODYARM0012F700001000B97D1 /* ArmRaiseDetector.swift */,
 				BODYHAND0012F700001000B97D5 /* HandGestureDetector.swift */,
 			);
@@ -1488,6 +1494,8 @@
 				AA1000032F400AA100000002 /* DwellSelectionManager.swift in Sources */,
 				AA1000052F400AA100000003 /* SwitchControlManager.swift in Sources */,
 				SWOUT0022F700001000B97D1 /* ESP32SwitchOutputManager.swift in Sources */,
+				SCAN0022F800001000A5C01 /* AACScannerProtocol.swift in Sources */,
+				SCAN0042F800001000A5C01 /* AACScannerManager.swift in Sources */,
 				DCE330522F304AC900ED4C53 /* AACGridView.swift in Sources */,
 				DCDD8AC22F3185E9000B97D2 /* PhraseStyleExtensions.swift in Sources */,
 				DCDD8AC32F3185E9000B97D2 /* DatabaseManager.swift in Sources */,

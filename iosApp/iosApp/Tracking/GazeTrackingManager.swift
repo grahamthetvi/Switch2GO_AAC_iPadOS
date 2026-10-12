@@ -37,6 +37,9 @@ class GazeTrackingManager: ObservableObject {
 
     /// iPad → ESP32 switch OUTPUT (PowerLink pulse). Independent of HID input.
     let switchOutputManager = ESP32SwitchOutputManager()
+
+    /// AAC Scanner switch input (HID choice keys + GATT status highlight).
+    let scannerManager = AACScannerManager()
     
     // Raw gaze values for calibration (normalized -1 to 1)
     var rawGazeX: Float = 0.0
@@ -1083,26 +1086,56 @@ class GazeTrackingManager: ObservableObject {
         // Bind switch manager to dwell manager so switch presses trigger selection
         dwellManager.bindSwitchControl(switchManager)
 
+        scannerManager.$lastStatus
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] status in
+                guard let self, let status else { return }
+                self.switchManager.applyScannerStatus(status)
+            }
+            .store(in: &cancellables)
+
+        scannerManager.$isDrivingHighlight
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] driving in
+                guard let self else { return }
+                if driving {
+                    self.switchManager.beginScannerInput()
+                } else {
+                    self.switchManager.stopScannerHighlight()
+                }
+            }
+            .store(in: &cancellables)
+
         // Apply saved settings to switch manager
         applySwitchSettings(settings)
 
         if settings.switchControlEnabled {
             switchManager.initialize()
+            startScannerInput()
         }
     }
 
     /// Apply current settings to the switch control manager.
     func applySwitchSettings(_ settings: AppSettings) {
         switchManager.apply(configuration: settings.switchControlConfiguration())
+        scannerManager.syncChoiceCount(settings.symbolCount)
     }
 
     /// Enable or disable switch control. Call when the setting changes.
     func setSwitchControlEnabled(_ enabled: Bool) {
         if enabled {
             switchManager.initialize()
+            startScannerInput()
         } else {
             switchManager.shutdown()
+            scannerManager.stopListening()
         }
+    }
+
+    private func startScannerInput() {
+        scannerManager.syncChoiceCount(AppSettings.shared.symbolCount)
+        scannerManager.start()
+        scannerManager.startScanning()
     }
 
     // MARK: - Settings Mapping

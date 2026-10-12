@@ -110,6 +110,53 @@ final class SwitchControlDedupeTests: XCTestCase {
         )
     }
 
+    func testDigitsOneThroughFourMapToPhraseSlots() {
+        XCTAssertEqual(SwitchControlManager.scannerPhraseSlot(forHID: 30), 0)
+        XCTAssertEqual(SwitchControlManager.scannerPhraseSlot(forHID: 31), 1)
+        XCTAssertEqual(SwitchControlManager.scannerPhraseSlot(forHID: 32), 2)
+        XCTAssertEqual(SwitchControlManager.scannerPhraseSlot(forHID: 33), 3)
+        XCTAssertNil(SwitchControlManager.scannerPhraseSlot(forHID: 40))
+    }
+
+    func testTrailingEnterAfterChoiceDigitIsIgnored() {
+        XCTAssertTrue(
+            SwitchControlManager.shouldIgnoreTrailingEnter(
+                hidCode: 40,
+                now: 100.10,
+                lastChoiceDigitTime: 100.0,
+                enterIsMappedSwitch: false
+            )
+        )
+    }
+
+    func testTrailingEnterOutsideWindowIsNotIgnored() {
+        XCTAssertFalse(
+            SwitchControlManager.shouldIgnoreTrailingEnter(
+                hidCode: 40,
+                now: 100.20,
+                lastChoiceDigitTime: 100.0,
+                enterIsMappedSwitch: false
+            )
+        )
+    }
+
+    func testMappedEnterIsNotIgnored() {
+        XCTAssertFalse(
+            SwitchControlManager.shouldIgnoreTrailingEnter(
+                hidCode: 40,
+                now: 100.05,
+                lastChoiceDigitTime: 100.0,
+                enterIsMappedSwitch: true
+            )
+        )
+    }
+
+    func testOnePhraseSlotIsNotClampedToTwo() {
+        var configuration = SwitchControlConfiguration()
+        configuration.phraseSlotCount = 1
+        XCTAssertEqual(configuration.clampedPhraseSlotCount, 1)
+    }
+
     func testFourSwitchReadingOrderIsRowMajor() {
         let ids = ["d", "c", "b", "a"]
         let frames: [String: CGRect] = [
