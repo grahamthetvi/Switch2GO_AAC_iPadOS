@@ -19,6 +19,7 @@ struct SwitchControlSettingsView: View {
         ScrollView {
             VStack(spacing: 20) {
                 enableSection
+                scannerSection
                 environmentalControlSection
 
                 if settings.switchControlEnabled {
@@ -88,7 +89,7 @@ struct SwitchControlSettingsView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("External Switches")
                         .font(.headline)
-                    Text("ESP32 Bluetooth switch interface (Switch2GO-XXXX)")
+                    Text("AAC Scanner or Switch2GO-XXXX Bluetooth switches")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -98,6 +99,12 @@ struct SwitchControlSettingsView: View {
         .background(Color(UIColor.secondarySystemBackground))
         .cornerRadius(12)
         .padding(.horizontal)
+    }
+
+    // MARK: - AAC Scanner
+
+    private var scannerSection: some View {
+        AACScannerCard(scanner: gazeManager.scannerManager)
     }
 
     // MARK: - Environmental control (iPad → ESP32 → PowerLink)
@@ -157,7 +164,7 @@ struct SwitchControlSettingsView: View {
         if gazeManager.switchManager.isConnected {
             return "Press a switch to test. Keys must match mapping below."
         }
-        return "Pair Switch2GO-XXXX in iPad Settings → Bluetooth, then press a wired switch (or use BOOT multi-tap)."
+        return "Pair AAC Scanner or Switch2GO-XXXX in iPad Settings → Bluetooth, then press the switch."
     }
 
     // MARK: - Mode picker
@@ -463,6 +470,85 @@ private struct SwitchKeyPicker: View {
     NavigationStack {
         SwitchControlSettingsView()
             .environmentObject(GazeTrackingManager())
+    }
+}
+
+private struct AACScannerCard: View {
+    @ObservedObject var scanner: AACScannerManager
+    @StateObject private var settings = AppSettings.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("AAC Scanner")
+                .font(.headline)
+                .padding(.horizontal)
+
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 16) {
+                    ZStack {
+                        Circle()
+                            .fill(scanner.isReady ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
+                            .frame(width: 60, height: 60)
+                        Image(systemName: scanner.isReady ? "lightbulb.fill" : "lightbulb")
+                            .font(.title)
+                            .foregroundColor(scanner.isReady ? .green : .orange)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(scanner.isReady ? "Scanner connected" : "AAC Scanner")
+                            .font(.title3.bold())
+                            .foregroundColor(scanner.isReady ? .green : .primary)
+                        Text(statusDetail)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer()
+                }
+
+                Text("Pair AAC Scanner in iPad Settings → Bluetooth. The board scans the choices; a long press types 1–N and selects that phrase here.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                if scanner.isReady, let status = scanner.lastStatus, !status.keyboardConnected {
+                    Text("Config only: selections will not arrive until a normal reboot. Do not hold Pause while powering on.")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                }
+
+                HStack(spacing: 12) {
+                    Button("Connect") {
+                        scanner.startScanning()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!settings.switchControlEnabled)
+
+                    if scanner.isReady || settings.scannerPeripheralUUID != nil {
+                        Button("Disconnect", role: .destructive) {
+                            scanner.disconnect()
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+            }
+            .padding()
+            .background(Color(UIColor.secondarySystemBackground))
+            .cornerRadius(12)
+            .padding(.horizontal)
+        }
+    }
+
+    private var statusDetail: String {
+        if let name = scanner.connectedDeviceName, scanner.isReady {
+            if let status = scanner.lastStatus {
+                if status.state == .paused || status.choice == 0 {
+                    return "\(name) — \(status.state.displayName)"
+                }
+                return "\(name) — \(status.state.displayName), choice \(status.choice)"
+            }
+            return name
+        }
+        return scanner.state.statusText
     }
 }
 

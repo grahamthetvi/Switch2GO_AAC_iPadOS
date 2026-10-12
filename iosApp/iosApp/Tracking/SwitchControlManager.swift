@@ -60,7 +60,7 @@ enum SwitchControlMode: String, CaseIterable, Identifiable {
 struct SwitchControlConfiguration: Equatable {
     var mode: SwitchControlMode = .directPhrase
     var scanInterval: TimeInterval = 1.5
-    /// Phrases on screen (2–4); limits active switches in direct phrase mode.
+    /// Phrases on screen (1–4); limits active switches in direct phrase mode.
     var phraseSlotCount: Int = 2
     /// Scanning: HID code for the select switch (default key "1").
     var scanSelectKeyHID: Int = 30
@@ -69,9 +69,11 @@ struct SwitchControlConfiguration: Equatable {
     /// Direct phrase: HID codes for slots 1–4 (default keys "1"–"4").
     var phraseKeyHIDs: [Int] = [30, 31, 32, 33]
 
-    static let minPhraseSlots = 2
+    static let minPhraseSlots = 1
     static let maxPhraseSlots = 4
     static let scanningSwitchCount = 2
+    static let enterHIDUsage = 40
+    static let trailingEnterWindow: TimeInterval = 0.15
 
     var clampedPhraseSlotCount: Int {
         min(max(phraseSlotCount, Self.minPhraseSlots), Self.maxPhraseSlots)
@@ -143,6 +145,8 @@ final class SwitchControlManager: NSObject, ObservableObject {
     @Published private(set) var connectedDeviceName: String?
     @Published private(set) var lastSwitchEvent: SwitchEvent?
     @Published private(set) var scanHighlightedButtonId: String?
+    /// True while AAC Scanner status notifications are driving the on-screen highlight.
+    @Published private(set) var isScannerDrivingHighlight = false
 
     // MARK: - Configuration
 
@@ -176,6 +180,8 @@ final class SwitchControlManager: NSObject, ObservableObject {
     private var isListening = false
     /// Deduplicate GCKeyboard + UIKit delivering the same HID event.
     private var lastHIDKey: (code: Int, pressed: Bool, time: TimeInterval)?
+    private var lastChoiceDigitTime: TimeInterval?
+    private var lastScannerStatus: AACScannerProtocol.Status?
     static let hidDedupeWindow: TimeInterval = 0.05
     static let scanActionDebounce: TimeInterval = 0.05
 
@@ -188,11 +194,11 @@ final class SwitchControlManager: NSObject, ObservableObject {
 
         switch configuration.mode {
         case .scanning:
-            if modeChanged || intervalChanged {
+            if (modeChanged || intervalChanged), !isScannerDrivingHighlight {
                 restartScanTimerIfNeeded()
             }
         case .directPhrase:
-            if modeChanged {
+            if modeChanged, !isScannerDrivingHighlight {
                 stopScanning()
             }
         }
@@ -212,9 +218,13 @@ final class SwitchControlManager: NSObject, ObservableObject {
         stopScanning()
         removeKeyboardObservers()
         isListening = false
+        isScannerDrivingHighlight = false
+        lastScannerStatus = nil
+        lastChoiceDigitTime = nil
         DispatchQueue.main.async {
             self.isConnected = false
             self.connectedDeviceName = nil
+            self.scanHighlightedButtonId = nil
         }
     }
 
@@ -224,13 +234,18 @@ final class SwitchControlManager: NSObject, ObservableObject {
         let changed = phraseButtonIds != buttonIds
         phraseButtonIds = buttonIds
         scanIndex = min(scanIndex, max(buttonIds.count - 1, 0))
-        updateScanHighlight()
+        if isScannerDrivingHighlight, let lastScannerStatus {
+            applyScannerStatus(lastScannerStatus)
+        } else {
+            updateScanHighlight()
+        }
         if changed, !buttonIds.isEmpty {
             DebugLog.debug("Phrase buttons updated: \(buttonIds.count)", tag: "Switch")
         }
     }
 
     func startScanning() {
+        guard !isScannerDrivingHighlight else { return }
         guard configuration.mode == .scanning, !phraseButtonIds.isEmpty else { return }
         scanIndex = 0
         updateScanHighlight()
@@ -244,6 +259,7 @@ final class SwitchControlManager: NSObject, ObservableObject {
     func stopScanning() {
         scanTimer?.invalidate()
         scanTimer = nil
+        if isScannerDrivingHighlight { return }
         DispatchQueue.main.async {
             self.scanHighlightedButtonId = nil
         }
@@ -309,6 +325,71 @@ final class SwitchControlManager: NSObject, ObservableObject {
         handleHIDKey(hidUsageCode, pressed: pressed, source: "UIKit")
     }
 
+    func shouldHandleHIDKey(_ hidCode: Int) -> Bool {
+        if isScannerDrivingHighlight {
+            if Self.scannerPhraseSlot(forHID: hidCode) != nil { return true }
+            if hidCode == SwitchControlConfiguration.enterHIDUsage { return true }
+        }
+        return configuration.activeKeyHIDs.contains(hidCode)
+    }
+
+    /// HID usage 30–33 are keys 1–4 from AAC Scanner (choice N).
+    static func scannerPhraseSlot(forHID hidCode: Int) -> Int? {
+        switch hidCode {
+        case 30: return 0
+        case 31: return 1
+        case 32: return 2
+        case 33: return 3
+        default: return nil
+        }
+    }
+
+    static func shouldIgnoreTrailingEnter(
+        hidCode: Int,
+        now: TimeInterval,
+        lastChoiceDigitTime: TimeInterval?,
+        enterIsMappedSwitch: Bool,
+        window: TimeInterval = SwitchControlConfiguration.trailingEnterWindow
+    ) -> Bool {
+        guard hidCode == SwitchControlConfiguration.enterHIDUsage else { return false }
+        if enterIsMappedSwitch { return false }
+        guard let lastChoiceDigitTime else { return false }
+        return now - lastChoiceDigitTime < window
+    }
+
+    func beginScannerInput() {
+        isScannerDrivingHighlight = true
+        scanTimer?.invalidate()
+        scanTimer = nil
+    }
+
+    func applyScannerStatus(_ status: AACScannerProtocol.Status) {
+        beginScannerInput()
+        lastScannerStatus = status
+        let buttonId = AACScannerProtocol.highlightButtonId(
+            choice: status.choice,
+            state: status.state,
+            phraseButtonIds: phraseButtonIds
+        )
+        DispatchQueue.main.async {
+            self.scanHighlightedButtonId = buttonId
+        }
+    }
+
+    func stopScannerHighlight() {
+        guard isScannerDrivingHighlight else { return }
+        isScannerDrivingHighlight = false
+        lastScannerStatus = nil
+        lastChoiceDigitTime = nil
+        if isListening, configuration.mode == .scanning, !phraseButtonIds.isEmpty {
+            startScanning()
+        } else {
+            DispatchQueue.main.async {
+                self.scanHighlightedButtonId = nil
+            }
+        }
+    }
+
     /// Returns true if this event should be ignored as a duplicate of a recent one.
     static func isDuplicateHIDEvent(
         code: Int,
@@ -324,14 +405,32 @@ final class SwitchControlManager: NSObject, ObservableObject {
     }
 
     private func handleHIDKey(_ hidCode: Int, pressed: Bool, source: String) {
-        guard let switchIndex = configuration.activeKeyHIDs.firstIndex(of: hidCode) else { return }
-
         let now = CACurrentMediaTime()
         if Self.isDuplicateHIDEvent(code: hidCode, pressed: pressed, now: now, previous: lastHIDKey) {
             DebugLog.debug("Ignoring duplicate HID \(hidCode) from \(source)", tag: "Switch")
             return
         }
+
+        if isScannerDrivingHighlight, pressed,
+           Self.shouldIgnoreTrailingEnter(
+            hidCode: hidCode,
+            now: now,
+            lastChoiceDigitTime: lastChoiceDigitTime,
+            enterIsMappedSwitch: configuration.activeKeyHIDs.contains(SwitchControlConfiguration.enterHIDUsage)
+           ) {
+            lastHIDKey = (hidCode, pressed, now)
+            DebugLog.debug("Ignoring AAC Scanner trailing Enter", tag: "Switch")
+            return
+        }
+
+        let scannerSlot = isScannerDrivingHighlight ? Self.scannerPhraseSlot(forHID: hidCode) : nil
+        let switchIndex = scannerSlot ?? configuration.activeKeyHIDs.firstIndex(of: hidCode)
+        guard let switchIndex else { return }
+
         lastHIDKey = (hidCode, pressed, now)
+        if pressed, scannerSlot != nil {
+            lastChoiceDigitTime = now
+        }
 
         markConnected()
 
@@ -341,7 +440,7 @@ final class SwitchControlManager: NSObject, ObservableObject {
             timestamp: now
         )
 
-        let role = roleLabel(for: switchIndex)
+        let role = scannerSlot != nil ? "Phrase \(switchIndex + 1)" : roleLabel(for: switchIndex)
         DebugLog.info(
             "\(source): HID=\(hidCode) \(pressed ? "PRESS" : "release") → \(role)",
             tag: "Switch"
@@ -357,7 +456,11 @@ final class SwitchControlManager: NSObject, ObservableObject {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         }
 
-        dispatchPress(switchIndex: switchIndex)
+        if scannerSlot != nil {
+            handleDirectPhrasePress(switchIndex: switchIndex)
+        } else {
+            dispatchPress(switchIndex: switchIndex)
+        }
     }
 
     private func dispatchPress(switchIndex: Int) {
@@ -411,6 +514,7 @@ final class SwitchControlManager: NSObject, ObservableObject {
     // MARK: - Scan timer
 
     private func restartScanTimerIfNeeded() {
+        guard !isScannerDrivingHighlight else { return }
         guard configuration.mode == .scanning, !phraseButtonIds.isEmpty else { return }
         scanTimer?.invalidate()
         scanTimer = Timer.scheduledTimer(withTimeInterval: configuration.scanInterval, repeats: true) { [weak self] _ in
@@ -501,7 +605,7 @@ final class KeyPressInterceptorViewController: UIViewController {
         for press in presses {
             guard let key = press.key else { continue }
             let hidCode = Int(key.keyCode.rawValue)
-            if manager.configuration.activeKeyHIDs.contains(hidCode) {
+            if manager.shouldHandleHIDKey(hidCode) {
                 manager.handleUIKitKeyPress(hidUsageCode: hidCode, pressed: pressed)
                 handled = true
             }

@@ -388,6 +388,10 @@ struct ContentView: View {
 
         switchMgr.setPhraseButtons(buttonIds)
 
+        if switchMgr.isScannerDrivingHighlight {
+            return
+        }
+
         if settings.switchControlMode == SwitchControlMode.scanning.rawValue {
             switchMgr.startScanning()
         } else {
