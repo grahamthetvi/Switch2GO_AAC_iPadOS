@@ -65,12 +65,17 @@ enum LocalizationHelper {
             return langBundle.localizedString(forKey: key, value: fallback, table: nil)
         }
 
-        var resource = LocalizedStringResource(
-            key,
-            defaultValue: String.LocalizationValue(stringLiteral: fallback)
+        // LocalizedStringResource's key is a StaticString, so a runtime key has to
+        // go through String.LocalizationValue. A missing catalog entry comes back
+        // as the key itself; use the caller-supplied fallback in that case.
+        let resolved = String(
+            localized: String.LocalizationValue(stringLiteral: key),
+            locale: language.locale
         )
-        resource.locale = language.locale
-        return String(localized: resource)
+        if resolved == key {
+            return fallback
+        }
+        return resolved
     }
 
     static func format(_ key: String, arguments: [CVarArg]) -> String {
