@@ -56,7 +56,6 @@
 		LANG0003APP000000000001 /* LanguageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LANG0004APP000000000001 /* LanguageSettingsView.swift */; };
 		LANG0005APP000000000001 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = LANG0006APP000000000001 /* Localizable.xcstrings */; };
 		LANG0007APP000000000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = LANG0008APP000000000001 /* InfoPlist.strings */; };
-		LANG000BAPP000000000001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = LANG000CAPP000000000001 /* Localizable.strings */; };
 		LANG000AAPP000000000001 /* PrivacyPolicy.txt in Resources */ = {isa = PBXBuildFile; fileRef = LANG0009APP000000000001 /* PrivacyPolicy.txt */; };
 		DCDD8AD02F3185FF000B97D2 /* AccessibilityHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDD8AC42F3185FF000B97D2 /* AccessibilityHelpers.swift */; };
 		DCDD8AD42F318624000B97D2 /* PhrasesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDD8AD22F318624000B97D2 /* PhrasesViewModel.swift */; };
@@ -205,15 +204,6 @@
 		LANGPPZHANT000000001 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text; name = "zh-Hant"; path = "zh-Hant.lproj/PrivacyPolicy.txt"; sourceTree = "<group>"; };
 		LANGPPJA000000000001 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text; name = ja; path = ja.lproj/PrivacyPolicy.txt; sourceTree = "<group>"; };
 		LANGPPVI000000000001 /* vi */ = {isa = PBXFileReference; lastKnownFileType = text; name = vi; path = vi.lproj/PrivacyPolicy.txt; sourceTree = "<group>"; };
-		LANGLEN00000000000001 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
-		LANGLESS0000000000001 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
-		LANGLFR00000000000001 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
-		LANGLDE00000000000001 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
-		LANGLAR00000000000001 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
-		LANGLZHANS0000000001 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		LANGLZHANT0000000001 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		LANGLJA00000000000001 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
-		LANGLVI00000000000001 /* vi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = vi; path = vi.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DCDD8AC92F3185FF000B97D2 /* TTSManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSManager.swift; sourceTree = "<group>"; };
 		DCDD8AD12F318624000B97D2 /* CategoriesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoriesViewModel.swift; sourceTree = "<group>"; };
 		DCDD8AD22F318624000B97D2 /* PhrasesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhrasesViewModel.swift; sourceTree = "<group>"; };
@@ -526,7 +516,6 @@
 				BODYPOSE0012F700001000B97D6 /* pose_landmarker_lite.task */,
 				BODYGEST0012F700001000B97D2 /* gesture_recognizer.task */,
 				LANG0006APP000000000001 /* Localizable.xcstrings */,
-				LANG000CAPP000000000001 /* Localizable.strings */,
 				LANG0008APP000000000001 /* InfoPlist.strings */,
 				LANG0009APP000000000001 /* PrivacyPolicy.txt */,
 				TPN0032F6000TPN00000003 /* ThirdPartyNotices.txt */,
@@ -1322,7 +1311,6 @@
 				BODYPOSE0022F700001000B97D6 /* pose_landmarker_lite.task in Resources */,
 				BODYGEST0022F700001000B97D2 /* gesture_recognizer.task in Resources */,
 				LANG0005APP000000000001 /* Localizable.xcstrings in Resources */,
-				LANG000BAPP000000000001 /* Localizable.strings in Resources */,
 				LANG0007APP000000000001 /* InfoPlist.strings in Resources */,
 				LANG000AAPP000000000001 /* PrivacyPolicy.txt in Resources */,
 				DCDD8AA52F313DD5000B97D2 /* Assets.xcassets in Resources */,
@@ -1606,22 +1594,6 @@
 				LANGPPVI000000000001 /* vi */,
 			);
 			name = PrivacyPolicy.txt;
-			sourceTree = "<group>";
-		};
-		LANG000CAPP000000000001 /* Localizable.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				LANGLEN00000000000001 /* en */,
-				LANGLESS0000000000001 /* es */,
-				LANGLFR00000000000001 /* fr */,
-				LANGLDE00000000000001 /* de */,
-				LANGLAR00000000000001 /* ar */,
-				LANGLZHANS0000000001 /* zh-Hans */,
-				LANGLZHANT0000000001 /* zh-Hant */,
-				LANGLJA00000000000001 /* ja */,
-				LANGLVI00000000000001 /* vi */,
-			);
-			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
