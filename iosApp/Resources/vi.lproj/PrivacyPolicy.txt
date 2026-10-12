@@ -1,0 +1,136 @@
+CHÍNH SÁCH QUYỀN RIÊNG TƯ
+Cập nhật lần cuối: 26 tháng 1 năm 2026
+Cam kết về quyền riêng tư
+Ứng dụng này được thiết kế với quyền riêng tư là nguyên tắc cốt lõi. Chúng tôi không thu thập, lưu trữ hay truyền bất kỳ thông tin cá nhân nào từ thiết bị của bạn. Mọi tính năng chạy hoàn toàn trên thiết bị, không gửi dữ liệu tới máy chủ bên ngoài.
+
+1. THÔNG TIN CHÚNG TÔI THU THẬP
+Chúng tôi thu thập KHÔNG thông tin. Ứng dụng này không:
+
+Thu thập thông tin cá nhân
+Thu thập dữ liệu khuôn mặt, hình học khuôn mặt hay hình ảnh
+Theo dõi phân tích sử dụng
+Gửi báo cáo sự cố
+Kết nối máy chủ bên ngoài
+Dùng cookie hay công nghệ theo dõi
+Thu thập mã quảng cáo
+Truy cập vị trí của bạn
+Lưu hay truyền dữ liệu camera hoặc micro
+
+
+2. ỨNG DỤNG HOẠT ĐỘNG THẾ NÀO
+Quyền camera (theo dõi mắt và điểm mốc khuôn mặt)
+
+Mục đích: Ứng dụng dùng camera trước và công nghệ MediaPipe để nhận điểm mốc khuôn mặt và theo dõi chuyển động mắt. Người hạn chế vận động có thể điều khiển con trỏ trên màn hình và tương tác không dùng tay.
+Xử lý: Mọi xử lý khuôn mặt, điểm mốc và theo dõi mắt diễn ra nghiêm ngặt trên thiết bị, theo thời gian thực, bằng thị giác máy tính.
+Lưu trữ: Không bao giờ lưu, giữ hay truyền ảnh camera, video, dữ liệu khuôn mặt, hình học khuôn mặt hay dữ liệu theo dõi mắt.
+Quyền kiểm soát: Bạn có thể thu hồi quyền camera bất cứ lúc nào trong cài đặt thiết bị
+
+Quyền micro (tính năng giọng nói)
+
+Mục đích: Ứng dụng có thể xin quyền micro cho tính năng dựa trên giọng nói
+Xử lý: Mọi xử lý giọng nói diễn ra trên thiết bị
+Lưu trữ: Không lưu hay truyền bản ghi âm
+Quyền kiểm soát: Bạn có thể thu hồi quyền micro bất cứ lúc nào trong cài đặt thiết bị
+
+Lưu dữ liệu cục bộ
+
+Ứng dụng lưu tùy chọn, cụm từ tùy chỉnh và cài đặt hiệu chỉnh trên thiết bị
+Dữ liệu này không bao giờ rời thiết bị
+Bạn có thể xóa bằng cách gỡ ứng dụng hoặc xóa dữ liệu ứng dụng trong cài đặt thiết bị
+
+
+3. CHIA SẺ DỮ LIỆU
+Chúng tôi KHÔNG chia sẻ dữ liệu với ai. Vì không thu thập dữ liệu nên không có gì để chia với:
+
+Dịch vụ bên thứ ba
+Nhà quảng cáo
+Công ty phân tích
+Người dùng khác
+Bất kỳ ai khác
+
+
+4. QUYỀN RIÊNG TƯ TRẺ EM (TUÂN THỦ COPPA & FERPA)
+Ứng dụng an toàn cho trẻ em và học sinh mọi lứa tuổi:
+
+Không thu thập dữ liệu: Không thu thập thông tin cá nhân từ bất kỳ ai, kể cả trẻ dưới 13 tuổi
+Dùng trong giáo dục: Thiết kế cho môi trường giáo dục và tuân thủ FERPA
+Kiểm soát của phụ huynh: Phụ huynh và giáo viên kiểm soát đầy đủ qua quyền cấp thiết bị
+Không bên thứ ba: Dữ liệu trẻ em không bao giờ được chia vì không thu thập dữ liệu
+
+
+5. NGƯỜI DÙNG QUỐC TẾ (TUÂN THỦ GDPR)
+Đối với người dùng Khu vực Kinh tế Châu Âu (EEA), Vương quốc Anh và Thụy Sĩ:
+
+Bảo vệ dữ liệu ngay từ thiết kế: Ứng dụng xây trên nền tảng quyền riêng tư
+Quyền của bạn: Vì không thu thập dữ liệu nên không có dữ liệu để xem, sửa, xóa hay chuyển
+Không cần đồng ý thu thập: Chúng tôi không cần đồng ý thu thập vì không thu thập gì
+Cơ sở pháp lý: Không áp dụng — không xử lý dữ liệu cá nhân
+
+
+6. QUYỀN RIÊNG TƯ CÁC BANG HOA KỲ
+Đối với cư dân California, Virginia, Colorado, Connecticut và các bang có luật riêng tư:
+
+Quyền được biết: Chúng tôi không thu thập thông tin cá nhân
+Quyền xóa: Không áp dụng — không thu thập dữ liệu
+Quyền từ chối bán: Không áp dụng — chúng tôi không bán dữ liệu
+Không phân biệt đối xử: Không áp dụng — không có thực tiễn dữ liệu để từ chối
+
+
+7. TIẾP CẬN VÀ CÔNG NGHỆ HỖ TRỢ
+Ứng dụng này là công cụ giao tiếp hỗ trợ:
+
+Mọi tính năng hoạt động ngoại tuyến
+Không cần tài khoản hay đăng nhập
+Bảo vệ riêng tư ngay từ thiết kế cho người khuyết tật
+An toàn khi dùng ở trường, trị liệu và nhà
+
+
+8. BẢO MẬT DỮ LIỆU
+Vì không thu thập hay truyền dữ liệu:
+
+Không rủi ro rò rỉ dữ liệu
+Không mật khẩu hay tài khoản cần bảo vệ
+Mọi xử lý ở lại trên thiết bị
+Quyền riêng tư được bảo vệ ngay từ thiết kế
+
+
+9. GIẢI THÍCH QUYỀN
+Ứng dụng chỉ xin các quyền cần thiết:
+QuyềnMục đíchLưu dữ liệuCameraTheo dõi mắt để điều khiển con trỏKhông — chỉ xử lý thời gian thựcMicroTính năng giọng nói tùy chọnKhông — chỉ xử lý thời gian thực
+Bạn có thể xem và đổi quyền trong Cài đặt thiết bị > Ứng dụng > [Tên ứng dụng] > Quyền.
+
+10. DỊCH VỤ BÊN THỨ BA
+Ứng dụng không dùng dịch vụ bên thứ ba, gồm:
+
+Không nền tảng phân tích
+Không báo cáo sự cố
+Không mạng quảng cáo
+Không dịch vụ đám mây
+Không dịch vụ AI/ML đòi truyền dữ liệu
+
+
+11. THAY ĐỔI CHÍNH SÁCH NÀY
+Nếu chúng tôi thay đổi cách làm về quyền riêng tư (ví dụ thêm tính năng đám mây tùy chọn), chúng tôi sẽ:
+
+Cập nhật chính sách với ngày “Cập nhật lần cuối” mới
+Thông báo trong ứng dụng
+Xin đồng ý trước khi thu thập dữ liệu
+Giữ yêu cầu chọn tham gia cho mọi tính năng thu thập dữ liệu
+
+
+12. MÃ NGUỒN MỞ VÀ MINH BẠCH
+Ứng dụng dựa trên mã nguồn mở, chỉnh để tăng quyền riêng tư. Bạn có thể xem cách hoạt động bằng cách đọc mã nguồn hoặc hỏi chuyên gia kỹ thuật.
+
+13. THÔNG TIN LIÊN HỆ
+Nếu bạn có câu hỏi về chính sách này hoặc cách ứng dụng bảo vệ quyền riêng tư:
+Tên: Addison Graham
+Email: grahamthetvi@icloud.com
+Địa điểm: Illinois
+
+14. SỰ ĐỒNG Ý CỦA BẠN
+Khi dùng ứng dụng này, bạn xác nhận rằng:
+
+Bạn đã đọc chính sách quyền riêng tư này
+Bạn hiểu không thu thập dữ liệu cá nhân
+Bạn cho phép camera/micro chỉ để xử lý cục bộ trên thiết bị
+Bạn có thể thu hồi các quyền này bất cứ lúc nào

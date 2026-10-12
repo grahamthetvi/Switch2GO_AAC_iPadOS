@@ -56,7 +56,7 @@ struct AppBorderColorView: View {
                                     )
                             )
                     }
-                    .accessibilityLabel("Border color option")
+                    .accessibilityLabel(L("Border color option"))
                 }
             }
             .padding(.horizontal)

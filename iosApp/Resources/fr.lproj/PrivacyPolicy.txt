@@ -1,0 +1,136 @@
+POLITIQUE DE CONFIDENTIALITÉ
+Dernière mise à jour : 26 janvier 2026
+Notre engagement envers la confidentialité
+Cette app est conçue avec la confidentialité comme principe fondamental. Nous ne collectons, ne stockons ni ne transmettons aucune information personnelle depuis votre appareil. Toutes les fonctions s’exécutent entièrement sur votre appareil, sans envoi de données vers des serveurs externes.
+
+1. INFORMATIONS QUE NOUS COLLECTONS
+Nous collectons ZÉRO information. Cette app ne :
+
+Collecte pas d’informations personnelles
+Ne collecte pas de données faciales, de géométrie faciale ni d’images
+Ne suit pas d’analyses d’usage
+N’envoie pas de rapports de plantage
+Ne se connecte pas à des serveurs externes
+N’utilise pas de cookies ni de technologies de suivi
+Ne collecte pas d’identifiants publicitaires
+N’accède pas à votre localisation
+Ne stocke ni ne transmet de données caméra ou microphone
+
+
+2. FONCTIONNEMENT DE L’APP
+Accès à la caméra (suivi oculaire et points faciaux)
+
+Objectif : L’app utilise la caméra avant et la technologie MediaPipe pour détecter des points faciaux et suivre les mouvements des yeux. Les personnes à mobilité réduite peuvent ainsi contrôler un pointeur à l’écran et interagir sans les mains.
+Traitement : Tout le traitement du visage, des points faciaux et du suivi oculaire a lieu strictement en local, en temps réel, par vision par ordinateur.
+Stockage : Aucune image caméra, vidéo, donnée faciale, géométrie faciale ni donnée de suivi oculaire n’est jamais stockée, enregistrée ou transmise.
+Votre contrôle : Vous pouvez révoquer l’autorisation caméra à tout moment dans les réglages de l’appareil
+
+Accès au microphone (fonctions vocales)
+
+Objectif : L’app peut demander le microphone pour des fonctions vocales
+Traitement : Tout le traitement vocal a lieu en local sur votre appareil
+Stockage : Aucun enregistrement audio n’est stocké ni transmis
+Votre contrôle : Vous pouvez révoquer l’autorisation microphone à tout moment dans les réglages de l’appareil
+
+Stockage local des données
+
+L’app enregistre préférences, phrases personnalisées et réglages de calibrage en local
+Ces données ne quittent jamais votre appareil
+Vous pouvez les supprimer en désinstallant l’app ou en effaçant les données de l’app dans les réglages
+
+
+3. PARTAGE DES DONNÉES
+Nous ne partageons AUCUNE donnée avec quiconque. Comme nous ne collectons rien, il n’y a rien à partager avec :
+
+Des services tiers
+Des annonceurs
+Des sociétés d’analyse
+D’autres utilisateurs
+Qui que ce soit d’autre
+
+
+4. CONFIDENTIALITÉ DES ENFANTS (CONFORMITÉ COPPA ET FERPA)
+Cette app est sûre pour les enfants et les élèves de tous âges :
+
+Aucune collecte : Nous ne collectons d’informations personnelles de personne, y compris les moins de 13 ans
+Usage éducatif : Conçue pour le milieu scolaire et conforme au FERPA
+Contrôle parental : Parents et éducateurs ont le contrôle via les autorisations de l’appareil
+Pas de tiers : Les données des enfants ne sont jamais partagées car aucune donnée n’est collectée
+
+
+5. UTILISATEURS INTERNATIONAUX (CONFORMITÉ RGPD)
+Pour les utilisateurs de l’Espace économique européen (EEE), du Royaume-Uni et de la Suisse :
+
+Protection dès la conception : L’app est bâtie sur la confidentialité
+Vos droits : Comme nous ne collectons pas de données, il n’y a rien à consulter, corriger, supprimer ou transférer
+Aucun consentement de collecte : Nous n’avons pas besoin de consentement car nous ne collectons rien
+Base juridique : Non applicable — aucun traitement de données personnelles
+
+
+6. DROITS DE CONFIDENTIALITÉ DES ÉTATS AMÉRICAINS
+Pour les résidents de Californie, Virginie, Colorado, Connecticut et d’autres États :
+
+Droit de savoir : Nous ne collectons aucune information personnelle
+Droit de suppression : Non applicable — aucune donnée n’est collectée
+Droit de refus de vente : Non applicable — nous ne vendons pas de données
+Non-discrimination : Non applicable — aucune pratique de données à refuser
+
+
+7. ACCESSIBILITÉ ET AIDES TECHNIQUES
+Cette app est un outil de communication d’assistance :
+
+Toutes les fonctions marchent hors ligne
+Aucun compte ni connexion
+Confidentialité dès la conception pour les personnes en situation de handicap
+Utilisable à l’école, en thérapie et à domicile
+
+
+8. SÉCURITÉ DES DONNÉES
+Comme aucune donnée n’est collectée ni transmise :
+
+Aucun risque de fuite de données
+Aucun mot de passe ni compte à protéger
+Tout le traitement reste sur votre appareil
+Votre vie privée est protégée par conception
+
+
+9. AUTORISATIONS EXPLIQUÉES
+L’app ne demande que les autorisations essentielles :
+AutorisationObjectifStockageCaméraSuivi oculaire pour le pointeurAucun — traitement en temps réel uniquementMicrophoneFonctions vocales optionnellesAucun — traitement en temps réel uniquement
+Vous pouvez revoir et modifier les autorisations dans Réglages de l’appareil > Apps > [Nom de l’app] > Autorisations.
+
+10. SERVICES TIERS
+Cette app n’utilise aucun service tiers, notamment :
+
+Aucune plateforme d’analyse
+Aucun rapport de plantage
+Aucun réseau publicitaire
+Aucun service cloud
+Aucun service IA/ML exigeant une transmission de données
+
+
+11. MODIFICATIONS DE CETTE POLITIQUE
+Si nous changions nos pratiques (par exemple des fonctions cloud optionnelles), nous :
+
+Mettrions à jour cette politique avec une nouvelle date de « Dernière mise à jour »
+Aviserions les utilisateurs dans l’app
+Obtiendrions un consentement avant toute collecte
+Maintiendrions l’opt-in pour toute collecte de données
+
+
+12. OPEN SOURCE ET TRANSPARENCE
+Cette app repose sur du code open source, modifié pour renforcer la confidentialité. Vous pouvez examiner le fonctionnement via le code source ou des experts techniques.
+
+13. CONTACT
+Pour toute question sur cette politique ou les pratiques de confidentialité de l’app :
+Nom : Addison Graham
+E-mail : grahamthetvi@icloud.com
+Lieu : Illinois
+
+14. VOTRE CONSENTEMENT
+En utilisant cette app, vous reconnaissez que :
+
+Vous avez lu cette politique de confidentialité
+Vous comprenez qu’aucune donnée personnelle n’est collectée
+Vous autorisez caméra/microphone uniquement pour un traitement local sur l’appareil
+Vous pouvez révoquer ces autorisations à tout moment

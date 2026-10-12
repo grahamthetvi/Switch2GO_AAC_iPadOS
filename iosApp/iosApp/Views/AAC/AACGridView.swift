@@ -112,7 +112,7 @@ struct PhraseButtonView: View {
         .buttonStyle(.plain)
         .frame(height: 100)
         .accessibilityLabel(phrase)
-        .accessibilityHint("Double tap to speak")
+        .accessibilityHint(L("Double tap to speak"))
     }
 
     private var backgroundColor: Color {

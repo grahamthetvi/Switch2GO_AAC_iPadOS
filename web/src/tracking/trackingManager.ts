@@ -36,6 +36,7 @@ export interface TrackingConfig {
   eyeSelection: EyeSelection
   enableDoubleBlinkRecenter: boolean
   enableAutoRecenter: boolean
+  enableHeadPoseCompensation: boolean
   enableOutOfBoundsHiding: boolean
   showTrackingErrorBanner: boolean
 }
@@ -100,6 +101,7 @@ export class TrackingManager {
     eyeSelection: 'both',
     enableDoubleBlinkRecenter: true,
     enableAutoRecenter: true,
+    enableHeadPoseCompensation: true,
     enableOutOfBoundsHiding: true,
     showTrackingErrorBanner: true,
   }
@@ -250,6 +252,7 @@ export class TrackingManager {
         gazeCameraOffsetX(this.config.headCameraPosition, this.config.headOffsetYaw),
         0.3,
       )
+      gt.setHeadPoseCompensationEnabled(this.config.enableHeadPoseCompensation)
     }
 
     this.headPoseTracker.sensitivityX = this.config.headSensX

@@ -69,6 +69,15 @@ class GazeTracker(
     }
 
     /**
+     * Enable or disable head-pose compensation on 2D and 3D gaze calculators.
+     * Default is on. Turn off when the user aims by turning their head.
+     */
+    fun setHeadPoseCompensationEnabled(enabled: Boolean) {
+        gazeCalculator.headPoseCompensationEnabled = enabled
+        eyeball3DCalculator.headPoseCompensationEnabled = enabled
+    }
+
+    /**
      * Set gaze calculator sensitivity multipliers.
      */
     fun setGazeSensitivity(sensitivityX: Float, sensitivityY: Float) {

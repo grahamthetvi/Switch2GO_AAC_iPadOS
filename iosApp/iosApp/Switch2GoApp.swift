@@ -7,12 +7,16 @@ import Combine
 struct Switch2GoApp: App {
     @StateObject private var appState = AppState()
     @StateObject private var phrasePacks = PhrasePackSession()
+    @StateObject private var settings = AppSettings.shared
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
                 .environmentObject(phrasePacks)
+                .environment(\.locale, settings.resolvedLanguage.locale)
+                .environment(\.layoutDirection, settings.resolvedLanguage.layoutDirection)
+                .id(settings.resolvedLanguage.id)
                 .onOpenURL { url in
                     let ext = url.pathExtension.lowercased()
                     guard ext == PhrasePackFormat.fileExtension || ext == "zip" else { return }
@@ -21,6 +25,8 @@ struct Switch2GoApp: App {
                 .fullScreenCover(isPresented: $phrasePacks.showImportSheet) {
                     PhrasePackImportView()
                         .environmentObject(phrasePacks)
+                        .environment(\.locale, settings.resolvedLanguage.locale)
+                        .environment(\.layoutDirection, settings.resolvedLanguage.layoutDirection)
                 }
         }
     }

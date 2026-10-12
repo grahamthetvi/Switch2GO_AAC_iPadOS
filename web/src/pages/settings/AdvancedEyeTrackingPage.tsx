@@ -132,6 +132,14 @@ export function AdvancedEyeTrackingPage() {
           />
         </label>
         <label className="toggle-row">
+          <span>Head pose compensation (turn off if you look by moving your head)</span>
+          <input
+            type="checkbox"
+            checked={s.enableHeadPoseCompensation}
+            onChange={(e) => s.setEnableHeadPoseCompensation(e.target.checked)}
+          />
+        </label>
+        <label className="toggle-row">
           <span>Debug camera preview</span>
           <input
             type="checkbox"

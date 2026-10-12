@@ -114,7 +114,7 @@ struct PhrasePackImportView: View {
                 switch collision {
                 case .custom(let id, let name):
                     Section {
-                        Text("A category named \"\(name)\" already exists. Importing will add another copy unless you merge into the existing category.")
+                        Text(L("A category named \"%@\" already exists. Importing will add another copy unless you merge into the existing category.", name))
                     }
                     Section {
                         Button("Create another copy") {
@@ -135,7 +135,7 @@ struct PhrasePackImportView: View {
                     }
                 case .preset(let displayName):
                     Section {
-                        Text("\"\(displayName)\" is a built-in board and cannot be changed by a phrase pack. Rename the incoming category or cancel.")
+                        Text(L("\"%@\" is a built-in board and cannot be changed by a phrase pack. Rename the incoming category or cancel.", displayName))
                     }
                     Section {
                         Button("Rename incoming category") {

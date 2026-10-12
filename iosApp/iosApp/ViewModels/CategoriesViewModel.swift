@@ -14,6 +14,10 @@ class CategoriesViewModel: ObservableObject {
     init(database: VocableDatabase = DatabaseManager.shared.db) {
         self.database = database
         loadCategories()
+        NotificationCenter.default.publisher(for: .appLanguageDidChange)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.loadCategories() }
+            .store(in: &cancellables)
     }
     
     /// Load all visible categories
@@ -77,15 +81,7 @@ class CategoriesViewModel: ObservableObject {
     
     /// Get localized category name (natural, conversational)
     private func getCategoryName(for categoryId: String) -> String {
-        switch categoryId {
-        case "preset_routine_activity": return "Daily Activities"
-        case "preset_food_drink": return "Food & Drinks"
-        case "preset_comfort_state": return "How I Feel"
-        case "preset_play_leisure": return "Fun & Games"
-        case "preset_positioning": return "Move Me"
-        case "preset_recents": return "Recently Said"
-        default: return categoryId
-        }
+        CoreVocabulary.categoryName(for: categoryId)
     }
 }
 

@@ -22,10 +22,24 @@ export class GazeTracker {
   private oldGazeX: number | null = null
   private oldGazeY: number | null = null
   private lerpFactor = 0.3
+  private lastGazeX: number | null = null
+  private lastGazeY: number | null = null
+  private lastSmoothTimestampMs: number | null = null
 
   smoothingMode: SmoothingMode = 'adaptive'
   eyeSelection: EyeSelection = 'both'
   trackingMethod: TrackingMethod = '2D'
+
+  private static readonly LEFT_EYE_OUTER = 33
+  private static readonly LEFT_EYE_INNER = 133
+  private static readonly LEFT_EYE_TOP = 159
+  private static readonly LEFT_EYE_BOTTOM = 145
+  private static readonly RIGHT_EYE_OUTER = 362
+  private static readonly RIGHT_EYE_INNER = 263
+  private static readonly RIGHT_EYE_TOP = 386
+  private static readonly RIGHT_EYE_BOTTOM = 374
+  private static readonly LEFT_IRIS_CENTER = 468
+  private static readonly RIGHT_IRIS_CENTER = 473
 
   constructor(screenWidth: number, screenHeight: number) {
     this.screenWidth = screenWidth
@@ -36,11 +50,15 @@ export class GazeTracker {
     this.lerpFactor = Math.min(1, Math.max(0.05, factor))
   }
 
+  /** Match KMP: offsets apply to the iris (2D) calculator only. */
   setGazeOffsets(offsetX: number, offsetY: number): void {
     this.gazeCalculator.offsetX = Math.min(1, Math.max(-1, offsetX))
     this.gazeCalculator.offsetY = Math.min(1, Math.max(-1, offsetY))
-    this.eyeball3DCalculator.offsetX = Math.min(1, Math.max(-1, offsetX))
-    this.eyeball3DCalculator.offsetY = Math.min(1, Math.max(-1, offsetY))
+  }
+
+  setHeadPoseCompensationEnabled(enabled: boolean): void {
+    this.gazeCalculator.headPoseCompensationEnabled = enabled
+    this.eyeball3DCalculator.headPoseCompensationEnabled = enabled
   }
 
   updateScreenDimensions(width: number, height: number): void {
@@ -53,12 +71,12 @@ export class GazeTracker {
     return this.smoothingMode === 'simple'
   }
 
-  processFrame(frame: FaceLandmarkFrame): GazeResult | null {
+  processFrame(frame: FaceLandmarkFrame, timestampMs: number = performance.now()): GazeResult | null {
     const { landmarks, frameWidth, frameHeight } = frame
     if (landmarks.length === 0) return null
     return this.trackingMethod === '3D'
-      ? this.process3D(landmarks, frameWidth, frameHeight)
-      : this.process2D(landmarks, frameWidth, frameHeight)
+      ? this.process3D(landmarks, frameWidth, frameHeight, timestampMs)
+      : this.process2D(landmarks, frameWidth, frameHeight, timestampMs)
   }
 
   /** Linear gaze-to-screen mapping (no calibration UI). */
@@ -76,23 +94,75 @@ export class GazeTracker {
     this.adaptiveKalmanFilter.reset()
     this.oldGazeX = null
     this.oldGazeY = null
+    this.lastGazeX = null
+    this.lastGazeY = null
+    this.lastSmoothTimestampMs = null
+  }
+
+  private blinkOnlyResult(headYaw: number, headPitch: number, headRoll: number): GazeResult {
+    return {
+      gazeX: this.lastGazeX ?? 0,
+      gazeY: this.lastGazeY ?? 0,
+      leftIrisCenter: null,
+      rightIrisCenter: null,
+      confidence: 0,
+      leftBlink: true,
+      rightBlink: true,
+      headYaw,
+      headPitch,
+      headRoll,
+    }
   }
 
   private process2D(
     landmarks: FaceLandmarkFrame['landmarks'],
     frameWidth: number,
     frameHeight: number,
+    timestampMs: number,
   ): GazeResult | null {
     const [headYaw, headPitch, headRoll] = this.gazeCalculator.estimateHeadPose(landmarks)
+    const {
+      LEFT_EYE_OUTER,
+      LEFT_EYE_INNER,
+      LEFT_EYE_TOP,
+      LEFT_EYE_BOTTOM,
+      RIGHT_EYE_OUTER,
+      RIGHT_EYE_INNER,
+      RIGHT_EYE_TOP,
+      RIGHT_EYE_BOTTOM,
+      LEFT_IRIS_CENTER,
+      RIGHT_IRIS_CENTER,
+    } = GazeTracker
+
+    const maxLeft = Math.max(LEFT_EYE_TOP, LEFT_EYE_BOTTOM, LEFT_EYE_OUTER, LEFT_EYE_INNER)
+    const maxRight = Math.max(RIGHT_EYE_TOP, RIGHT_EYE_BOTTOM, RIGHT_EYE_OUTER, RIGHT_EYE_INNER)
 
     const leftBlink =
-      landmarks.length > 145
-        ? this.gazeCalculator.detectBlink(landmarks[159], landmarks[145])
+      landmarks.length > maxLeft
+        ? this.gazeCalculator.detectBlink(
+            landmarks[LEFT_EYE_TOP],
+            landmarks[LEFT_EYE_BOTTOM],
+            landmarks[LEFT_EYE_OUTER],
+            landmarks[LEFT_EYE_INNER],
+            frameWidth,
+            frameHeight,
+          )
         : false
     const rightBlink =
-      landmarks.length > 374
-        ? this.gazeCalculator.detectBlink(landmarks[386], landmarks[374])
+      landmarks.length > maxRight
+        ? this.gazeCalculator.detectBlink(
+            landmarks[RIGHT_EYE_TOP],
+            landmarks[RIGHT_EYE_BOTTOM],
+            landmarks[RIGHT_EYE_OUTER],
+            landmarks[RIGHT_EYE_INNER],
+            frameWidth,
+            frameHeight,
+          )
         : false
+
+    if (leftBlink && rightBlink) {
+      return this.blinkOnlyResult(headYaw, headPitch, headRoll)
+    }
 
     let leftGaze: [number, number] | null = null
     let leftIrisCenter: [number, number] | null = null
@@ -100,11 +170,11 @@ export class GazeTracker {
     let rightIrisCenter: [number, number] | null = null
 
     const useLeft = this.eyeSelection === 'both' || this.eyeSelection === 'left'
-    if (useLeft && !leftBlink && landmarks.length > 468) {
+    if (useLeft && !leftBlink && landmarks.length > LEFT_IRIS_CENTER) {
       const [gaze, center] = this.gazeCalculator.calculateIrisPosition(
-        landmarks[33],
-        landmarks[133],
-        landmarks[468],
+        landmarks[LEFT_EYE_OUTER],
+        landmarks[LEFT_EYE_INNER],
+        landmarks[LEFT_IRIS_CENTER],
         frameWidth,
         frameHeight,
       )
@@ -113,11 +183,11 @@ export class GazeTracker {
     }
 
     const useRight = this.eyeSelection === 'both' || this.eyeSelection === 'right'
-    if (useRight && !rightBlink && landmarks.length > 473) {
+    if (useRight && !rightBlink && landmarks.length > RIGHT_IRIS_CENTER) {
       const [gaze, center] = this.gazeCalculator.calculateIrisPosition(
-        landmarks[362],
-        landmarks[263],
-        landmarks[473],
+        landmarks[RIGHT_EYE_OUTER],
+        landmarks[RIGHT_EYE_INNER],
+        landmarks[RIGHT_IRIS_CENTER],
         frameWidth,
         frameHeight,
       )
@@ -148,7 +218,9 @@ export class GazeTracker {
       headYaw,
       headPitch,
     )
-    const [smoothedX, smoothedY] = this.applySmoothing(compensatedX, compensatedY)
+    const [smoothedX, smoothedY] = this.applySmoothing(compensatedX, compensatedY, timestampMs)
+    this.lastGazeX = smoothedX
+    this.lastGazeY = smoothedY
 
     return {
       gazeX: smoothedX,
@@ -168,6 +240,7 @@ export class GazeTracker {
     landmarks: FaceLandmarkFrame['landmarks'],
     frameWidth: number,
     frameHeight: number,
+    timestampMs: number,
   ): GazeResult | null {
     const calc = this.eyeball3DCalculator
     const {
@@ -184,8 +257,28 @@ export class GazeTracker {
     } = Eyeball3DGazeCalculator
     const [headYaw, headPitch, headRoll] = calc.estimateHeadPose(landmarks, frameWidth, frameHeight)
 
-    const leftBlink = calc.detectBlink(landmarks, LEFT_EYE_TOP, LEFT_EYE_BOTTOM)
-    const rightBlink = calc.detectBlink(landmarks, RIGHT_EYE_TOP, RIGHT_EYE_BOTTOM)
+    const leftBlink = calc.detectBlink(
+      landmarks,
+      LEFT_EYE_TOP,
+      LEFT_EYE_BOTTOM,
+      LEFT_EYE_OUTER,
+      LEFT_EYE_INNER,
+      frameWidth,
+      frameHeight,
+    )
+    const rightBlink = calc.detectBlink(
+      landmarks,
+      RIGHT_EYE_TOP,
+      RIGHT_EYE_BOTTOM,
+      RIGHT_EYE_OUTER,
+      RIGHT_EYE_INNER,
+      frameWidth,
+      frameHeight,
+    )
+
+    if (leftBlink && rightBlink) {
+      return this.blinkOnlyResult(headYaw, headPitch, headRoll)
+    }
 
     const useLeft = this.eyeSelection === 'both' || this.eyeSelection === 'left'
     const useRight = this.eyeSelection === 'both' || this.eyeSelection === 'right'
@@ -221,7 +314,9 @@ export class GazeTracker {
     const combined = calc.combineGaze(leftEye, rightEye, headYaw, headPitch, this.eyeSelection)
     if (!combined) return null
 
-    const [smoothedX, smoothedY] = this.applySmoothing(combined[0], combined[1])
+    const [smoothedX, smoothedY] = this.applySmoothing(combined[0], combined[1], timestampMs)
+    this.lastGazeX = smoothedX
+    this.lastGazeY = smoothedY
 
     const leftIrisCenter: [number, number] | null =
       landmarks.length > LEFT_IRIS_CENTER
@@ -252,7 +347,21 @@ export class GazeTracker {
     }
   }
 
-  private applySmoothing(gazeX: number, gazeY: number): [number, number] {
+  private computeSmoothDt(timestampMs: number): number {
+    const DEFAULT_DT = 1 / 20
+    const MIN_DT = 1 / 120
+    const MAX_DT = 0.25
+    if (this.lastSmoothTimestampMs == null || timestampMs <= 0) {
+      this.lastSmoothTimestampMs = timestampMs
+      return DEFAULT_DT
+    }
+    const dt = (timestampMs - this.lastSmoothTimestampMs) / 1000
+    this.lastSmoothTimestampMs = timestampMs
+    return Math.min(MAX_DT, Math.max(MIN_DT, dt))
+  }
+
+  private applySmoothing(gazeX: number, gazeY: number, timestampMs: number): [number, number] {
+    const dt = this.computeSmoothDt(timestampMs)
     switch (this.smoothingMode) {
       case 'none':
         return [gazeX, gazeY]
@@ -271,11 +380,11 @@ export class GazeTracker {
         return [nx, ny]
       }
       case 'kalman':
-        return this.kalmanFilter.update(gazeX, gazeY)
+        return this.kalmanFilter.update(gazeX, gazeY, dt)
       case 'adaptive':
-        return this.adaptiveKalmanFilter.update(gazeX, gazeY)
+        return this.adaptiveKalmanFilter.update(gazeX, gazeY, dt)
       case 'combined': {
-        const [fx, fy] = this.adaptiveKalmanFilter.update(gazeX, gazeY)
+        const [fx, fy] = this.adaptiveKalmanFilter.update(gazeX, gazeY, dt)
         const ox = this.oldGazeX
         const oy = this.oldGazeY
         if (ox == null || oy == null) {

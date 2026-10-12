@@ -1,0 +1,136 @@
+DATENSCHUTZRICHTLINIE
+Zuletzt aktualisiert: 26. Januar 2026
+Unser Engagement für den Datenschutz
+Diese App ist mit Datenschutz als Kernprinzip gestaltet. Wir erheben, speichern oder übertragen keine personenbezogenen Daten von Ihrem Gerät. Alle Funktionen laufen vollständig auf Ihrem Gerät; es werden keine Daten an externe Server gesendet.
+
+1. WELCHE INFORMATIONEN WIR ERHEBEN
+Wir erheben NULL Informationen. Diese App tut Folgendes nicht:
+
+Personenbezogene Daten erheben
+Gesichtsdaten, Gesichtsgeometrie oder Bilder erfassen
+Nutzungsanalysen verfolgen
+Absturzberichte senden
+Sich mit externen Servern verbinden
+Cookies oder Tracking-Technologien nutzen
+Werbekennungen erfassen
+Auf Ihren Standort zugreifen
+Kamera- oder Mikrofondaten speichern oder übertragen
+
+
+2. WIE DIE APP FUNKTIONIERT
+Kamerazugriff (Blicksteuerung und Gesichtslandmarks)
+
+Zweck: Die App nutzt die Frontkamera und MediaPipe, um Gesichtslandmarks zu erkennen und Augenbewegungen zu verfolgen. So können Nutzer mit eingeschränkter Mobilität einen Bildschirmzeiger steuern und die App freihändig bedienen.
+Verarbeitung: Alle Gesichts-, Landmark- und Blickverarbeitung erfolgt streng lokal auf Ihrem Gerät in Echtzeit per Computer Vision.
+Speicherung: Keine Kamerabilder, Videos, Gesichtsdaten, Gesichtsgeometrie oder Blickdaten werden jemals gespeichert, gesichert oder übertragen.
+Ihre Kontrolle: Sie können die Kameraberechtigung jederzeit in den Geräteeinstellungen widerrufen
+
+Mikrofonzugriff (Sprachfunktionen)
+
+Zweck: Die App kann Mikrofonzugriff für Sprachfunktionen anfordern
+Verarbeitung: Alle Sprachverarbeitung erfolgt lokal auf Ihrem Gerät
+Speicherung: Es werden keine Audioaufnahmen gespeichert oder übertragen
+Ihre Kontrolle: Sie können die Mikrofonberechtigung jederzeit in den Geräteeinstellungen widerrufen
+
+Lokale Datenspeicherung
+
+Die App speichert Einstellungen, eigene Phrasen und Kalibrierung lokal auf Ihrem Gerät
+Diese Daten verlassen Ihr Gerät nie
+Sie können sie durch Deinstallieren der App oder Löschen der App-Daten entfernen
+
+
+3. DATENWEITERGABE
+Wir teilen KEINE Daten mit niemandem. Weil wir nichts erheben, gibt es nichts zu teilen mit:
+
+Drittanbieterdiensten
+Werbetreibenden
+Analyseunternehmen
+Anderen Nutzern
+Sonst wem
+
+
+4. KINDERDATENSCHUTZ (COPPA- UND FERPA-KONFORMITÄT)
+Diese App ist sicher für Kinder und Schüler jeden Alters:
+
+Keine Datenerhebung: Wir erheben von niemandem personenbezogene Daten, auch nicht von Kindern unter 13
+Bildungseinsatz: Für Bildungseinrichtungen gedacht und FERPA-konform
+Elterliche Kontrolle: Eltern und Pädagogen haben volle Kontrolle über Geräteberechtigungen
+Keine Dritten: Kinderdaten werden nie geteilt, weil keine Daten erhoben werden
+
+
+5. INTERNATIONALE NUTZER (DSGVO-KONFORMITÄT)
+Für Nutzer im Europäischen Wirtschaftsraum (EWR), im Vereinigten Königreich und in der Schweiz:
+
+Datenschutz durch Technikgestaltung: Die App ist auf Privatsphäre aufgebaut
+Ihre Rechte: Weil wir keine Daten erheben, gibt es nichts einzusehen, zu berichtigen, zu löschen oder zu übertragen
+Keine Einwilligung zur Erhebung: Wir brauchen keine Einwilligung, weil wir nichts erheben
+Rechtsgrundlage: Nicht anwendbar — keine Verarbeitung personenbezogener Daten
+
+
+6. US-STAATLICHE DATENSCHUTZRECHTE
+Für Einwohner von Kalifornien, Virginia, Colorado, Connecticut und anderen Staaten mit Datenschutzgesetzen:
+
+Recht auf Auskunft: Wir erheben keine personenbezogenen Daten
+Recht auf Löschung: Nicht anwendbar — es werden keine Daten erhoben
+Widerspruch gegen Verkauf: Nicht anwendbar — wir verkaufen keine Daten
+Nichtdiskriminierung: Nicht anwendbar — keine Datenpraktiken, denen man widersprechen müsste
+
+
+7. BARRIEREFREIHEIT UND HILFSMITTEL
+Diese App ist ein assistives Kommunikationswerkzeug:
+
+Alle Funktionen arbeiten offline
+Kein Konto und keine Anmeldung
+Datenschutzfreundlich für Menschen mit Behinderung
+Sicher in Schule, Therapie und Zuhause
+
+
+8. DATENSICHERHEIT
+Da keine Daten erhoben oder übertragen werden:
+
+Kein Risiko von Datenlecks
+Keine Passwörter oder Konten zu schützen
+Alle Verarbeitung bleibt auf Ihrem Gerät
+Ihre Privatsphäre ist durch Design geschützt
+
+
+9. BERECHTIGUNGEN ERKLÄRT
+Die App fordert nur wesentliche Berechtigungen an:
+BerechtigungZweckSpeicherungKameraBlicksteuerung für den ZeigerKeine — nur EchtzeitverarbeitungMikrofonOptionale SprachfunktionenKeine — nur Echtzeitverarbeitung
+Sie können Berechtigungen unter Einstellungen > Apps > [App-Name] > Berechtigungen prüfen und ändern.
+
+10. DRITTANBIETERDIENSTE
+Diese App nutzt keine Drittanbieterdienste, einschließlich:
+
+Keine Analyseplattformen
+Keine Absturzberichte
+Keine Werbenetze
+Keine Cloud-Dienste
+Keine KI/ML-Dienste, die Datenübertragung erfordern
+
+
+11. ÄNDERUNGEN DIESER RICHTLINIE
+Falls wir unsere Datenschutzpraktiken je ändern (z. B. optionale Cloud-Funktionen), werden wir:
+
+Diese Richtlinie mit neuem Datum „Zuletzt aktualisiert“ anpassen
+Nutzer in der App benachrichtigen
+Vor jeder Datenerhebung eine Einwilligung einholen
+Opt-in für alle Datenerhebungsfunktionen beibehalten
+
+
+12. OPEN SOURCE UND TRANSPARENZ
+Diese App basiert auf Open-Source-Code, angepasst für mehr Datenschutz. Sie können die Funktionsweise im Quellcode oder mit Fachleuten prüfen.
+
+13. KONTAKT
+Bei Fragen zu dieser Datenschutzrichtlinie oder den Praktiken der App:
+Name: Addison Graham
+E-Mail: grahamthetvi@icloud.com
+Ort: Illinois
+
+14. IHRE EINWILLIGUNG
+Durch die Nutzung dieser App bestätigen Sie:
+
+Sie haben diese Datenschutzrichtlinie gelesen
+Sie verstehen, dass keine personenbezogenen Daten erhoben werden
+Sie erlauben Kamera-/Mikrofonzugriff nur für lokale Verarbeitung auf dem Gerät
+Sie können diese Berechtigungen jederzeit widerrufen

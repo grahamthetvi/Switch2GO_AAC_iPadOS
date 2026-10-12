@@ -8,11 +8,11 @@ struct EmptyRecentsView: View {
                 .font(.system(size: 80))
                 .foregroundColor(.secondary)
             
-            Text("No recent phrases")
+            Text(l10n: "No recent phrases")
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Select phrases to see them here")
+            Text(l10n: "Select phrases to see them here")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

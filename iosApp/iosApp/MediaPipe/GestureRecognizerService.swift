@@ -203,8 +203,10 @@ final class GestureRecognizerService: NSObject, ObservableObject {
         return nil
     }
 
+    /// Front-camera frames are selfie-mirrored, so MediaPipe's "Left"/"Right"
+    /// labels are opposite the user's hands. Flip to user-facing laterality.
     static func mapHandedness(_ label: String) -> HandSide {
-        label.lowercased() == "right" ? .right : .left
+        UserFacingLaterality.handSide(fromMediaPipeLabel: label, flip: true)
     }
 }
 

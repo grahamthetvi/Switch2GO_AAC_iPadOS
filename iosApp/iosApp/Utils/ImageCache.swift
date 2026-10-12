@@ -124,33 +124,21 @@ struct CachedAsyncImage: View {
             return
         }
         
-        // Check if it's a file URL
-        if ref.hasPrefix("file://") {
-            // Try to create URL from string
-            if let url = URL(string: ref) {
-                DebugLog.debug("Loading file URL: \(url.path)", tag: "CachedAsyncImage")
+        // Relative Documents path, absolute path, or file:// URL
+        if MediaStorage.isRelativeFileRef(ref) || ref.hasPrefix("file://") || ref.hasPrefix("/") {
+            if let url = MediaStorage.resolveImageURL(imageRef: ref) {
+                DebugLog.debug("Loading file: \(url.path)", tag: "CachedAsyncImage")
                 loadedImage = ImageCache.shared.loadImage(from: url)
                 if loadedImage == nil {
-                    DebugLog.error("Failed to load image from file URL", tag: "CachedAsyncImage")
+                    DebugLog.error("Failed to load image from file", tag: "CachedAsyncImage")
                 }
             } else {
-                DebugLog.error("Invalid file URL string: \(ref)", tag: "CachedAsyncImage")
+                DebugLog.error("Image file missing for ref: \(ref)", tag: "CachedAsyncImage")
             }
             return
         }
-        
-        // Check for absolute path without file:// prefix
-        if ref.hasPrefix("/") {
-            let url = URL(fileURLWithPath: ref)
-            DebugLog.debug("Loading absolute path: \(ref)", tag: "CachedAsyncImage")
-            loadedImage = ImageCache.shared.loadImage(from: url)
-            if loadedImage == nil {
-                DebugLog.error("Failed to load image from absolute path", tag: "CachedAsyncImage")
-            }
-            return
-        }
-        
-        // Load as named resource
+
+        // Load as named asset / symbol
         DebugLog.debug("Loading named resource: \(ref)", tag: "CachedAsyncImage")
         loadedImage = ImageCache.shared.loadImage(named: ref)
         if loadedImage == nil {

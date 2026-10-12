@@ -11,6 +11,7 @@ import { useTranslation } from '../i18n/useTranslation'
 import { hexToCss, useSettings } from '../settings/settingsStore'
 import { prepareSpeech, speak } from '../tts/speak'
 import { useTrackingActions, useTrackingState } from '../tracking/TrackingContext'
+import { phraseIndexForSide, phraseIndexForSwitch } from '../tracking/userFacingLaterality'
 
 export function PhrasesPage() {
   const { t, locale } = useTranslation()
@@ -84,7 +85,8 @@ export function PhrasesPage() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isFullscreenActive) return
-      const idx = '1234'.indexOf(e.key)
+      const switchIndex = '1234'.indexOf(e.key)
+      const idx = phraseIndexForSwitch(switchIndex)
       if (idx >= 0 && idx < pagePhrases.length) {
         const phrase = pagePhrases[idx]
         prepareSpeech()
@@ -102,7 +104,7 @@ export function PhrasesPage() {
     if (settings.selectionMode !== 'armRaise') return
     return subscribeArmRaise((side) => {
       if (symbolCount !== 2 || pagePhrases.length !== 2) return
-      const idx = side === 'left' ? 0 : 1
+      const idx = phraseIndexForSide(side)
       void selectPhrase(pagePhrases[idx])
     })
   }, [settings.selectionMode, subscribeArmRaise, pagePhrases, selectPhrase, symbolCount])
@@ -111,7 +113,7 @@ export function PhrasesPage() {
     if (settings.selectionMode !== 'handGesture') return
     return subscribeHandGesture((side) => {
       if (symbolCount !== 2 || pagePhrases.length !== 2) return
-      const idx = side === 'left' ? 0 : 1
+      const idx = phraseIndexForSide(side)
       void selectPhrase(pagePhrases[idx])
     })
   }, [settings.selectionMode, subscribeHandGesture, pagePhrases, selectPhrase, symbolCount])
@@ -183,12 +185,12 @@ export function PhrasesPage() {
               const spanFullWidth = symbolCount === 3 && index === 2
               const armHighlighted =
                 armRaiseReady &&
-                ((index === 0 && armRaise.armState.leftRaised) ||
-                  (index === 1 && armRaise.armState.rightRaised))
+                ((index === phraseIndexForSide('left') && armRaise.armState.leftRaised) ||
+                  (index === phraseIndexForSide('right') && armRaise.armState.rightRaised))
               const handHighlighted =
                 handGestureReady &&
-                ((index === 0 && handGesture.handState.leftPose != null) ||
-                  (index === 1 && handGesture.handState.rightPose != null))
+                ((index === phraseIndexForSide('left') && handGesture.handState.leftPose != null) ||
+                  (index === phraseIndexForSide('right') && handGesture.handState.rightPose != null))
               const gestureHighlighted = armHighlighted || handHighlighted
               return (
                 <DwellSelectable

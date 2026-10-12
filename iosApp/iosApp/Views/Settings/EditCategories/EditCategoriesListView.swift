@@ -86,7 +86,7 @@ struct EditCategoriesListView: View {
                         Image(systemName: "chevron.right")
                             .foregroundColor(.secondary)
                     }
-                    .accessibilityLabel("Edit \(category.name)")
+                    .accessibilityLabel(L("Edit %@", category.name))
                 }
             }
             .onMove { from, to in
@@ -253,15 +253,7 @@ class EditCategoriesViewModel: ObservableObject {
     }
     
     private func getCategoryName(for categoryId: String) -> String {
-        switch categoryId {
-        case "preset_routine_activity": return "Daily Activities"
-        case "preset_food_drink": return "Food & Drinks"
-        case "preset_comfort_state": return "How I Feel"
-        case "preset_play_leisure": return "Fun & Games"
-        case "preset_positioning": return "Move Me"
-        case "preset_recents": return "Recently Said"
-        default: return categoryId
-        }
+        CoreVocabulary.categoryName(for: categoryId)
     }
 }
 

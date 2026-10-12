@@ -13,6 +13,8 @@ import {
 
 /** Constant-velocity 2D Kalman filter (ported from shared KalmanFilter2D.kt). */
 export class KalmanFilter2D {
+  static readonly DEFAULT_DT = 1 / 20
+
   private state = [0, 0, 0, 0]
   private P = createIdentityMatrix(4)
   private initialized = false
@@ -43,22 +45,28 @@ export class KalmanFilter2D {
     ]
   }
 
-  predict(): [number, number] {
+  private setTransitionDt(dt: number): void {
+    this.F[0][2] = dt
+    this.F[1][3] = dt
+  }
+
+  predict(dtSeconds = KalmanFilter2D.DEFAULT_DT): [number, number] {
     if (!this.initialized) return [this.state[0], this.state[1]]
+    this.setTransitionDt(dtSeconds)
     this.state = multiplyMatrixVector(this.F, this.state)
     const FP = multiplyMatrices(this.F, this.P)
     this.P = addMatrices(multiplyMatrices(FP, transpose(this.F)), this.Q)
     return [this.state[0], this.state[1]]
   }
 
-  update(x: number, y: number): [number, number] {
+  update(x: number, y: number, dtSeconds = KalmanFilter2D.DEFAULT_DT): [number, number] {
     if (!this.initialized) {
       this.state = [x, y, 0, 0]
       this.initialized = true
       return [x, y]
     }
 
-    this.predict()
+    this.predict(dtSeconds)
     const Hx = multiplyMatrixVector(this.H, this.state)
     const innovation = [x - Hx[0], y - Hx[1]]
     const HP = multiplyMatrices(this.H, this.P)

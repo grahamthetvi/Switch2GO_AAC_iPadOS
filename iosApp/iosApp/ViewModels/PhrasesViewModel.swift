@@ -18,6 +18,10 @@ class PhrasesViewModel: ObservableObject {
         self.categoryId = categoryId
         self.database = database
         loadPhrases()
+        NotificationCenter.default.publisher(for: .appLanguageDidChange)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.loadPhrases() }
+            .store(in: &cancellables)
     }
     
     /// Load phrases for category
@@ -31,23 +35,45 @@ class PhrasesViewModel: ObservableObject {
             
             // Check if it's Recents category
             if self.categoryId == "preset_recents" {
-                // Get recent phrases from preset phrases
-                let recentPresets = self.database.presetPhraseQueries
+                var recentItems: [(id: String, text: String, lastSpoken: Int64, isPreset: Bool, style: PhraseStyle?)] = []
+
+                // 1. Spoken preset phrases
+                let presetPhrases = self.database.presetPhraseQueries
                     .getAllPresetPhrases()
                     .executeAsList()
-                    .filter { $0.last_spoken_date != nil }
-                    .sorted { ($0.last_spoken_date?.int64Value ?? 0) > ($1.last_spoken_date?.int64Value ?? 0) }
-                    .prefix(8)
-                
-                for phrase in recentPresets {
+                    .filter { $0.last_spoken_date != nil && $0.deleted == 0 }
+
+                for phrase in presetPhrases {
+                    guard let spoken = phrase.last_spoken_date?.int64Value else { continue }
                     let phraseText = self.getPhraseText(for: phrase.phrase_id)
                     let parsedStyle = self.parseStyle(from: phrase.style)
+                    recentItems.append((id: phrase.phrase_id, text: phraseText, lastSpoken: spoken, isPreset: true, style: parsedStyle))
+                }
+
+                // 2. Spoken custom phrases
+                let customPhrases = self.database.phraseQueries
+                    .getAllPhrases()
+                    .executeAsList()
+                    .filter { $0.last_spoken_date != nil }
+
+                for phrase in customPhrases {
+                    guard let spoken = phrase.last_spoken_date?.int64Value else { continue }
+                    let phraseText = phrase.localized_utterance ?? ""
+                    let parsedStyle = self.parseStyle(from: phrase.style)
+                    recentItems.append((id: phrase.phrase_id, text: phraseText, lastSpoken: spoken, isPreset: false, style: parsedStyle))
+                }
+
+                // Sort by lastSpoken descending and take top 8
+                recentItems.sort { $0.lastSpoken > $1.lastSpoken }
+                let topRecents = recentItems.prefix(8)
+
+                for (idx, item) in topRecents.enumerated() {
                     displayModels.append(PhraseDisplayModel(
-                        id: phrase.phrase_id,
-                        text: phraseText,
-                        sortOrder: Int(phrase.sort_order),
-                        isPreset: true,
-                        style: parsedStyle
+                        id: item.id,
+                        text: item.text,
+                        sortOrder: idx,
+                        isPreset: item.isPreset,
+                        style: item.style
                     ))
                 }
             } else {
@@ -99,15 +125,26 @@ class PhrasesViewModel: ObservableObject {
     /// Mark phrase as spoken
     func markPhraseAsSpoken(phraseId: String) {
         let timestamp = Int64(Date().timeIntervalSince1970 * 1000)
-        
-        DispatchQueue.global(qos: .background).async { [weak self] in
+        let kLong = KotlinLong(value: timestamp)
+
+        DatabaseManager.shared.asyncWrite { [weak self] in
             guard let self = self else { return }
-            
-            // Update last spoken date
+
+            // Update preset phrase if present
             self.database.presetPhraseQueries.updatePresetPhraseLastSpoken(
-                last_spoken_date: KotlinLong(value: timestamp),
+                last_spoken_date: kLong,
                 phrase_id: phraseId
             )
+
+            // Update custom phrase if present
+            self.database.phraseQueries.updatePhraseLastSpoken(
+                last_spoken_date: kLong,
+                phrase_id: phraseId
+            )
+
+            if self.categoryId == "preset_recents" {
+                self.loadPhrases()
+            }
         }
     }
     
@@ -139,9 +176,9 @@ class PhrasesViewModel: ObservableObject {
     }
     
     private func updatePhraseSortOrder(phraseId: String, sortOrder: Int, isPreset: Bool) {
-        DispatchQueue.global(qos: .background).async { [weak self] in
+        DatabaseManager.shared.asyncWrite { [weak self] in
             guard let self = self else { return }
-            
+
             if isPreset {
                 guard let presetPhrase = self.database.presetPhraseQueries
                     .getPresetPhraseById(phrase_id: phraseId)
@@ -167,36 +204,7 @@ class PhrasesViewModel: ObservableObject {
     
     /// Get localized phrase text (natural, conversational)
     private func getPhraseText(for phraseId: String) -> String {
-        // Map of phrase IDs to text
-        let phraseTexts: [String: String] = [
-            // Daily Activities
-            "preset_need_help": "I need help",
-            "preset_all_done": "I'm all done",
-            "preset_want_more": "I want more",
-            "preset_take_break": "I need a break",
-            // Food & Drinks
-            "preset_eat_food": "I want to eat",
-            "preset_drink_water": "I want a drink",
-            "preset_more_please": "More please",
-            "preset_no_more": "No more",
-            // How I Feel
-            "preset_it_hurts": "It hurts",
-            "preset_feel_good": "I feel good",
-            "preset_i_am_hot": "I'm hot",
-            "preset_i_am_cold": "I'm cold",
-            // Fun & Games
-            "preset_go_now": "Let's go",
-            "preset_stop_now": "Stop",
-            "preset_my_turn": "My turn",
-            "preset_your_turn": "Your turn",
-            // Move Me
-            "preset_move_me": "Move me",
-            "preset_stay_here": "Stay here",
-            "preset_sit_up": "Sit me up",
-            "preset_lay_back": "Lay me back"
-        ]
-        
-        return phraseTexts[phraseId] ?? phraseId
+        CoreVocabulary.phraseText(for: phraseId, fallback: phraseId)
     }
     
     /// Parse PhraseStyle from JSON string

@@ -37,7 +37,7 @@ struct PhraseStyleEditorView: View {
             mediaType: nil,
             gameType: nil
         )
-        _currentStyle = State(initialValue: PhraseStyle(
+        let initialStyle = PhraseStyle(
             backgroundColor: baseStyle.backgroundColor,
             textColor: baseStyle.textColor,
             textSizeSp: baseStyle.textSizeSp,
@@ -48,8 +48,20 @@ struct PhraseStyleEditorView: View {
             mediaRef: baseStyle.mediaRef,
             mediaType: baseStyle.mediaType,
             gameType: baseStyle.gameType
-        ))
+        )
+        initialStyle.sendSwitchOutput = phrase.style?.sendSwitchOutput ?? false
+        _currentStyle = State(initialValue: initialStyle)
         _isBold = State(initialValue: phrase.style?.isBold ?? false)
+    }
+
+    private var sendSwitchOutputBinding: Binding<Bool> {
+        Binding(
+            get: { currentStyle.sendSwitchOutput },
+            set: { newValue in
+                currentStyle.sendSwitchOutput = newValue
+                saveStyle()
+            }
+        )
     }
     
     var body: some View {
@@ -180,7 +192,7 @@ struct PhraseStyleEditorView: View {
                     
                     // Border Thickness
                     styleButton(
-                        title: "Border Thickness: \(borderWidthLabel)",
+                        title: L("Border Thickness: %@", borderWidthLabel),
                         icon: "line.3.horizontal",
                         color: .blue
                     ) {
@@ -227,6 +239,19 @@ struct PhraseStyleEditorView: View {
                     ) {
                         showingGamePicker = true
                     }
+
+                    Toggle(isOn: sendSwitchOutputBinding) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Label("Send switch output", systemImage: "poweroutlet.type.b")
+                                .font(.headline)
+                            Text("When this phrase is selected, pulse the paired ESP32 so a PowerLink can toggle a device (fan, light).")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(12)
                     
                     // Reset to Default
                     Button(action: resetToDefault) {
@@ -290,7 +315,10 @@ struct PhraseStyleEditorView: View {
         ImagePickerView(
                 selectedImage: currentStyle.imageRef,
                 onImageSelected: { imageRef in
-                    currentStyle = cloneCurrentStyle(imageRef: imageRef)
+                    if imageRef != currentStyle.imageRef {
+                        MediaStorage.deleteMedia(mediaRef: currentStyle.imageRef)
+                    }
+                    currentStyle = cloneCurrentStyle(imageRef: imageRef, clearImage: imageRef == nil)
                     saveStyle()
                     showingImagePicker = false
                 },
@@ -305,14 +333,23 @@ struct PhraseStyleEditorView: View {
             currentImageRef: currentStyle.imageRef,
             onMediaSelected: { mediaRef, mediaType, posterRef in
                 clearPreviousLocalMedia(oldRef: currentStyle.mediaRef, newRef: mediaRef)
-                if mediaRef == nil {
-                    clearPreviousLocalMedia(oldRef: currentStyle.mediaRef, newRef: nil)
+
+                let removingVideo = mediaRef == nil && currentStyle.isVideo()
+                let currentImageIsPoster = MediaStorage.isVideoPosterRef(currentStyle.imageRef)
+                let imageMissing = currentStyle.imageRef == nil || currentStyle.imageRef?.isEmpty == true
+                let shouldApplyPoster = posterRef != nil && (imageMissing || currentImageIsPoster)
+                // Only generated `video_poster_` stills; keep user photos, emoji, and symbols.
+                let shouldClearStill = removingVideo && currentImageIsPoster
+
+                if shouldClearStill || (shouldApplyPoster && currentImageIsPoster) {
+                    MediaStorage.deleteMedia(mediaRef: currentStyle.imageRef)
                 }
-                let shouldApplyPoster = posterRef != nil && (currentStyle.imageRef == nil || currentStyle.imageRef?.isEmpty == true)
+
                 currentStyle = cloneCurrentStyle(
                     imageRef: shouldApplyPoster ? posterRef : nil,
                     mediaRef: mediaRef,
                     mediaType: mediaType,
+                    clearImage: shouldClearStill,
                     clearMedia: mediaRef == nil,
                     clearGame: mediaRef != nil
                 )
@@ -363,21 +400,25 @@ struct PhraseStyleEditorView: View {
         mediaRef: String? = nil,
         mediaType: String? = nil,
         gameType: String? = nil,
+        clearImage: Bool = false,
         clearMedia: Bool = false,
-        clearGame: Bool = false
+        clearGame: Bool = false,
+        sendSwitchOutput: Bool? = nil
     ) -> PhraseStyle {
-        PhraseStyle(
+        let style = PhraseStyle(
             backgroundColor: backgroundColor ?? currentStyle.backgroundColor,
             textColor: textColor ?? currentStyle.textColor,
             textSizeSp: textSizeSp ?? currentStyle.textSizeSp,
             isBold: isBold ?? currentStyle.isBold,
             borderColor: borderColor ?? currentStyle.borderColor,
             borderWidthDp: borderWidthDp ?? currentStyle.borderWidthDp,
-            imageRef: imageRef ?? currentStyle.imageRef,
+            imageRef: clearImage ? nil : (imageRef ?? currentStyle.imageRef),
             mediaRef: clearMedia ? nil : (mediaRef ?? currentStyle.mediaRef),
             mediaType: clearMedia ? nil : (mediaType ?? currentStyle.mediaType),
             gameType: clearGame ? nil : (gameType ?? currentStyle.gameType)
         )
+        style.sendSwitchOutput = sendSwitchOutput ?? currentStyle.sendSwitchOutput
+        return style
     }
     
     // MARK: - Computed Properties
@@ -488,7 +529,7 @@ struct PhraseStyleEditorView: View {
                     .foregroundColor(color)
                     .frame(width: 30)
                 
-                Text(title)
+                Text(l10n: title)
                     .font(.headline)
                     .foregroundColor(.primary)
                 
@@ -508,45 +549,48 @@ struct PhraseStyleEditorView: View {
     private var borderWidthLabel: String {
         let width = currentStyle.borderWidthDp ?? 0
         switch width {
-        case 0: return "None"
-        case 6: return "Thin"
-        case 10: return "Medium"
-        case 14: return "Thick"
-        case 20: return "XL"
-        case 28: return "XXL"
+        case 0: return L("None")
+        case 6: return L("Thin")
+        case 10: return L("Medium")
+        case 14: return L("Thick")
+        case 20: return L("XL")
+        case 28: return L("XXL")
         default: return "\(Int(truncating: width))dp"
         }
     }
     
     private var imageLabel: String {
         guard let imageRef = currentStyle.imageRef, !imageRef.isEmpty else {
-            return "Image/Emoji: None"
+            return L("Image/Emoji: None")
         }
         
         if let emoji = PhraseStyle.extractEmoji(ref: imageRef) {
-            return "Image/Emoji: \(emoji)"
+            return L("Image/Emoji: %@", emoji)
         }
         
-        if imageRef.hasPrefix("content://") || imageRef.hasPrefix("file://") {
-            return "Image/Emoji: Custom"
+        if imageRef.hasPrefix("content://")
+            || imageRef.hasPrefix("file://")
+            || imageRef.hasPrefix("/")
+            || MediaStorage.isRelativeFileRef(imageRef) {
+            return L("Image/Emoji: Custom")
         }
         
-        return "Image/Emoji: Symbol"
+        return L("Image/Emoji: Symbol")
     }
 
     private var videoMediaLabel: String {
-        if currentStyle.isVideo() { return "Video: Attached" }
-        return "Video: None"
+        if currentStyle.isVideo() { return L("Video: Attached") }
+        return L("Video: None")
     }
 
     private var audioMediaLabel: String {
-        if currentStyle.isAudio() { return "Audio: Attached" }
-        return "Audio: None"
+        if currentStyle.isAudio() { return L("Audio: Attached") }
+        return L("Audio: None")
     }
 
     private var youtubeMediaLabel: String {
         if currentStyle.isYouTube(), let ref = currentStyle.mediaRef {
-            return "YouTube: \(ref)"
+            return L("YouTube: %@", ref)
         }
         return "YouTube: None"
     }
@@ -567,9 +611,10 @@ struct PhraseStyleEditorView: View {
     // MARK: - Actions
     
     private func saveStyle() {
+        // Clone on the main thread so associated fields (e.g. sendSwitchOutput) are captured
+        // before hopping to a background queue for JSON + DB writes.
+        let styleToSave = cloneCurrentStyle()
         DispatchQueue.global(qos: .background).async {
-            // Serialize style to JSON using PhraseStyle extension
-            let styleToSave = cloneCurrentStyle()
             let styleString = styleToSave.toJSONString()
             
             // Update in database
@@ -594,7 +639,8 @@ struct PhraseStyleEditorView: View {
     
     private func resetToDefault() {
         MediaStorage.deleteMedia(mediaRef: currentStyle.mediaRef)
-        currentStyle = PhraseStyle(
+        MediaStorage.deleteMedia(mediaRef: currentStyle.imageRef)
+        let reset = PhraseStyle(
             backgroundColor: nil,
             textColor: nil,
             textSizeSp: nil,
@@ -606,6 +652,8 @@ struct PhraseStyleEditorView: View {
             mediaType: nil,
             gameType: nil
         )
+        reset.sendSwitchOutput = false
+        currentStyle = reset
         isBold = false
         saveStyle()
     }

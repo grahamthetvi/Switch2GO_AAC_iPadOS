@@ -54,7 +54,7 @@ struct CalibrationView: View {
                                 .font(.title2)
                                 .foregroundColor(.white)
 
-                            Text("Point \(currentPointIndex + 1) of \(calibrationManager.calibrationPoints.count)")
+                            Text(L("Point %d of %d", currentPointIndex + 1, calibrationManager.calibrationPoints.count))
                                 .foregroundColor(.gray)
 
                             Button(isCollecting ? "Collecting..." : "Collect Point") {

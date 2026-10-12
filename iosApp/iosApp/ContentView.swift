@@ -162,7 +162,7 @@ struct ContentView: View {
                         .clipShape(Circle())
                         .shadow(radius: 4)
                 }
-                .accessibilityLabel("Settings")
+                .accessibilityLabel(L("Settings"))
 
                 if settings.switchControlEnabled {
                     SwitchControlStatusBadge(switchManager: gazeManager.switchManager)
@@ -170,6 +170,7 @@ struct ContentView: View {
             }
             .padding(.trailing, 16)
             .padding(.top, windowTopSafeInset + 8)
+            .environment(\.layoutDirection, .leftToRight)
         }
         .tint(.blue)
         .overlay(
@@ -347,15 +348,15 @@ struct ContentView: View {
         if trackingSupported {
             info = OrientationBannerInfo(
                 icon: "eye",
-                title: "Head & Eye Tracking Active",
-                subtitle: "Gaze cursor, dwell selection, switch, and touch controls available",
+                title: L("Head & Eye Tracking Active"),
+                subtitle: L("Gaze cursor, dwell selection, switch, and touch controls available"),
                 color: .blue
             )
         } else {
             info = OrientationBannerInfo(
                 icon: "hand.tap",
-                title: "Touch & Switch Only",
-                subtitle: "Rotate to landscape (home button right) for head/eye tracking",
+                title: L("Touch & Switch Only"),
+                subtitle: L("Rotate to landscape (home button right) for head/eye tracking"),
                 color: .orange
             )
         }
@@ -428,10 +429,10 @@ struct GazeOutOfBoundsBanner: View {
                     .font(.title3)
                     .foregroundColor(.white)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Gaze out of bounds")
+                    Text(l10n: "Gaze out of bounds")
                         .font(.headline)
                         .foregroundColor(.white)
-                    Text("Look back at the screen to resume")
+                    Text(l10n: "Look back at the screen to resume")
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.9))
                 }
@@ -450,7 +451,7 @@ struct GazeOutOfBoundsBanner: View {
 
 /// Banner shown when face/eye or body tracking is not detected.
 struct TrackingLostBanner: View {
-    var message: String = "Make sure your face is in view and well lit"
+    var message: String? = nil
 
     var body: some View {
         VStack {
@@ -459,10 +460,10 @@ struct TrackingLostBanner: View {
                     .font(.title3)
                     .foregroundColor(.white)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Tracking lost")
+                    Text(l10n: "Tracking lost")
                         .font(.headline)
                         .foregroundColor(.white)
-                    Text(message)
+                    Text(l10n: message ?? "Make sure your face is in view and well lit")
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.9))
                 }
@@ -543,8 +544,8 @@ struct SwitchControlStatusBadge: View {
         )
         .accessibilityLabel(
             switchManager.isConnected
-                ? "Switch device connected"
-                : "Switch device not detected"
+                ? L("Switch device connected")
+                : L("Switch device not detected")
         )
     }
 }

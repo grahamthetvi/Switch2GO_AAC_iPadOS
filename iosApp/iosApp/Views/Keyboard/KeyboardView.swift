@@ -84,7 +84,7 @@ struct KeyboardView: View {
             Button(action: {
                 showingSaveCategoryPicker = true
             }) {
-                Text("Save Phrase")
+                Text(l10n: "Save Phrase")
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -95,6 +95,7 @@ struct KeyboardView: View {
             .disabled(inputText.isEmpty)
             .padding()
         }
+        .environment(\.layoutDirection, .leftToRight)
         .onAppear {
             isSystemKeyboardFocused = true
         }
@@ -104,7 +105,7 @@ struct KeyboardView: View {
                 Button(action: { dismiss() }) {
                     HStack {
                         Image(systemName: "chevron.left")
-                        Text("Back")
+                        Text(l10n: "Back")
                     }
                 }
             }

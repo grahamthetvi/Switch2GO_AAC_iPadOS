@@ -1,0 +1,5 @@
+"NSCameraUsageDescription" = "Switch2Go braucht Kamerazugriff für die Blicksteuerung und freihändige Kommunikation. Das Kamerabild wird nur auf dem Gerät verarbeitet und weder gespeichert noch übertragen.";
+"NSMicrophoneUsageDescription" = "Switch2Go kann das Mikrofon für Spracheingabe verwenden.";
+"NSPhotoLibraryUsageDescription" = "Switch2Go braucht Zugriff auf die Mediathek, um eigene Bilder auf Phrasentasten für bessere visuelle Kommunikation zu nutzen.";
+"NSBluetoothAlwaysUsageDescription" = "Switch2GO nutzt Bluetooth, um einen Schalterimpuls an den ESP32 für Umgebungssteuerung (PowerLink) zu senden.";
+"NSBluetoothPeripheralUsageDescription" = "Switch2GO nutzt Bluetooth, um einen Schalterimpuls an den ESP32 für Umgebungssteuerung (PowerLink) zu senden.";

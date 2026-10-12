@@ -5,8 +5,8 @@ extension View {
     /// Add comprehensive accessibility labels
     func accessibleButton(label: String, hint: String? = nil, traits: AccessibilityTraits = .isButton) -> some View {
         self
-            .accessibilityLabel(label)
-            .accessibilityHint(hint ?? "")
+            .accessibilityLabel(L(label))
+            .accessibilityHint(hint.map { L($0) } ?? "")
             .accessibilityAddTraits(traits)
     }
     

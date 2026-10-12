@@ -1,4 +1,5 @@
 import Foundation
+import ObjectiveC
 import VocableShared
 
 /// Swift wrapper for PhraseStyle JSON serialization
@@ -14,9 +15,11 @@ struct PhraseStyleData: Codable {
     let mediaRef: String?
     let mediaType: String?
     let gameType: String?
-    
+    /// Per-phrase environmental control. Omitted in older JSON (treated as false).
+    let sendSwitchOutput: Bool?
+
     func toPhraseStyle() -> PhraseStyle {
-        return PhraseStyle(
+        let style = PhraseStyle(
             backgroundColor: backgroundColor.map { KotlinUInt(value: UInt32($0)) },
             textColor: textColor.map { KotlinUInt(value: UInt32($0)) },
             textSizeSp: textSizeSp.map { KotlinFloat(value: $0) },
@@ -28,6 +31,8 @@ struct PhraseStyleData: Codable {
             mediaType: mediaType,
             gameType: gameType
         )
+        style.sendSwitchOutput = sendSwitchOutput ?? false
+        return style
     }
     
     static func from(_ style: PhraseStyle) -> PhraseStyleData {
@@ -41,7 +46,8 @@ struct PhraseStyleData: Codable {
             imageRef: style.imageRef,
             mediaRef: style.mediaRef,
             mediaType: style.mediaType,
-            gameType: style.gameType
+            gameType: style.gameType,
+            sendSwitchOutput: style.sendSwitchOutput ? true : nil
         )
     }
 }
@@ -81,7 +87,15 @@ extension PhraseStyle {
     func isPieCrazyGameType() -> Bool {
         gameType == PhraseGameTypeId.pieCrazy
     }
+
+    /// Stored beside Kotlin PhraseStyle in JSON (`sendSwitchOutput`) without a KMP schema change.
+    var sendSwitchOutput: Bool {
+        get { objc_getAssociatedObject(self, &phraseStyleSendSwitchOutputKey) as? Bool ?? false }
+        set { objc_setAssociatedObject(self, &phraseStyleSendSwitchOutputKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
 }
+
+private var phraseStyleSendSwitchOutputKey: UInt8 = 0
 
 /// Game type strings stored on phrase styles (local until shared framework includes new constants).
 enum PhraseGameTypeId {

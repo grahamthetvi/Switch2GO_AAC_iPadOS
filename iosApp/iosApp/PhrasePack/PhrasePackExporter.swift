@@ -122,13 +122,15 @@ enum PhrasePackExporter {
             media: nil,
             mediaType: nil,
             thumb: nil,
-            gameType: style.gameType
+            gameType: style.gameType,
+            sendSwitchOutput: style.sendSwitchOutput ? true : nil
         )
 
         if let imageRef = style.imageRef, !imageRef.isEmpty {
             if imageRef.hasPrefix(PhraseStyle.EMOJI_PREFIX) {
                 pack.image = imageRef
-            } else if let fileURL = PhraseImageStore.resolveLocalFile(imageRef) {
+            } else if let fileURL = MediaStorage.resolveImageURL(imageRef: imageRef)
+                ?? PhraseImageStore.resolveLocalFile(imageRef) {
                 pack.image = try copyNormalizedImage(fileURL, into: staging, name: "p\(index + 1)")
             }
         }
@@ -157,7 +159,8 @@ enum PhrasePackExporter {
 
         if pack.backgroundColor == nil && pack.textColor == nil && pack.textSizeSp == nil
             && !pack.isBold && pack.borderColor == nil && pack.borderWidthDp == nil
-            && pack.image == nil && pack.media == nil && pack.gameType == nil && pack.thumb == nil {
+            && pack.image == nil && pack.media == nil && pack.gameType == nil && pack.thumb == nil
+            && pack.sendSwitchOutput != true {
             return nil
         }
         return pack

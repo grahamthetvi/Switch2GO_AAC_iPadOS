@@ -110,7 +110,7 @@ class SharedGazeTrackerAdapter(
      * Enable/disable head pose compensation.
      */
     fun setHeadPoseCompensation(enabled: Boolean) {
-        gazeTracker.getGazeCalculator().headPoseCompensationEnabled = enabled
+        gazeTracker.setHeadPoseCompensationEnabled(enabled)
     }
 
     /**

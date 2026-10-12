@@ -19,6 +19,7 @@ struct SwitchControlSettingsView: View {
         ScrollView {
             VStack(spacing: 20) {
                 enableSection
+                environmentalControlSection
 
                 if settings.switchControlEnabled {
                     connectionStatusSection
@@ -97,6 +98,12 @@ struct SwitchControlSettingsView: View {
         .background(Color(UIColor.secondarySystemBackground))
         .cornerRadius(12)
         .padding(.horizontal)
+    }
+
+    // MARK: - Environmental control (iPad → ESP32 → PowerLink)
+
+    private var environmentalControlSection: some View {
+        EnvironmentalControlCard(output: gazeManager.switchOutputManager)
     }
 
     // MARK: - Connection
@@ -237,11 +244,11 @@ struct SwitchControlSettingsView: View {
 
     private var directPhraseModeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Switch to Phrase (\(phraseSlotCount) switches)")
+            Text(L("Switch to Phrase (%d switches)", phraseSlotCount))
                 .font(.headline)
                 .padding(.horizontal)
 
-            Text("Uses \(phraseSlotCount) phrases per page from Display settings. Each switch speaks one tile (left-to-right, top-to-bottom).")
+            Text(L("Uses %d phrases per page from Display settings. Each switch speaks one tile (left-to-right, top-to-bottom).", phraseSlotCount))
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
@@ -252,11 +259,11 @@ struct SwitchControlSettingsView: View {
                         Image(systemName: "\(slot).circle.fill")
                             .font(.title2)
                             .foregroundColor(.blue)
-                        Text("Switch \(slot)")
+                        Text(L("Switch %d", slot))
                             .font(.subheadline.bold())
                         Image(systemName: "arrow.right")
                             .foregroundColor(.secondary)
-                        Text("Phrase \(slot) (\(positionName(slot)))")
+                        Text(L("Phrase %d (%@)", slot, positionName(slot)))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         Spacer()
@@ -272,11 +279,11 @@ struct SwitchControlSettingsView: View {
 
     private func positionName(_ position: Int) -> String {
         switch position {
-        case 1: return "top-left"
-        case 2: return "top-right"
-        case 3: return "bottom-left"
-        case 4: return "bottom-right"
-        default: return "position \(position)"
+        case 1: return L("top-left")
+        case 2: return L("top-right")
+        case 3: return L("bottom-left")
+        case 4: return L("bottom-right")
+        default: return L("position %d", position)
         }
     }
 
@@ -351,6 +358,11 @@ struct SwitchControlSettingsView: View {
                     text: mode == .scanning
                         ? "Use two switches to scan and select phrases."
                         : "Use one switch per phrase on screen (\(phraseSlotCount) total)."
+                )
+                SetupStepRow(
+                    number: 4,
+                    icon: "poweroutlet.type.b",
+                    text: "For a fan or light: wire GPIO 26 through a relay or optocoupler to the PowerLink jack. Enable “Send switch output” on that phrase. After a firmware update, Forget Device and pair again."
                 )
             }
             .padding()
@@ -451,5 +463,69 @@ private struct SwitchKeyPicker: View {
     NavigationStack {
         SwitchControlSettingsView()
             .environmentObject(GazeTrackingManager())
+    }
+}
+
+private struct EnvironmentalControlCard: View {
+    @ObservedObject var output: ESP32SwitchOutputManager
+    @StateObject private var settings = AppSettings.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Environmental Control")
+                .font(.headline)
+                .padding(.horizontal)
+
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 16) {
+                    ZStack {
+                        Circle()
+                            .fill(output.isReady ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
+                            .frame(width: 60, height: 60)
+                        Image(systemName: output.isReady ? "poweroutlet.type.b.fill" : "poweroutlet.type.b")
+                            .font(.title)
+                            .foregroundColor(output.isReady ? .green : .orange)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(output.isReady ? "ESP32 output connected" : "ESP32 output")
+                            .font(.title3.bold())
+                            .foregroundColor(output.isReady ? .green : .primary)
+                        Text(output.connectedDeviceName ?? output.state.statusText)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer()
+                }
+
+                Text("When a phrase with “Send switch output” is selected, the iPad pulses GPIO 26 on the ESP32. Wire that pin through a relay or optocoupler to the PowerLink switch jack.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                HStack(spacing: 12) {
+                    Button("Connect") {
+                        output.startScanning()
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    if output.isReady || settings.switchOutputPeripheralUUID != nil {
+                        Button("Disconnect", role: .destructive) {
+                            output.disconnect()
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+
+                Button("Test pulse") {
+                    _ = output.sendPulse()
+                }
+                .disabled(!output.isReady)
+            }
+            .padding()
+            .background(Color(UIColor.secondarySystemBackground))
+            .cornerRadius(12)
+            .padding(.horizontal)
+        }
     }
 }

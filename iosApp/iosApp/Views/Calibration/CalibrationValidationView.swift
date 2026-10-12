@@ -50,7 +50,7 @@ struct CalibrationValidationView: View {
                     .font(.title2)
                     .foregroundColor(.white)
                 
-                Text("Look at point \(currentTestIndex + 1) of \(testPoints.count)")
+                Text(L("Look at point %d of %d", currentTestIndex + 1, testPoints.count))
                     .foregroundColor(.gray)
                 
                 Button("Next Point") {
