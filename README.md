@@ -157,6 +157,7 @@ Downloads `face_landmarker.task` (~3.6 MB) to `iosApp/iosApp/Resources/` on firs
 
 **Detailed steps and troubleshooting:** [iosApp/BUILD_AND_RUN.md](iosApp/BUILD_AND_RUN.md)  
 **Testing checklist:** [TESTING_GUIDE.md](TESTING_GUIDE.md)  
+**Check a code change:** `scripts/verify-changed.sh` runs the web typecheck and unit tests this machine can execute, regenerates presets to detect drift, and names the iOS or device checks it cannot run.  
 **Signing / TestFlight:** [Documentation/IOS_RELEASE_AND_SIGNING.md](Documentation/IOS_RELEASE_AND_SIGNING.md)
 
 ### Web (GitHub Pages)

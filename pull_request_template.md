@@ -8,13 +8,15 @@ If this changes user-facing UI, include before/after.
 
 ## Test plan
 
-How was this verified? Tick all that apply and add notes.
+How was this verified? Tick what you actually ran. `scripts/verify-changed.sh` prints the commands for the files you changed.
 
-- [ ] Unit tests (`./gradlew testDebug`)
-- [ ] Android instrumented tests (`./gradlew connectedDebugAndroidTest`)
-- [ ] iOS unit tests (`xcodebuild test` via `iosApp.xcworkspace`)
-- [ ] Manual smoke on Android device
-- [ ] Manual smoke on iPad / iPhone
+- [ ] `scripts/verify-changed.sh` (web typecheck and unit tests when `web/` changed; preset drift check when presets changed)
+- [ ] iOS unit tests on a Mac, from `iosApp/iosApp.xcworkspace` (not the `.xcodeproj`), JDK 17 (`source setjava.sh`)
+- [ ] Sibling file compared when gaze, dwell, head, arm, hand, settings, speech, games, or storage changed on only one of iOS / web / `shared`
+- [ ] Manual iPad pass for camera, gaze, dwell, gestures, or ESP32 switches
+- [ ] Manual Safari pass when the web UI changed
+
+`app/` is legacy Android. `./gradlew testDebug` is not the gate for iOS or web.
 
 ## Accessibility impact
 
@@ -24,6 +26,6 @@ How was this verified? Tick all that apply and add notes.
 
 ## Risk / rollback
 
-- [ ] Touches the Room database schema (new migration committed + tested)
+- [ ] Touches SQLDelight (`shared/src/commonMain/sqldelight`) or web Dexie (`web/src/data/db.ts`)
 - [ ] Touches CI or release pipelines
 - [ ] None of the above

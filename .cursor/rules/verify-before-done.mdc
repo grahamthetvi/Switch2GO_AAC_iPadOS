@@ -1,0 +1,19 @@
+---
+description: Verify Switch2Go edits against the real iOS, web, and shared copies before calling them correct
+alwaysApply: true
+---
+
+# Verify before calling a change correct
+
+Maintained products are the iPad app and the web app. `app/` is legacy Android. Do not use `./gradlew testDebug` as the gate for iOS or web.
+
+Before you say a change works:
+
+1. Follow `.cursor/skills/verify-switch2go/SKILL.md`. The sibling map is `.cursor/skills/verify-switch2go/parity.md`.
+2. Run `scripts/verify-changed.sh` on the files you edited.
+3. In the reply, keep **Ran**, **Not run**, and **Sibling review** separate. `VERDICT: PASS_WITH_REVIEW` (exit 3) means those lines are still open. A Linux checkout cannot compile Swift or the Kotlin iOS framework.
+4. Camera, on-screen gaze, dwell from a real face, blink recenter, BLE switches, spoken TTS, and games need a physical iPad or Safari. Say so when they were not run.
+
+A green test proves only its assertions. Web `setSymbolCount` clamps to 1-4. The iOS setter stores the value it is given. `AppSettingsTests` allows 2 through 9.
+
+Gradle needs JDK 17. `source setjava.sh` is the check. Java 25 fails the framework build with a version error, not a code error.
