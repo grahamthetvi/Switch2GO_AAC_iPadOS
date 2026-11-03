@@ -191,6 +191,9 @@ export function EditCategoryDetailPage() {
                   className="edit-list-main link"
                 >
                   <span className="edit-list-title">{phrase.text}</span>
+                  {phrase.spokenText && phrase.spokenText !== phrase.text ? (
+                    <span className="edit-list-subtitle">Says: {phrase.spokenText}</span>
+                  ) : null}
                   {phrase.isPreset ? <span className="edit-list-badge">Preset</span> : null}
                   {phrase.style ? <span className="edit-list-badge style">Styled</span> : null}
                 </Link>

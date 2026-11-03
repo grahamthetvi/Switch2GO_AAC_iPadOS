@@ -74,7 +74,7 @@ enum PhrasePackExporter {
         database: VocableDatabase,
         staging: URL
     ) throws -> [PhrasePackPhrase] {
-        var items: [(sort: Int, text: String, style: PhraseStyle?)] = []
+        var items: [(sort: Int, text: String, spokenText: String?, style: PhraseStyle?)] = []
 
         let presets = database.presetPhraseQueries
             .getPresetPhrasesForCategory(parent_category_id: categoryId)
@@ -82,7 +82,12 @@ enum PhrasePackExporter {
         for phrase in presets {
             let text = CoreVocabulary.phraseText(for: phrase.phrase_id, fallback: phrase.phrase_id)
             let style = PhraseStyle.fromJSONString(phrase.style)
-            items.append((sort: Int(phrase.sort_order), text: text, style: style))
+            items.append((
+                sort: Int(phrase.sort_order),
+                text: text,
+                spokenText: PhraseSpeech.normalizedSpokenText(phrase.spoken_text),
+                style: style
+            ))
         }
 
         let customs = database.phraseQueries
@@ -90,7 +95,12 @@ enum PhrasePackExporter {
             .executeAsList()
         for phrase in customs {
             let style = PhraseStyle.fromJSONString(phrase.style)
-            items.append((sort: Int(phrase.sort_order), text: phrase.localized_utterance ?? "", style: style))
+            items.append((
+                sort: Int(phrase.sort_order),
+                text: phrase.localized_utterance ?? "",
+                spokenText: PhraseSpeech.normalizedSpokenText(phrase.spoken_text),
+                style: style
+            ))
         }
 
         items.sort { $0.sort < $1.sort }
@@ -103,7 +113,8 @@ enum PhrasePackExporter {
                 id: packId,
                 text: item.text,
                 sortOrder: index,
-                style: packStyle
+                style: packStyle,
+                spokenText: item.spokenText
             ))
         }
         return packPhrases

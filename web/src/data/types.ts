@@ -42,6 +42,7 @@ export interface PresetPhraseRow {
   sort_order: number
   deleted: number
   style: string | null
+  spoken_text?: string | null
 }
 
 export interface CategoryRow {
@@ -62,6 +63,7 @@ export interface PhraseRow {
   localized_utterance: string | null
   sort_order: number
   style: string | null
+  spoken_text?: string | null
 }
 
 export interface CategoryDisplay {
@@ -76,7 +78,10 @@ export interface CategoryDisplay {
 
 export interface PhraseDisplay {
   id: string
+  /** Text shown on the button. */
   text: string
+  /** What speech says. Null means speak `text`. */
+  spokenText: string | null
   sortOrder: number
   isPreset: boolean
   style: PhraseStyle | null

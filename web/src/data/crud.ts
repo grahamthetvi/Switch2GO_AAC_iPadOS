@@ -1,5 +1,6 @@
 import { db } from './db'
 import { pickNewCategoryColor } from './categoryDefaults'
+import { normalizeSpokenText } from './phraseSpeech'
 import { serializePhraseStyle } from './phraseStyle'
 import type { CategoryDisplay, PhraseDisplay, PhraseStyle } from './types'
 
@@ -92,7 +93,11 @@ export async function deleteCustomCategory(categoryId: string): Promise<void> {
   })
 }
 
-export async function insertCustomPhrase(categoryId: string, text: string): Promise<string> {
+export async function insertCustomPhrase(
+  categoryId: string,
+  text: string,
+  spokenText?: string | null,
+): Promise<string> {
   const phraseId = newCustomId('custom')
   const timestamp = Date.now()
   const existing = await db.phrase.where('parent_category_id').equals(categoryId).count()
@@ -102,6 +107,7 @@ export async function insertCustomPhrase(categoryId: string, text: string): Prom
     creation_date: timestamp,
     last_spoken_date: null,
     localized_utterance: text,
+    spoken_text: normalizeSpokenText(spokenText),
     sort_order: existing,
     style: null,
   })
@@ -111,6 +117,21 @@ export async function insertCustomPhrase(categoryId: string, text: string): Prom
 export async function updateCustomPhraseText(phraseId: string, text: string): Promise<void> {
   const row = await db.phrase.get(phraseId)
   if (row) await db.phrase.put({ ...row, localized_utterance: text })
+}
+
+export async function updatePhraseSpokenText(
+  phraseId: string,
+  isPreset: boolean,
+  spokenText: string | null,
+): Promise<void> {
+  const stored = normalizeSpokenText(spokenText)
+  if (isPreset) {
+    const row = await db.presetPhrase.get(phraseId)
+    if (row) await db.presetPhrase.put({ ...row, spoken_text: stored })
+    return
+  }
+  const row = await db.phrase.get(phraseId)
+  if (row) await db.phrase.put({ ...row, spoken_text: stored })
 }
 
 export async function updatePhraseStyle(phraseId: string, isPreset: boolean, style: PhraseStyle | null): Promise<void> {

@@ -32,6 +32,22 @@ final class PhrasePackArchiveTests: XCTestCase {
         let loaded = try PhrasePackArchive.loadManifest(fromExtractRoot: extract)
         XCTAssertEqual(loaded.displayName, "Lesson")
         XCTAssertEqual(loaded.phrases.first?.text, "Hello")
+        XCTAssertNil(loaded.phrases.first?.spokenText)
+    }
+
+    func testManifestSpokenTextIsOptional() throws {
+        let json = """
+        {"formatVersion":1,"packId":"p","displayName":"Lesson","createdAt":1,"source":"ios","category":{"id":"c","name":"Lesson"},"phrases":[{"id":"pack_phrase_01","sortOrder":0,"text":"Hi"}]}
+        """
+        let decoded = try JSONDecoder().decode(PhrasePackManifest.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.phrases.first?.text, "Hi")
+        XCTAssertNil(decoded.phrases.first?.spokenText)
+
+        let encoded = try JSONEncoder().encode(
+            PhrasePackPhrase(id: "pack_phrase_01", text: "Bath", sortOrder: 0, style: nil, spokenText: "Bathroom please")
+        )
+        let phrase = try JSONDecoder().decode(PhrasePackPhrase.self, from: encoded)
+        XCTAssertEqual(phrase.spokenText, "Bathroom please")
     }
 
     func testCorruptZipFailsWithoutExtractRootLeftovers() {
@@ -144,7 +160,8 @@ final class PhrasePackImporterTests: XCTestCase {
             last_spoken_date: nil,
             localized_utterance: "Water",
             sort_order: 0,
-            style: nil
+            style: nil,
+            spoken_text: nil
         )
         createdPhraseIds.append(existingPhraseId)
 
@@ -278,6 +295,36 @@ final class PhrasePackImporterTests: XCTestCase {
         )) { error in
             XCTAssertEqual(error as? PhrasePackError, .protectedCategory)
         }
+    }
+
+    func testImportKeepsSpokenTextSeparateFromLabel() throws {
+        let name = "Speech Pack \(UUID().uuidString.prefix(8))"
+        let packURL = try writePack(
+            categoryName: name,
+            phrases: [
+                PhrasePackPhrase(
+                    id: "pack_phrase_01",
+                    text: "Bathroom",
+                    sortOrder: 0,
+                    style: nil,
+                    spokenText: "I need to use the bathroom"
+                )
+            ]
+        )
+        defer { try? FileManager.default.removeItem(at: packURL) }
+
+        let result = try PhrasePackImporter.importPack(
+            fileURL: packURL,
+            destination: .createNew(name: name)
+        )
+        createdCategoryIds.append(result.categoryId)
+        let phrases = DatabaseManager.shared.db.phraseQueries
+            .getPhrasesForCategory(parent_category_id: result.categoryId)
+            .executeAsList()
+        createdPhraseIds.append(contentsOf: phrases.map { $0.phrase_id })
+        XCTAssertEqual(phrases.count, 1)
+        XCTAssertEqual(phrases[0].localized_utterance, "Bathroom")
+        XCTAssertEqual(phrases[0].spoken_text, "I need to use the bathroom")
     }
 
     private func writePack(categoryName: String, phrases: [PhrasePackPhrase]) throws -> URL {

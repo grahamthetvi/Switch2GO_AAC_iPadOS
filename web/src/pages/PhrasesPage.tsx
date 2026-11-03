@@ -4,6 +4,7 @@ import { useGamePlayback } from '../game/GamePlaybackContext'
 import { Link, useParams } from 'react-router-dom'
 import { DwellSelectable } from '../components/DwellSelectable'
 import { PhraseMedia } from '../components/phrases/PhraseMedia'
+import { phraseSpeechText } from '../data/phraseSpeech'
 import { loadPhrases, markPhraseSpoken } from '../data/repository'
 import { phraseStyleToLabelStyle, phraseStyleToTileStyle } from '../data/phraseStyle'
 import type { PhraseDisplay } from '../data/types'
@@ -57,7 +58,7 @@ export function PhrasesPage() {
   const selectPhrase = useCallback(
     async (phrase: PhraseDisplay) => {
       if (isFullscreenActive) return
-      speak(phrase.text, locale)
+      speak(phraseSpeechText(phrase.text, phrase.spokenText), locale)
       await markPhraseSpoken(phrase.id, phrase.isPreset)
       onPhraseSelected(phrase)
       onGamePhraseSelected(phrase)
@@ -73,7 +74,7 @@ export function PhrasesPage() {
   const speakPhrase = useCallback(
     (phrase: PhraseDisplay) => {
       prepareSpeech()
-      speak(phrase.text, locale)
+      speak(phraseSpeechText(phrase.text, phrase.spokenText), locale)
     },
     [locale],
   )
@@ -90,7 +91,7 @@ export function PhrasesPage() {
       if (idx >= 0 && idx < pagePhrases.length) {
         const phrase = pagePhrases[idx]
         prepareSpeech()
-        speak(phrase.text, locale)
+        speak(phraseSpeechText(phrase.text, phrase.spokenText), locale)
         void markPhraseSpoken(phrase.id, phrase.isPreset)
         onPhraseSelected(phrase)
         onGamePhraseSelected(phrase)

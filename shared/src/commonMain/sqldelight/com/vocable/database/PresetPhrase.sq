@@ -6,7 +6,8 @@ CREATE TABLE PresetPhrase (
   last_spoken_date INTEGER,
   sort_order INTEGER NOT NULL,
   deleted INTEGER NOT NULL DEFAULT 0,
-  style TEXT DEFAULT NULL
+  style TEXT DEFAULT NULL,
+  spoken_text TEXT
 );
 
 -- Queries
@@ -22,8 +23,11 @@ WHERE parent_category_id = ? AND deleted = 0
 ORDER BY sort_order ASC;
 
 insertPresetPhrase:
-INSERT OR REPLACE INTO PresetPhrase (phrase_id, parent_category_id, creation_date, last_spoken_date, sort_order, deleted, style)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO PresetPhrase (phrase_id, parent_category_id, creation_date, last_spoken_date, sort_order, deleted, style, spoken_text)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+updatePresetPhraseSpokenText:
+UPDATE PresetPhrase SET spoken_text = ? WHERE phrase_id = ?;
 
 updatePresetPhraseLastSpoken:
 UPDATE PresetPhrase SET last_spoken_date = ? WHERE phrase_id = ?;

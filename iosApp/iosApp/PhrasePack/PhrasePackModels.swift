@@ -120,6 +120,8 @@ struct PhrasePackPhrase: Codable, Equatable {
     var text: String
     var sortOrder: Int
     var style: PhrasePackStyle?
+    /// What speech says. Nil means speak `text`. Omitted by older packs.
+    var spokenText: String? = nil
 }
 
 struct PhrasePackStyle: Codable, Equatable {
