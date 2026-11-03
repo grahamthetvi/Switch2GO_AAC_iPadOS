@@ -80,12 +80,14 @@ class DatabaseTests: XCTestCase {
                 last_spoken_date: nil,
                 localized_utterance: "Test Phrase",
                 sort_order: 999,
-                style: nil
+                style: nil,
+                spoken_text: nil
             )
             
             let phrase = try database.phraseQueries.getPhraseById(phrase_id: phraseId).executeAsOneOrNull()
             XCTAssertNotNil(phrase, "Phrase should be inserted")
             XCTAssertEqual(phrase?.localized_utterance, "Test Phrase")
+            XCTAssertNil(phrase?.spoken_text)
             
             // Cleanup
             try database.phraseQueries.deletePhrase(phrase_id: phraseId)
@@ -94,6 +96,43 @@ class DatabaseTests: XCTestCase {
         }
     }
     
+    func testCustomPhraseSpokenTextCanDifferFromLabel() {
+        let phraseId = "test_spoken_\(UUID().uuidString)"
+
+        do {
+            try database.phraseQueries.insertPhrase(
+                phrase_id: phraseId,
+                parent_category_id: "preset_routine_activity",
+                creation_date: 12345,
+                last_spoken_date: nil,
+                localized_utterance: "Bathroom",
+                sort_order: 999,
+                style: nil,
+                spoken_text: "I need to use the bathroom"
+            )
+
+            let phrase = try database.phraseQueries.getPhraseById(phrase_id: phraseId).executeAsOneOrNull()
+            XCTAssertEqual(phrase?.localized_utterance, "Bathroom")
+            XCTAssertEqual(phrase?.spoken_text, "I need to use the bathroom")
+            XCTAssertEqual(
+                PhraseSpeech.speechText(presented: phrase?.localized_utterance ?? "", spoken: phrase?.spoken_text),
+                "I need to use the bathroom"
+            )
+
+            try database.phraseQueries.updatePhraseSpokenText(spoken_text: nil, phrase_id: phraseId)
+            let cleared = try database.phraseQueries.getPhraseById(phrase_id: phraseId).executeAsOneOrNull()
+            XCTAssertNil(cleared?.spoken_text)
+            XCTAssertEqual(
+                PhraseSpeech.speechText(presented: cleared?.localized_utterance ?? "", spoken: cleared?.spoken_text),
+                "Bathroom"
+            )
+
+            try database.phraseQueries.deletePhrase(phrase_id: phraseId)
+        } catch {
+            XCTFail("Failed to store spoken text: \(error)")
+        }
+    }
+
     func testUpdatePhraseStyle() {
         let phraseId = "preset_please" // Use existing preset phrase
         let styleJson = "{\"backgroundColor\":4293456181,\"textColor\":4294967295}"
@@ -158,7 +197,8 @@ class DatabaseTests: XCTestCase {
                 last_spoken_date: nil,
                 localized_utterance: "Custom Recents Test",
                 sort_order: 999,
-                style: nil
+                style: nil,
+                spoken_text: nil
             )
 
             // Update spoken date
@@ -192,7 +232,8 @@ class DatabaseTests: XCTestCase {
                 last_spoken_date: newerTimestamp,
                 localized_utterance: "Custom Most Recent",
                 sort_order: 1,
-                style: nil
+                style: nil,
+                spoken_text: nil
             )
 
             try database.presetPhraseQueries.updatePresetPhraseLastSpoken(

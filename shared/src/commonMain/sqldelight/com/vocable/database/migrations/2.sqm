@@ -1,0 +1,4 @@
+-- Migration 2: Optional spoken text, separate from the button label.
+-- New column is appended so it matches ALTER TABLE column order.
+ALTER TABLE Phrase ADD COLUMN spoken_text TEXT;
+ALTER TABLE PresetPhrase ADD COLUMN spoken_text TEXT;

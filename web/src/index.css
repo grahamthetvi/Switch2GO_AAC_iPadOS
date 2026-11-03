@@ -538,6 +538,14 @@ button.settings-hub-row {
   font-weight: 600;
 }
 
+.edit-list-subtitle {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8rem;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
 .edit-list-badge {
   display: inline-block;
   font-size: 0.7rem;

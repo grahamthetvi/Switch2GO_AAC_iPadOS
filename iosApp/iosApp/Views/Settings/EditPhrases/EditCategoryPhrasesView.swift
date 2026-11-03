@@ -24,6 +24,12 @@ struct EditCategoryPhrasesView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(phrase.text)
                                 .font(.body)
+
+                            if let spoken = phrase.spokenText, spoken != phrase.text {
+                                Text("Says: \(spoken)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                             
                             if phrase.isPreset {
                                 Text("Preset")
@@ -85,18 +91,49 @@ struct AddPhraseView: View {
     let onSaved: () -> Void
     
     @State private var phraseText: String = ""
+    @State private var spokenText: String = ""
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
     
     var body: some View {
         NavigationStack {
+            ScrollView {
             VStack(spacing: 20) {
-                TextField("Phrase text", text: $phraseText)
-                    .font(.title2)
-                    .padding()
-                    .background(Color(UIColor.secondarySystemBackground))
-                    .cornerRadius(12)
-                    .padding()
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Presented text")
+                        .font(.headline)
+                    TextField("What shows on the button", text: $phraseText, axis: .vertical)
+                        .lineLimit(2...4)
+                        .font(.title2)
+                        .padding()
+                        .background(Color(UIColor.secondarySystemBackground))
+                        .cornerRadius(12)
+                    Text("This is the label on the phrase button.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Spoken text")
+                        .font(.headline)
+                    TextField("Same as the button text", text: $spokenText, axis: .vertical)
+                        .lineLimit(2...4)
+                        .font(.title2)
+                        .padding()
+                        .background(Color(UIColor.secondarySystemBackground))
+                        .cornerRadius(12)
+                    Text("What is spoken aloud. Leave blank to say the button text.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Button("Preview speech") {
+                        TTSManager.shared.speak(
+                            PhraseSpeech.speechText(presented: phraseText, spoken: spokenText)
+                        )
+                    }
+                    .disabled(phraseText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+                .padding(.horizontal)
                 
                 Button(action: savePhrase) {
                     Text("Save Phrase")
@@ -111,6 +148,8 @@ struct AddPhraseView: View {
                 .padding(.horizontal)
                 
                 Spacer()
+            }
+            .padding(.vertical)
             }
             .navigationTitle("Add Phrase")
             .navigationBarTitleDisplayMode(.inline)
@@ -141,7 +180,8 @@ struct AddPhraseView: View {
             last_spoken_date: nil,
             localized_utterance: phraseText,
             sort_order: 999,
-            style: nil
+            style: nil,
+            spoken_text: PhraseSpeech.normalizedSpokenText(spokenText)
         )
         dismiss()
         onSaved()

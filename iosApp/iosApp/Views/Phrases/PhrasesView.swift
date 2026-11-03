@@ -258,9 +258,9 @@ struct PhrasesView: View {
             )
             return
         }
-        DebugLog.info("Phrase selected — speaking \"\(phrase.text)\"", tag: "Dwell")
+        DebugLog.info("Phrase selected — speaking \"\(phrase.speechText)\"", tag: "Dwell")
         viewModel.markPhraseAsSpoken(phraseId: phrase.id)
-        TTSManager.shared.speak(phrase.text)
+        TTSManager.shared.speak(phrase.speechText)
         mediaCoordinator.onPhraseSelected(phrase)
         gameCoordinator.onPhraseSelected(phrase)
         if phrase.style?.sendSwitchOutput == true {

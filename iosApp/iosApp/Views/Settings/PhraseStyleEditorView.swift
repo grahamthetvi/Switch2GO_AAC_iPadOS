@@ -664,6 +664,7 @@ struct PhraseStyleEditorView: View {
         PhraseStyleEditorView(phrase: PhraseDisplayModel(
             id: "test",
             text: "Hello World",
+            spokenText: nil,
             sortOrder: 0,
             isPreset: false,
             style: nil

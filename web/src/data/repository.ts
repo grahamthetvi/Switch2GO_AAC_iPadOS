@@ -2,8 +2,9 @@ import { localizedCategoryName, localizedPhraseText } from '../i18n/i18n'
 import { useSettings } from '../settings/settingsStore'
 import presets from './presets.json'
 import { db } from './db'
+import { normalizeSpokenText } from './phraseSpeech'
 import { parsePhraseStyle } from './phraseStyle'
-import type { CategoryDisplay, PhraseDisplay, PhraseStyle } from './types'
+import type { CategoryDisplay, PhraseDisplay, PhraseRow, PresetPhraseRow } from './types'
 import { RECENTS_CATEGORY_ID } from './types'
 
 function presetCategoryLabel(categoryId: string): string {
@@ -33,6 +34,28 @@ export function getPresetPhraseText(phraseId: string): string {
 }
 
 const parseStyle = parsePhraseStyle
+
+function presetPhraseDisplay(row: PresetPhraseRow): PhraseDisplay {
+  return {
+    id: row.phrase_id,
+    text: presetPhraseLabel(row.phrase_id),
+    spokenText: normalizeSpokenText(row.spoken_text),
+    sortOrder: row.sort_order,
+    isPreset: true,
+    style: parseStyle(row.style),
+  }
+}
+
+function customPhraseDisplay(row: PhraseRow): PhraseDisplay {
+  return {
+    id: row.phrase_id,
+    text: row.localized_utterance ?? '',
+    spokenText: normalizeSpokenText(row.spoken_text),
+    sortOrder: row.sort_order,
+    isPreset: false,
+    style: parseStyle(row.style),
+  }
+}
 
 /** All categories for settings editor (includes hidden). */
 export async function loadCategoriesForEdit(): Promise<CategoryDisplay[]> {
@@ -104,6 +127,16 @@ export async function loadPhrasesForEdit(categoryId: string): Promise<PhraseDisp
   return loadPhrases(categoryId)
 }
 
+export async function loadPhraseById(phraseId: string, isPreset: boolean): Promise<PhraseDisplay | null> {
+  if (isPreset) {
+    const row = await db.presetPhrase.get(phraseId)
+    if (!row || row.deleted === 1) return null
+    return presetPhraseDisplay(row)
+  }
+  const row = await db.phrase.get(phraseId)
+  return row ? customPhraseDisplay(row) : null
+}
+
 export async function loadPhrases(categoryId: string): Promise<PhraseDisplay[]> {
   if (categoryId === RECENTS_CATEGORY_ID) {
     const recentPresets = await db.presetPhrase
@@ -111,30 +144,15 @@ export async function loadPhrases(categoryId: string): Promise<PhraseDisplay[]> 
       .toArray()
     const recentCustom = await db.phrase.filter((p) => p.last_spoken_date != null).toArray()
 
-    type RecentRow = {
-      id: string
-      text: string
-      sortOrder: number
-      isPreset: boolean
-      style: PhraseStyle | null
-      lastSpoken: number
-    }
+    type RecentRow = PhraseDisplay & { lastSpoken: number }
 
     const combined: RecentRow[] = [
       ...recentPresets.map((p) => ({
-        id: p.phrase_id,
-        text: presetPhraseLabel(p.phrase_id),
-        sortOrder: p.sort_order,
-        isPreset: true,
-        style: parseStyle(p.style),
+        ...presetPhraseDisplay(p),
         lastSpoken: p.last_spoken_date ?? 0,
       })),
       ...recentCustom.map((p) => ({
-        id: p.phrase_id,
-        text: p.localized_utterance ?? '',
-        sortOrder: p.sort_order,
-        isPreset: false,
-        style: parseStyle(p.style),
+        ...customPhraseDisplay(p),
         lastSpoken: p.last_spoken_date ?? 0,
       })),
     ]
@@ -152,20 +170,8 @@ export async function loadPhrases(categoryId: string): Promise<PhraseDisplay[]> 
   const customRows = await db.phrase.where('parent_category_id').equals(categoryId).toArray()
 
   const display: PhraseDisplay[] = [
-    ...presetRows.map((p) => ({
-      id: p.phrase_id,
-      text: presetPhraseLabel(p.phrase_id),
-      sortOrder: p.sort_order,
-      isPreset: true,
-      style: parseStyle(p.style),
-    })),
-    ...customRows.map((p) => ({
-      id: p.phrase_id,
-      text: p.localized_utterance ?? '',
-      sortOrder: p.sort_order,
-      isPreset: false,
-      style: parseStyle(p.style),
-    })),
+    ...presetRows.map((p) => presetPhraseDisplay(p)),
+    ...customRows.map((p) => customPhraseDisplay(p)),
   ]
 
   return display.sort((a, b) => a.sortOrder - b.sortOrder)

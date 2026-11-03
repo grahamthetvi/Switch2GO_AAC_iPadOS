@@ -186,7 +186,8 @@ struct SavePhraseToCategoryView: View {
             last_spoken_date: nil,
             localized_utterance: phraseText,
             sort_order: 999,
-            style: nil
+            style: nil,
+            spoken_text: nil
         )
         dismiss()
         onSaved()

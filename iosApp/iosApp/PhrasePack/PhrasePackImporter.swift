@@ -113,7 +113,8 @@ enum PhrasePackImporter {
                         last_spoken_date: nil,
                         localized_utterance: phrase.text,
                         sort_order: Int64(phrase.sortOrder),
-                        style: phrase.styleJSON
+                        style: phrase.styleJSON,
+                        spoken_text: phrase.spokenText
                     )
                 }
             }
@@ -138,6 +139,7 @@ enum PhrasePackImporter {
     private struct PreparedPhrase {
         let id: String
         let text: String
+        let spokenText: String?
         let sortOrder: Int
         let creationDate: Int64
         let styleJSON: String?
@@ -209,6 +211,7 @@ enum PhrasePackImporter {
             prepared.append(PreparedPhrase(
                 id: "custom_\(UUID().uuidString)",
                 text: phrase.text,
+                spokenText: PhraseSpeech.normalizedSpokenText(phrase.spokenText),
                 sortOrder: startingSort + index,
                 creationDate: now,
                 styleJSON: styleJSON

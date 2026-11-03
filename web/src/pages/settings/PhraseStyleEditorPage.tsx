@@ -71,6 +71,7 @@ export function PhraseStyleEditorPage() {
       setPhrase({
         id: phraseId,
         text: getPresetPhraseText(phraseId),
+        spokenText: null,
         sortOrder: 0,
         isPreset,
         style: null,

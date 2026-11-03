@@ -6,7 +6,8 @@ CREATE TABLE Phrase (
   last_spoken_date INTEGER,
   localized_utterance TEXT,
   sort_order INTEGER NOT NULL,
-  style TEXT DEFAULT NULL
+  style TEXT DEFAULT NULL,
+  spoken_text TEXT
 );
 
 -- Queries
@@ -28,15 +29,18 @@ ORDER BY last_spoken_date DESC
 LIMIT ?;
 
 insertPhrase:
-INSERT OR REPLACE INTO Phrase (phrase_id, parent_category_id, creation_date, last_spoken_date, localized_utterance, sort_order, style)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO Phrase (phrase_id, parent_category_id, creation_date, last_spoken_date, localized_utterance, sort_order, style, spoken_text)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 insertPhraseExclusive:
-INSERT INTO Phrase (phrase_id, parent_category_id, creation_date, last_spoken_date, localized_utterance, sort_order, style)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT INTO Phrase (phrase_id, parent_category_id, creation_date, last_spoken_date, localized_utterance, sort_order, style, spoken_text)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 updatePhraseText:
 UPDATE Phrase SET localized_utterance = ? WHERE phrase_id = ?;
+
+updatePhraseSpokenText:
+UPDATE Phrase SET spoken_text = ? WHERE phrase_id = ?;
 
 updatePhraseStyle:
 UPDATE Phrase SET style = ? WHERE phrase_id = ?;

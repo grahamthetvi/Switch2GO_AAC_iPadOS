@@ -5,9 +5,13 @@ import {
   deleteCustomPhrase,
   softDeletePresetPhrase,
   updateCustomPhraseText,
+  updatePhraseSpokenText,
 } from '../../data/crud'
-import { getPresetPhraseText, loadPhrasesForEdit } from '../../data/repository'
+import { phraseSpeechText } from '../../data/phraseSpeech'
+import { loadPhraseById } from '../../data/repository'
 import type { PhraseDisplay } from '../../data/types'
+import { useSettings } from '../../settings/settingsStore'
+import { prepareSpeech, speak } from '../../tts/speak'
 
 export function EditPhraseDetailPage() {
   const { phraseId = '' } = useParams()
@@ -15,32 +19,25 @@ export function EditPhraseDetailPage() {
   const isPreset = searchParams.get('preset') === '1'
   const categoryId = searchParams.get('category') ?? ''
   const navigate = useNavigate()
+  const locale = useSettings((s) => s.locale)
 
   const [phrase, setPhrase] = useState<PhraseDisplay | null>(null)
   const [text, setText] = useState('')
+  const [spoken, setSpoken] = useState('')
   const [loading, setLoading] = useState(true)
 
   const refresh = useCallback(async () => {
     setLoading(true)
-    if (categoryId) {
-      const list = await loadPhrasesForEdit(categoryId)
-      const found = list.find((p) => p.id === phraseId)
-      if (found) {
-        setPhrase(found)
-        setText(found.text)
-      }
-    } else if (isPreset) {
-      setPhrase({
-        id: phraseId,
-        text: getPresetPhraseText(phraseId),
-        sortOrder: 0,
-        isPreset: true,
-        style: null,
-      })
-      setText(getPresetPhraseText(phraseId))
+    const found = await loadPhraseById(phraseId, isPreset)
+    if (found) {
+      setPhrase(found)
+      setText(found.text)
+      setSpoken(found.spokenText ?? '')
+    } else {
+      setPhrase(null)
     }
     setLoading(false)
-  }, [categoryId, isPreset, phraseId])
+  }, [isPreset, phraseId])
 
   useEffect(() => {
     void refresh()
@@ -50,6 +47,21 @@ export function EditPhraseDetailPage() {
     if (!phrase || phrase.isPreset) return
     setText(value)
     await updateCustomPhraseText(phrase.id, value)
+  }
+
+  const saveSpoken = async (value: string) => {
+    if (!phrase) return
+    setSpoken(value)
+    await updatePhraseSpokenText(phrase.id, phrase.isPreset, value)
+  }
+
+  const preview = () => {
+    if (!phrase) return
+    const presented = phrase.isPreset ? phrase.text : text
+    const speech = phraseSpeechText(presented, spoken)
+    if (!speech.trim()) return
+    prepareSpeech()
+    speak(speech, locale)
   }
 
   const remove = async () => {
@@ -88,23 +100,48 @@ export function EditPhraseDetailPage() {
     )
   }
 
+  const presented = phrase.isPreset ? phrase.text : text
+
   return (
     <SettingsLayout title="Edit Phrase" backTo={backTo} backLabel="← Category">
       <section className="settings-section">
-        <h2>Phrase text</h2>
+        <h2>Presented text</h2>
         {phrase.isPreset ? (
           <>
             <p className="readonly-field">{phrase.text}</p>
-            <p className="hint">Preset phrase text comes from the app bundle and cannot be edited.</p>
+            <p className="hint">Preset button text comes from the app and cannot be edited.</p>
           </>
         ) : (
-          <textarea
-            className="text-input phrase-textarea"
-            value={text}
-            onChange={(e) => void saveText(e.target.value)}
-            rows={3}
-          />
+          <>
+            <textarea
+              className="text-input phrase-textarea"
+              value={text}
+              onChange={(e) => void saveText(e.target.value)}
+              rows={3}
+            />
+            <p className="hint">This is the label on the phrase button.</p>
+          </>
         )}
+      </section>
+
+      <section className="settings-section">
+        <h2>Spoken text</h2>
+        <textarea
+          className="text-input phrase-textarea"
+          value={spoken}
+          onChange={(e) => void saveSpoken(e.target.value)}
+          placeholder="Same as the button text"
+          rows={3}
+        />
+        <p className="hint">What is spoken aloud. Leave blank to say the button text.</p>
+        <button
+          type="button"
+          className="secondary-btn"
+          disabled={!presented.trim()}
+          onClick={preview}
+        >
+          Preview speech
+        </button>
       </section>
 
       <section className="settings-section">

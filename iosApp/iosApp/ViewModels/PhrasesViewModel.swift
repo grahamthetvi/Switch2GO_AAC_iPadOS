@@ -35,7 +35,7 @@ class PhrasesViewModel: ObservableObject {
             
             // Check if it's Recents category
             if self.categoryId == "preset_recents" {
-                var recentItems: [(id: String, text: String, lastSpoken: Int64, isPreset: Bool, style: PhraseStyle?)] = []
+                var recentItems: [(id: String, text: String, spokenText: String?, lastSpoken: Int64, isPreset: Bool, style: PhraseStyle?)] = []
 
                 // 1. Spoken preset phrases
                 let presetPhrases = self.database.presetPhraseQueries
@@ -47,7 +47,14 @@ class PhrasesViewModel: ObservableObject {
                     guard let spoken = phrase.last_spoken_date?.int64Value else { continue }
                     let phraseText = self.getPhraseText(for: phrase.phrase_id)
                     let parsedStyle = self.parseStyle(from: phrase.style)
-                    recentItems.append((id: phrase.phrase_id, text: phraseText, lastSpoken: spoken, isPreset: true, style: parsedStyle))
+                    recentItems.append((
+                        id: phrase.phrase_id,
+                        text: phraseText,
+                        spokenText: PhraseSpeech.normalizedSpokenText(phrase.spoken_text),
+                        lastSpoken: spoken,
+                        isPreset: true,
+                        style: parsedStyle
+                    ))
                 }
 
                 // 2. Spoken custom phrases
@@ -60,7 +67,14 @@ class PhrasesViewModel: ObservableObject {
                     guard let spoken = phrase.last_spoken_date?.int64Value else { continue }
                     let phraseText = phrase.localized_utterance ?? ""
                     let parsedStyle = self.parseStyle(from: phrase.style)
-                    recentItems.append((id: phrase.phrase_id, text: phraseText, lastSpoken: spoken, isPreset: false, style: parsedStyle))
+                    recentItems.append((
+                        id: phrase.phrase_id,
+                        text: phraseText,
+                        spokenText: PhraseSpeech.normalizedSpokenText(phrase.spoken_text),
+                        lastSpoken: spoken,
+                        isPreset: false,
+                        style: parsedStyle
+                    ))
                 }
 
                 // Sort by lastSpoken descending and take top 8
@@ -71,6 +85,7 @@ class PhrasesViewModel: ObservableObject {
                     displayModels.append(PhraseDisplayModel(
                         id: item.id,
                         text: item.text,
+                        spokenText: item.spokenText,
                         sortOrder: idx,
                         isPreset: item.isPreset,
                         style: item.style
@@ -88,6 +103,7 @@ class PhrasesViewModel: ObservableObject {
                     displayModels.append(PhraseDisplayModel(
                         id: phrase.phrase_id,
                         text: phraseText,
+                        spokenText: PhraseSpeech.normalizedSpokenText(phrase.spoken_text),
                         sortOrder: Int(phrase.sort_order),
                         isPreset: true,
                         style: parsedStyle
@@ -104,6 +120,7 @@ class PhrasesViewModel: ObservableObject {
                     displayModels.append(PhraseDisplayModel(
                         id: phrase.phrase_id,
                         text: phrase.localized_utterance ?? "",
+                        spokenText: PhraseSpeech.normalizedSpokenText(phrase.spoken_text),
                         sortOrder: Int(phrase.sort_order),
                         isPreset: false,
                         style: parsedStyle
@@ -191,7 +208,8 @@ class PhrasesViewModel: ObservableObject {
                     last_spoken_date: presetPhrase.last_spoken_date,
                     sort_order: Int64(sortOrder),
                     deleted: presetPhrase.deleted,
-                    style: presetPhrase.style
+                    style: presetPhrase.style,
+                    spoken_text: presetPhrase.spoken_text
                 )
             } else {
                 self.database.phraseQueries.updatePhraseSortOrder(
@@ -216,11 +234,30 @@ class PhrasesViewModel: ObservableObject {
     }
 }
 
+/// Blank spoken text means the button label is what gets spoken.
+enum PhraseSpeech {
+    static func normalizedSpokenText(_ raw: String?) -> String? {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    static func speechText(presented: String, spoken: String?) -> String {
+        normalizedSpokenText(spoken) ?? presented
+    }
+}
+
 /// Display model for a phrase
 struct PhraseDisplayModel: Identifiable {
     let id: String
+    /// Text shown on the button.
     let text: String
+    /// What speech says. Nil means speak `text`.
+    let spokenText: String?
     let sortOrder: Int
     let isPreset: Bool
     let style: PhraseStyle?
+
+    var speechText: String {
+        PhraseSpeech.speechText(presented: text, spoken: spokenText)
+    }
 }

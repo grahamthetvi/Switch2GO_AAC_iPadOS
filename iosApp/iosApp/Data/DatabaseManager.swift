@@ -119,7 +119,8 @@ class DatabaseManager: ObservableObject {
                 last_spoken_date: phrase.lastSpokenDate,
                 sort_order: Int64(phrase.sortOrder),
                 deleted: 0,
-                style: styleJson
+                style: styleJson,
+                spoken_text: nil
             )
         }
 

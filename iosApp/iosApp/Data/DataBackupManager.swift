@@ -36,6 +36,7 @@ enum DataBackupManager {
         let sort_order: Int64
         let deleted: Int64
         let style: String?
+        let spoken_text: String?
     }
 
     struct CategoryRow: Codable {
@@ -56,6 +57,7 @@ enum DataBackupManager {
         let localized_utterance: String?
         let sort_order: Int64
         let style: String?
+        let spoken_text: String?
     }
 
     struct BackupPayload: Codable {
@@ -114,7 +116,8 @@ enum DataBackupManager {
                 last_spoken_date: $0.last_spoken_date.map { Int64(truncating: $0) },
                 sort_order: $0.sort_order,
                 deleted: $0.deleted,
-                style: $0.style
+                style: $0.style,
+                spoken_text: $0.spoken_text
             )
         }
         let categories = database.categoryQueries.getAllCategories().executeAsList().map {
@@ -136,7 +139,8 @@ enum DataBackupManager {
                 last_spoken_date: $0.last_spoken_date.map { Int64(truncating: $0) },
                 localized_utterance: $0.localized_utterance,
                 sort_order: $0.sort_order,
-                style: $0.style
+                style: $0.style,
+                spoken_text: $0.spoken_text
             )
         }
 
@@ -262,7 +266,8 @@ enum DataBackupManager {
                 last_spoken_date: phrase.last_spoken_date.map { KotlinLong(value: $0) },
                 sort_order: phrase.sort_order,
                 deleted: phrase.deleted,
-                style: phrase.style
+                style: phrase.style,
+                spoken_text: phrase.spoken_text
             )
         }
         for cat in payload.category {
@@ -284,7 +289,8 @@ enum DataBackupManager {
                 last_spoken_date: phrase.last_spoken_date.map { KotlinLong(value: $0) },
                 localized_utterance: phrase.localized_utterance,
                 sort_order: phrase.sort_order,
-                style: phrase.style
+                style: phrase.style,
+                spoken_text: phrase.spoken_text
             )
         }
 
