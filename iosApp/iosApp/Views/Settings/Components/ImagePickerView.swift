@@ -11,6 +11,7 @@ struct ImagePickerView: View {
     
     @State private var showingPhotoPicker = false
     @State private var showingEmojiKeyboard = false
+    @State private var showingLibrary = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     
     var body: some View {
@@ -27,6 +28,14 @@ struct ImagePickerView: View {
                             onImageSelected(nil)
                         }
                         
+                        specialButton(
+                            title: "Choose from Library",
+                            icon: "rectangle.stack",
+                            color: .purple
+                        ) {
+                            showingLibrary = true
+                        }
+
                         specialButton(
                             title: "Use Emoji",
                             icon: "face.smiling",
@@ -50,6 +59,11 @@ struct ImagePickerView: View {
                         ) {
                             openImageTool()
                         }
+
+                        Text("Choosing None takes the picture off this phrase. Photos you added stay in Media Library so you can save them or use them on another phrase.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal)
                     }
                     .padding(.horizontal)
                     
@@ -77,6 +91,16 @@ struct ImagePickerView: View {
                 )
             }
             .photosPicker(isPresented: $showingPhotoPicker, selection: $selectedPhotoItem)
+            .sheet(isPresented: $showingLibrary) {
+                MediaLibraryPickerView(
+                    kind: .picture,
+                    onSelect: { imageRef in
+                        showingLibrary = false
+                        onImageSelected(imageRef)
+                    },
+                    onCancel: { showingLibrary = false }
+                )
+            }
             .onChange(of: selectedPhotoItem) { _, newItem in
                 Task {
                     if let data = try? await newItem?.loadTransferable(type: Data.self) {

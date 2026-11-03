@@ -63,6 +63,15 @@ struct MainSettingsView: View {
                                 color: .teal
                             )
                         }
+
+                        NavigationLink(destination: MediaLibraryView()) {
+                            settingsRow(
+                                title: "Media Library",
+                                icon: "photo.on.rectangle.angled",
+                                color: .pink,
+                                subtitle: "Save or reuse pictures, videos, and audio"
+                            )
+                        }
                         
                         NavigationLink(destination: TimingSensitivityView()) {
                             settingsRow(

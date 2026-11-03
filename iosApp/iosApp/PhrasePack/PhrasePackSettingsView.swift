@@ -13,7 +13,7 @@ struct PhrasePackSettingsView: View {
     var body: some View {
         List {
             Section {
-                Text("A phrase pack is a .switch2go file a teacher can send by email, AirDrop, or Files. Importing adds a copy of the category and its phrases. Built-in boards are never overwritten.")
+                Text("A phrase pack is a .switch2go file a teacher can send by email, AirDrop, or Files. Importing adds a copy of the category and its phrases. Pictures, videos, and audio from the pack also appear in Media Library so you can save them or use them on another phrase. Built-in boards are never overwritten.")
                     .font(.footnote)
                     .foregroundColor(.secondary)
             }

@@ -178,7 +178,7 @@ struct EditCategoryDetailView: View {
                         }
                     }
                     .disabled(isExporting)
-                    Text("Creates a .switch2go file you can send by Mail, AirDrop, or Files. Videos should be 20 seconds or shorter. Files larger than 24.75 MB may not send by school email.")
+                    Text("Creates a .switch2go file you can send by Mail, AirDrop, or Files. Videos should be 20 seconds or shorter. Files larger than 24.75 MB may not send by school email. On the iPad that imports it, pictures, videos, and audio show up in Media Library.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

@@ -11,6 +11,7 @@ struct MediaPickerView: View {
     let onCancel: () -> Void
 
     @State private var showingDocumentPicker = false
+    @State private var showingLibrary = false
     @State private var pickerError: String?
 
     var body: some View {
@@ -31,6 +32,16 @@ struct MediaPickerView: View {
                     }
 
                     Button {
+                        showingLibrary = true
+                    } label: {
+                        optionRow(
+                            title: "Choose from Library",
+                            icon: "rectangle.stack",
+                            color: .purple
+                        )
+                    }
+
+                    Button {
                         showingDocumentPicker = true
                     } label: {
                         optionRow(
@@ -39,6 +50,11 @@ struct MediaPickerView: View {
                             color: .blue
                         )
                     }
+
+                    Text("Taking media off this phrase leaves the file in Media Library, where you can save it or use it on another phrase.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal)
 
                     if mediaType == PhraseStyle.companion.MEDIA_TYPE_VIDEO {
                         Text("Videos must be 20 seconds or shorter. Longer files are not attached.")
@@ -57,10 +73,20 @@ struct MediaPickerView: View {
                 }
             }
             .sheet(isPresented: $showingDocumentPicker) {
-                DocumentPickerRepresentable(
+                MediaDocumentPicker(
                     contentTypes: allowedTypes,
                     onPick: handlePickedURL,
                     onCancel: { showingDocumentPicker = false }
+                )
+            }
+            .sheet(isPresented: $showingLibrary) {
+                MediaLibraryPickerView(
+                    kind: mediaType == PhraseStyle.companion.MEDIA_TYPE_VIDEO ? .video : .audio,
+                    onSelect: { relativeRef in
+                        showingLibrary = false
+                        deliverSavedMedia(relativeRef)
+                    },
+                    onCancel: { showingLibrary = false }
                 )
             }
         }
@@ -106,7 +132,12 @@ struct MediaPickerView: View {
                 }
                 return
             }
+            deliverSavedMedia(relativeRef)
+        }
+    }
 
+    private func deliverSavedMedia(_ relativeRef: String) {
+        Task {
             var posterRef: String?
             let imageMissing = currentImageRef == nil || currentImageRef?.isEmpty == true
             let needsPoster = mediaType == PhraseStyle.companion.MEDIA_TYPE_VIDEO
@@ -142,39 +173,3 @@ struct MediaPickerView: View {
     }
 }
 
-private struct DocumentPickerRepresentable: UIViewControllerRepresentable {
-    let contentTypes: [UTType]
-    let onPick: (URL?) -> Void
-    let onCancel: () -> Void
-
-    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
-        let picker = UIDocumentPickerViewController(forOpeningContentTypes: contentTypes, asCopy: true)
-        picker.delegate = context.coordinator
-        picker.allowsMultipleSelection = false
-        return picker
-    }
-
-    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onPick: onPick, onCancel: onCancel)
-    }
-
-    final class Coordinator: NSObject, UIDocumentPickerDelegate {
-        let onPick: (URL?) -> Void
-        let onCancel: () -> Void
-
-        init(onPick: @escaping (URL?) -> Void, onCancel: @escaping () -> Void) {
-            self.onPick = onPick
-            self.onCancel = onCancel
-        }
-
-        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-            onPick(urls.first)
-        }
-
-        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-            onCancel()
-        }
-    }
-}

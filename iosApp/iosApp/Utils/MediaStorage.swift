@@ -2,6 +2,12 @@ import Foundation
 
 /// Stores phrase images under Documents/Images/ and video/audio under Documents/Media/.
 /// Persisted refs are relative paths (`Images/….jpg`, `Media/….mp4`).
+struct StoredMediaFile: Equatable {
+    let relativePath: String
+    let byteSize: Int64
+    let modifiedAt: Date
+}
+
 enum MediaStorage {
     static let maxFileBytes: Int64 = 100 * 1024 * 1024 // 100 MB
     static let imagesFolderName = "Images"
@@ -215,18 +221,29 @@ enum MediaStorage {
 
     /// Lists relative paths of all files currently under Images/ and Media/.
     static func listStoredRelativePaths() -> [String] {
-        var paths: [String] = []
+        listStoredFiles().map(\.relativePath)
+    }
+
+    /// Lists files under Images/ and Media/, including size and modification time.
+    static func listStoredFiles() -> [StoredMediaFile] {
+        var files: [StoredMediaFile] = []
         for folder in [imagesFolderName, mediaFolderName] {
             let dir = documentsDirectory.appendingPathComponent(folder, isDirectory: true)
             guard let contents = try? FileManager.default.contentsOfDirectory(
                 at: dir,
-                includingPropertiesForKeys: nil
+                includingPropertiesForKeys: [.fileSizeKey, .contentModificationDateKey, .isRegularFileKey]
             ) else { continue }
-            for url in contents where !url.hasDirectoryPath {
-                paths.append(relativeRef(folder: folder, fileName: url.lastPathComponent))
+            for url in contents {
+                let values = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey, .isRegularFileKey])
+                if values?.isRegularFile == false { continue }
+                files.append(StoredMediaFile(
+                    relativePath: relativeRef(folder: folder, fileName: url.lastPathComponent),
+                    byteSize: Int64(values?.fileSize ?? 0),
+                    modifiedAt: values?.contentModificationDate ?? .distantPast
+                ))
             }
         }
-        return paths
+        return files
     }
 
     static func mimeType(forRelativePath path: String) -> String {
