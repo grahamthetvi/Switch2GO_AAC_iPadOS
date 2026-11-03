@@ -127,9 +127,13 @@ struct PhraseStyleEditorView: View {
                 currentGameType: currentStyle.gameType,
                 onGameSelected: { gameType in
                     if let gameType {
-                        clearPreviousLocalMedia(oldRef: currentStyle.mediaRef, newRef: nil)
+                        let clearPoster = currentStyle.isVideo() && MediaStorage.isVideoPosterRef(currentStyle.imageRef)
+                        if clearPoster {
+                            MediaStorage.deleteMedia(mediaRef: currentStyle.imageRef)
+                        }
                         currentStyle = cloneCurrentStyle(
                             gameType: gameType,
+                            clearImage: clearPoster,
                             clearMedia: true,
                             clearGame: false
                         )
@@ -315,7 +319,7 @@ struct PhraseStyleEditorView: View {
         ImagePickerView(
                 selectedImage: currentStyle.imageRef,
                 onImageSelected: { imageRef in
-                    if imageRef != currentStyle.imageRef {
+                    if imageRef != currentStyle.imageRef, MediaStorage.isVideoPosterRef(currentStyle.imageRef) {
                         MediaStorage.deleteMedia(mediaRef: currentStyle.imageRef)
                     }
                     currentStyle = cloneCurrentStyle(imageRef: imageRef, clearImage: imageRef == nil)
@@ -332,14 +336,12 @@ struct PhraseStyleEditorView: View {
             currentMediaRef: currentStyle.mediaRef,
             currentImageRef: currentStyle.imageRef,
             onMediaSelected: { mediaRef, mediaType, posterRef in
-                clearPreviousLocalMedia(oldRef: currentStyle.mediaRef, newRef: mediaRef)
-
-                let removingVideo = mediaRef == nil && currentStyle.isVideo()
                 let currentImageIsPoster = MediaStorage.isVideoPosterRef(currentStyle.imageRef)
                 let imageMissing = currentStyle.imageRef == nil || currentStyle.imageRef?.isEmpty == true
                 let shouldApplyPoster = posterRef != nil && (imageMissing || currentImageIsPoster)
                 // Only generated `video_poster_` stills; keep user photos, emoji, and symbols.
-                let shouldClearStill = removingVideo && currentImageIsPoster
+                let leavingVideo = currentStyle.isVideo() && mediaType != PhraseStyle.companion.MEDIA_TYPE_VIDEO
+                let shouldClearStill = leavingVideo && currentImageIsPoster
 
                 if shouldClearStill || (shouldApplyPoster && currentImageIsPoster) {
                     MediaStorage.deleteMedia(mediaRef: currentStyle.imageRef)
@@ -368,10 +370,14 @@ struct PhraseStyleEditorView: View {
         YouTubePickerView(
             currentMediaRef: currentStyle.mediaRef,
             onMediaSelected: { mediaRef, mediaType in
-                clearPreviousLocalMedia(oldRef: currentStyle.mediaRef, newRef: mediaRef)
+                let clearPoster = currentStyle.isVideo() && MediaStorage.isVideoPosterRef(currentStyle.imageRef)
+                if clearPoster {
+                    MediaStorage.deleteMedia(mediaRef: currentStyle.imageRef)
+                }
                 currentStyle = cloneCurrentStyle(
                     mediaRef: mediaRef,
                     mediaType: mediaType,
+                    clearImage: clearPoster,
                     clearMedia: mediaRef == nil,
                     clearGame: mediaRef != nil
                 )
@@ -382,11 +388,6 @@ struct PhraseStyleEditorView: View {
                 showingYouTubePicker = false
             }
         )
-    }
-
-    private func clearPreviousLocalMedia(oldRef: String?, newRef: String?) {
-        guard let oldRef, oldRef != newRef, MediaStorage.isLocalMediaRef(oldRef) else { return }
-        MediaStorage.deleteMedia(mediaRef: oldRef)
     }
 
     private func cloneCurrentStyle(
@@ -638,8 +639,10 @@ struct PhraseStyleEditorView: View {
     }
     
     private func resetToDefault() {
-        MediaStorage.deleteMedia(mediaRef: currentStyle.mediaRef)
-        MediaStorage.deleteMedia(mediaRef: currentStyle.imageRef)
+        // Pictures, video, and audio stay in Media Library. Only a generated video still is discarded.
+        if MediaStorage.isVideoPosterRef(currentStyle.imageRef) {
+            MediaStorage.deleteMedia(mediaRef: currentStyle.imageRef)
+        }
         let reset = PhraseStyle(
             backgroundColor: nil,
             textColor: nil,

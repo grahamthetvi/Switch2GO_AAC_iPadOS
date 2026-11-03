@@ -18,7 +18,7 @@ struct DataBackupView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Save or restore your categories, phrases, styles, images, and media. Backups are primarily for the same iPad app (not interchangeable with the web app yet).")
+                Text("Save or restore your categories, phrases, styles, images, and media. Restored pictures, videos, and audio also appear in Media Library. Backups are primarily for the same iPad app (not interchangeable with the web app yet).")
                     .font(.body)
                     .foregroundColor(.secondary)
 
