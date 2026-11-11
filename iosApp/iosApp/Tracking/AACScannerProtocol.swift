@@ -142,6 +142,12 @@ enum AACScannerProtocol {
         )
     }
 
+    /// A status `choice` above the count the iPad asked for means the board is
+    /// scanning more choices than the iPad shows (stale or rejected config write).
+    static func statusShowsExtraChoices(statusChoice: UInt8, expectedChoices: UInt8) -> Bool {
+        statusChoice > expectedChoices
+    }
+
     static func highlightButtonId(
         choice: UInt8,
         state: ScanState,

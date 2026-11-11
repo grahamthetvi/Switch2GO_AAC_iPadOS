@@ -90,4 +90,55 @@ final class AACScannerProtocolTests: XCTestCase {
         XCTAssertNil(AACScannerProtocol.decodeConfig(Data([1, 4])))
         XCTAssertNil(AACScannerProtocol.decodeStatus(Data([0, 1, 1])))
     }
+
+    func testStatusAboveIPadChoiceCountFlagsMismatch() {
+        XCTAssertTrue(AACScannerProtocol.statusShowsExtraChoices(statusChoice: 3, expectedChoices: 2))
+        XCTAssertTrue(AACScannerProtocol.statusShowsExtraChoices(statusChoice: 4, expectedChoices: 3))
+        XCTAssertFalse(AACScannerProtocol.statusShowsExtraChoices(statusChoice: 4, expectedChoices: 4))
+        XCTAssertFalse(AACScannerProtocol.statusShowsExtraChoices(statusChoice: 2, expectedChoices: 4))
+        // Paused reports choice 0.
+        XCTAssertFalse(AACScannerProtocol.statusShowsExtraChoices(statusChoice: 0, expectedChoices: 1))
+    }
+
+    func testThreeAndFourChoiceHighlightsMapInOrder() {
+        let ids = ["p1", "p2", "p3", "p4"]
+        for choice in 1...4 {
+            XCTAssertEqual(
+                AACScannerProtocol.highlightButtonId(choice: UInt8(choice), state: .scanning, phraseButtonIds: ids),
+                ids[choice - 1]
+            )
+        }
+        XCTAssertNil(
+            AACScannerProtocol.highlightButtonId(choice: 4, state: .scanning, phraseButtonIds: Array(ids.prefix(3)))
+        )
+    }
+
+    func testReconnectBackoffIsBounded() {
+        XCTAssertEqual(AACScannerManager.reconnectDelay(attempt: 0), 1)
+        XCTAssertEqual(AACScannerManager.reconnectDelay(attempt: 1), 2)
+        XCTAssertEqual(AACScannerManager.reconnectDelay(attempt: 3), 8)
+        XCTAssertEqual(AACScannerManager.reconnectDelay(attempt: 4), 10)
+        XCTAssertEqual(AACScannerManager.reconnectDelay(attempt: 50), 10)
+        XCTAssertEqual(AACScannerManager.reconnectDelay(attempt: -1), 1)
+    }
+
+    func testReplacingNumChoicesSupportsThreeAndFour() throws {
+        let config = AACScannerProtocol.Config(
+            numChoices: 2,
+            scanTenths: 20,
+            holdTenths: 300,
+            longPressMs: 1000,
+            flags: AACScannerProtocol.flagSendEnter,
+            options: Array(
+                repeating: AACScannerProtocol.OptionConfig(r: 255, g: 255, b: 255, brightness: 255, mode: 0),
+                count: AACScannerProtocol.optionCount
+            )
+        )
+        let data = try XCTUnwrap(AACScannerProtocol.encodeConfig(config))
+        for count: UInt8 in [3, 4] {
+            let updated = try XCTUnwrap(AACScannerProtocol.replacingNumChoices(in: data, with: count))
+            XCTAssertEqual(AACScannerProtocol.decodeConfig(updated)?.numChoices, count)
+        }
+        XCTAssertNil(AACScannerProtocol.replacingNumChoices(in: data, with: 5))
+    }
 }

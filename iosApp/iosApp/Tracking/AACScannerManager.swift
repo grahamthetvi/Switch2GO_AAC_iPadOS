@@ -1,6 +1,7 @@
 import Foundation
 import CoreBluetooth
 import Combine
+import GameController
 
 /// GATT client for AAC Scanner. HID keys still arrive through SwitchControlManager.
 /// iOS often hides a paired keyboard from a scan, so this prefers
@@ -12,12 +13,24 @@ final class AACScannerManager: NSObject, ObservableObject {
     static let statusUUID = CBUUID(string: AACScannerProtocol.statusUUIDString)
     static let hidServiceUUID = CBUUID(string: AACScannerProtocol.hidServiceUUIDString)
     static let scanDuration: TimeInterval = 15
+    /// After this long in `.connecting`, the status text changes to "waiting".
+    /// The pending connect is kept so the board connects as soon as it powers on.
+    static let connectWaitNotice: TimeInterval = 10
+    static let maxConfigWriteAttempts = 3
+    static let configResyncThrottle: TimeInterval = 5
+
+    /// Backoff for automatic reconnects: 1, 2, 4, 8, then 10 s.
+    static func reconnectDelay(attempt: Int) -> TimeInterval {
+        let exponent = min(max(attempt, 0), 4)
+        return min(pow(2.0, Double(exponent)), 10)
+    }
 
     enum ConnectionState: Equatable {
         case idle
         case bluetoothOff
         case scanning
         case connecting
+        case waiting
         case ready
         case failed(String)
 
@@ -31,6 +44,8 @@ final class AACScannerManager: NSObject, ObservableObject {
                 return "Looking for AAC Scanner…"
             case .connecting:
                 return "Connecting…"
+            case .waiting:
+                return "Waiting for AAC Scanner. Turn it on; it connects by itself."
             case .ready:
                 return "Connected"
             case .failed(let message):
@@ -43,6 +58,13 @@ final class AACScannerManager: NSObject, ObservableObject {
     @Published private(set) var connectedDeviceName: String?
     @Published private(set) var lastStatus: AACScannerProtocol.Status?
     @Published private(set) var isDrivingHighlight = false
+    /// True when the AAC Scanner is connected to iPadOS as a keyboard, even if the
+    /// GATT status link is not up. Its keys 1–N are then choice numbers.
+    @Published private(set) var isKeyboardLinked = false
+    /// Number of choices the board reports in its config (nil until read).
+    @Published private(set) var boardChoiceCount: Int?
+    /// True after the iPad gave up writing the choice count to the board.
+    @Published private(set) var choiceSyncFailed = false
 
     var isReady: Bool { state == .ready }
 
@@ -53,7 +75,15 @@ final class AACScannerManager: NSObject, ObservableObject {
     private var lastConfigData: Data?
     private var desiredChoiceCount: UInt8 = 2
     private var scanTimeoutWork: DispatchWorkItem?
+    private var connectWaitWork: DispatchWorkItem?
+    private var reconnectWork: DispatchWorkItem?
+    private var reconnectAttempt = 0
     private var wantsScan = false
+    private var configWriteAttempts = 0
+    private var isConfigWriteInFlight = false
+    private var lastConfigResyncRequest: TimeInterval = 0
+    private var keyboardObserversInstalled = false
+    private var statusNotifyRetried = false
 
     static func isScannerPeripheral(name: String?, advertisedServiceUUIDs: [CBUUID] = []) -> Bool {
         AACScannerProtocol.isScannerPeripheral(
@@ -63,12 +93,16 @@ final class AACScannerManager: NSObject, ObservableObject {
     }
 
     func start() {
+        installKeyboardObservers()
         guard central == nil else { return }
         central = CBCentralManager(delegate: self, queue: .main)
     }
 
     func startScanning() {
         wantsScan = true
+        reconnectAttempt = 0
+        configWriteAttempts = 0
+        choiceSyncFailed = false
         guard let central else {
             start()
             return
@@ -82,6 +116,7 @@ final class AACScannerManager: NSObject, ObservableObject {
 
     func stopListening() {
         wantsScan = false
+        cancelTimers()
         stopScan()
         if let peripheral {
             central?.cancelPeripheralConnection(peripheral)
@@ -89,11 +124,13 @@ final class AACScannerManager: NSObject, ObservableObject {
         clearConnection(forgetUUID: false)
         isDrivingHighlight = false
         lastStatus = nil
+        isKeyboardLinked = false
         state = .idle
     }
 
     func disconnect() {
         wantsScan = false
+        cancelTimers()
         stopScan()
         if let peripheral {
             central?.cancelPeripheralConnection(peripheral)
@@ -102,19 +139,78 @@ final class AACScannerManager: NSObject, ObservableObject {
         AppSettings.shared.scannerPeripheralUUID = nil
         isDrivingHighlight = false
         lastStatus = nil
+        isKeyboardLinked = false
         state = .idle
         DebugLog.info("AAC Scanner disconnected", tag: "Scanner")
     }
 
     func syncChoiceCount(_ count: Int) {
-        desiredChoiceCount = UInt8(min(max(count, 1), 4))
+        let clamped = UInt8(min(max(count, 1), 4))
+        if clamped != desiredChoiceCount {
+            configWriteAttempts = 0
+            choiceSyncFailed = false
+        }
+        desiredChoiceCount = clamped
         writeChoiceCountIfNeeded()
+    }
+
+    /// Re-checks whether iPadOS has the AAC Scanner connected as a keyboard.
+    func refreshKeyboardLink() {
+        guard let central, central.state == .poweredOn else {
+            setKeyboardLinked(false)
+            return
+        }
+        let savedUUID = AppSettings.shared.scannerPeripheralUUID
+        let linked = central
+            .retrieveConnectedPeripherals(withServices: [Self.serviceUUID, Self.hidServiceUUID])
+            .contains { candidate in
+                Self.isScannerPeripheral(name: candidate.name)
+                    || (savedUUID != nil && candidate.identifier.uuidString == savedUUID)
+            }
+        setKeyboardLinked(linked || (state == .ready && lastStatus?.keyboardConnected == true))
+    }
+
+    private func setKeyboardLinked(_ linked: Bool) {
+        guard linked != isKeyboardLinked else { return }
+        isKeyboardLinked = linked
+        DebugLog.info("AAC Scanner keyboard \(linked ? "linked" : "not linked")", tag: "Scanner")
+    }
+
+    private func installKeyboardObservers() {
+        guard !keyboardObserversInstalled else { return }
+        keyboardObserversInstalled = true
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardConnectionChanged(_:)),
+            name: .GCKeyboardDidConnect,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardConnectionChanged(_:)),
+            name: .GCKeyboardDidDisconnect,
+            object: nil
+        )
+    }
+
+    @objc private func keyboardConnectionChanged(_ notification: Notification) {
+        // Core Bluetooth can lag the GameController notification slightly.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self else { return }
+            self.refreshKeyboardLink()
+            if self.wantsScan, self.isKeyboardLinked, !self.isReady,
+               self.state != .connecting, self.state != .scanning {
+                self.connectToKnownOrScan()
+            }
+        }
     }
 
     // MARK: - Connection
 
     private func connectToKnownOrScan() {
         guard let central, central.state == .poweredOn else { return }
+        reconnectWork?.cancel()
+        reconnectWork = nil
 
         if let peripheral, peripheral.state == .connected, statusCharacteristic != nil {
             state = .ready
@@ -124,6 +220,7 @@ final class AACScannerManager: NSObject, ObservableObject {
         let connected = central.retrieveConnectedPeripherals(withServices: [Self.serviceUUID, Self.hidServiceUUID])
             .filter { Self.isScannerPeripheral(name: $0.name) }
         if let match = connected.first {
+            setKeyboardLinked(true)
             attach(match)
             return
         }
@@ -137,7 +234,11 @@ final class AACScannerManager: NSObject, ObservableObject {
             }
         }
 
-        beginScan()
+        if wantsScan {
+            beginScan()
+        } else {
+            state = .idle
+        }
     }
 
     private func beginScan() {
@@ -162,37 +263,99 @@ final class AACScannerManager: NSObject, ObservableObject {
         central?.stopScan()
     }
 
+    private func cancelTimers() {
+        connectWaitWork?.cancel()
+        connectWaitWork = nil
+        reconnectWork?.cancel()
+        reconnectWork = nil
+    }
+
     private func attach(_ peripheral: CBPeripheral) {
         stopScan()
+        if let current = self.peripheral, current.identifier != peripheral.identifier {
+            central?.cancelPeripheralConnection(current)
+            clearConnection(forgetUUID: false)
+        }
         self.peripheral = peripheral
         peripheral.delegate = self
         connectedDeviceName = peripheral.name
         AppSettings.shared.scannerPeripheralUUID = peripheral.identifier.uuidString
         state = .connecting
+        armConnectWaitNotice()
         if peripheral.state == .connected {
             peripheral.discoverServices([Self.serviceUUID])
         } else {
+            // No timeout on purpose: iOS keeps this pending and connects when the
+            // board powers on, which is what a classroom setup needs.
             central?.connect(peripheral, options: nil)
         }
     }
 
+    private func armConnectWaitNotice() {
+        connectWaitWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.state == .connecting else { return }
+            self.state = .waiting
+            DebugLog.info("AAC Scanner not answering yet; connect stays pending", tag: "Scanner")
+        }
+        connectWaitWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.connectWaitNotice, execute: work)
+    }
+
+    private func scheduleReconnect(reason: String) {
+        // Only while switch input is on; stopListening/disconnect clear wantsScan.
+        guard wantsScan else { return }
+        reconnectWork?.cancel()
+        let delay = Self.reconnectDelay(attempt: reconnectAttempt)
+        reconnectAttempt += 1
+        DebugLog.info("AAC Scanner reconnect in \(delay)s (\(reason))", tag: "Scanner")
+        let work = DispatchWorkItem { [weak self] in
+            self?.connectToKnownOrScan()
+        }
+        reconnectWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+
     private func clearConnection(forgetUUID: Bool) {
+        connectWaitWork?.cancel()
+        connectWaitWork = nil
         peripheral?.delegate = nil
         peripheral = nil
         configCharacteristic = nil
         statusCharacteristic = nil
         lastConfigData = nil
+        isConfigWriteInFlight = false
+        boardChoiceCount = nil
         connectedDeviceName = nil
         if forgetUUID {
             AppSettings.shared.scannerPeripheralUUID = nil
         }
     }
 
+    // MARK: - Choice count sync
+
     private func writeChoiceCountIfNeeded() {
         guard state == .ready,
               let lastConfigData,
-              let updated = AACScannerProtocol.replacingNumChoices(in: lastConfigData, with: desiredChoiceCount),
-              updated != lastConfigData else {
+              let updated = AACScannerProtocol.replacingNumChoices(in: lastConfigData, with: desiredChoiceCount) else {
+            return
+        }
+        guard updated != lastConfigData else {
+            // Board already matches the iPad.
+            configWriteAttempts = 0
+            choiceSyncFailed = false
+            return
+        }
+        guard !isConfigWriteInFlight else { return }
+        guard configWriteAttempts < Self.maxConfigWriteAttempts else {
+            if !choiceSyncFailed {
+                choiceSyncFailed = true
+                let boardText = boardChoiceCount.map { String($0) } ?? "?"
+                DebugLog.warn(
+                    "AAC Scanner kept \(boardText) choices after \(Self.maxConfigWriteAttempts) writes of \(desiredChoiceCount)",
+                    tag: "Scanner"
+                )
+            }
             return
         }
         writeConfig(updated)
@@ -200,11 +363,55 @@ final class AACScannerManager: NSObject, ObservableObject {
 
     private func writeConfig(_ data: Data) {
         guard let peripheral, let configCharacteristic else { return }
-        let writeType: CBCharacteristicWriteType =
-            configCharacteristic.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse
-        peripheral.writeValue(data, for: configCharacteristic, type: writeType)
-        lastConfigData = data
-        DebugLog.info("Wrote AAC Scanner numChoices=\(desiredChoiceCount)", tag: "Scanner")
+        configWriteAttempts += 1
+        DebugLog.info(
+            "Writing AAC Scanner numChoices=\(desiredChoiceCount) (attempt \(configWriteAttempts))",
+            tag: "Scanner"
+        )
+        if configCharacteristic.properties.contains(.write) {
+            // With response, so a failed write is reported and retried.
+            isConfigWriteInFlight = true
+            peripheral.writeValue(data, for: configCharacteristic, type: .withResponse)
+        } else {
+            peripheral.writeValue(data, for: configCharacteristic, type: .withoutResponse)
+            readConfigBack(after: 0.5)
+        }
+    }
+
+    /// Reads the config so `lastConfigData` reflects what the board really stored.
+    private func readConfigBack(after delay: TimeInterval) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let self, let peripheral = self.peripheral, peripheral.state == .connected,
+                  let configCharacteristic = self.configCharacteristic else { return }
+            peripheral.readValue(for: configCharacteristic)
+        }
+    }
+
+    private func requestConfigResyncIfNeeded(for status: AACScannerProtocol.Status) {
+        guard AACScannerProtocol.statusShowsExtraChoices(
+            statusChoice: status.choice,
+            expectedChoices: desiredChoiceCount
+        ) else { return }
+        let now = Date().timeIntervalSince1970
+        guard now - lastConfigResyncRequest > Self.configResyncThrottle, !isConfigWriteInFlight else { return }
+        lastConfigResyncRequest = now
+        DebugLog.warn(
+            "AAC Scanner is on choice \(status.choice) but the iPad shows \(desiredChoiceCount); re-reading config",
+            tag: "Scanner"
+        )
+        readConfigBack(after: 0)
+    }
+
+    private func dropLink(_ message: String?) {
+        clearConnection(forgetUUID: false)
+        isDrivingHighlight = false
+        lastStatus = nil
+        if let message {
+            state = .failed(message)
+        } else {
+            state = .idle
+        }
+        refreshKeyboardLink()
     }
 }
 
@@ -214,22 +421,34 @@ extension AACScannerManager: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
-            if wantsScan || AppSettings.shared.scannerPeripheralUUID != nil {
+            refreshKeyboardLink()
+            if wantsScan {
                 connectToKnownOrScan()
             } else {
                 state = .idle
             }
         case .poweredOff:
             stopScan()
+            cancelTimers()
             clearConnection(forgetUUID: false)
             isDrivingHighlight = false
             lastStatus = nil
+            isKeyboardLinked = false
             state = .bluetoothOff
+        case .resetting:
+            stopScan()
+            cancelTimers()
+            clearConnection(forgetUUID: false)
+            isDrivingHighlight = false
+            lastStatus = nil
+            state = .idle
         case .unauthorized:
             stopScan()
+            cancelTimers()
             clearConnection(forgetUUID: false)
             isDrivingHighlight = false
             lastStatus = nil
+            isKeyboardLinked = false
             state = .failed("Bluetooth permission is off for Switch2GO.")
         case .unsupported:
             state = .failed("This device does not support Bluetooth LE.")
@@ -250,30 +469,25 @@ extension AACScannerManager: CBCentralManagerDelegate {
         DebugLog.info("Connected to \(peripheral.name ?? AACScannerProtocol.deviceName)", tag: "Scanner")
         connectedDeviceName = peripheral.name
         AppSettings.shared.scannerPeripheralUUID = peripheral.identifier.uuidString
+        if state == .waiting { state = .connecting }
         peripheral.discoverServices([Self.serviceUUID])
     }
 
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         let message = error?.localizedDescription ?? "Could not connect to AAC Scanner."
         DebugLog.warn("Connect failed: \(message)", tag: "Scanner")
-        clearConnection(forgetUUID: false)
-        isDrivingHighlight = false
-        lastStatus = nil
-        state = .failed(message)
+        dropLink(message)
+        scheduleReconnect(reason: "connect failed")
     }
 
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        DebugLog.info("Disconnected from \(peripheral.name ?? AACScannerProtocol.deviceName)", tag: "Scanner")
-        let shouldReconnect = wantsScan || AppSettings.shared.scannerPeripheralUUID != nil
-        clearConnection(forgetUUID: false)
-        isDrivingHighlight = false
-        lastStatus = nil
-        state = .idle
-        if shouldReconnect {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                self?.connectToKnownOrScan()
-            }
-        }
+        let name = peripheral.name ?? AACScannerProtocol.deviceName
+        let detail = error.map { ": " + $0.localizedDescription } ?? ""
+        DebugLog.info("Disconnected from \(name)\(detail)", tag: "Scanner")
+        // Ignore a late callback for a peripheral we already replaced.
+        if let current = self.peripheral, current.identifier != peripheral.identifier { return }
+        dropLink(nil)
+        scheduleReconnect(reason: "disconnected")
     }
 }
 
@@ -283,6 +497,8 @@ extension AACScannerManager: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if let error {
             DebugLog.warn("Service discovery failed: \(error.localizedDescription)", tag: "Scanner")
+            // Drop the link; didDisconnect schedules a reconnect.
+            central?.cancelPeripheralConnection(peripheral)
             state = .failed(error.localizedDescription)
             return
         }
@@ -293,34 +509,62 @@ extension AACScannerManager: CBPeripheralDelegate {
             if wantsScan {
                 beginScan()
             } else {
-                state = .failed("Paired device is not AAC Scanner.")
+                state = .failed("Paired device is not AAC Scanner. If the firmware was updated, forget AAC Scanner in iPad Settings → Bluetooth and pair again.")
             }
             return
         }
         peripheral.discoverCharacteristics([Self.configUUID, Self.statusUUID], for: service)
     }
 
+    func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
+        guard invalidatedServices.contains(where: { $0.uuid == Self.serviceUUID }) else { return }
+        DebugLog.info("AAC Scanner services changed; rediscovering", tag: "Scanner")
+        configCharacteristic = nil
+        statusCharacteristic = nil
+        isConfigWriteInFlight = false
+        state = .connecting
+        peripheral.discoverServices([Self.serviceUUID])
+    }
+
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         if let error {
             DebugLog.warn("Characteristic discovery failed: \(error.localizedDescription)", tag: "Scanner")
+            central?.cancelPeripheralConnection(peripheral)
             state = .failed(error.localizedDescription)
             return
         }
         configCharacteristic = service.characteristics?.first(where: { $0.uuid == Self.configUUID })
         statusCharacteristic = service.characteristics?.first(where: { $0.uuid == Self.statusUUID })
-        guard configCharacteristic != nil, let statusCharacteristic else {
-            state = .failed("AAC Scanner GATT characteristics missing.")
+        guard let configCharacteristic, let statusCharacteristic else {
+            state = .failed("AAC Scanner GATT characteristics missing. Forget AAC Scanner in iPad Settings → Bluetooth and pair again.")
             return
         }
-        if let configCharacteristic {
-            peripheral.readValue(for: configCharacteristic)
-        }
+        connectWaitWork?.cancel()
+        connectWaitWork = nil
+        reconnectAttempt = 0
+        statusNotifyRetried = false
+        peripheral.readValue(for: configCharacteristic)
         peripheral.setNotifyValue(true, for: statusCharacteristic)
         peripheral.readValue(for: statusCharacteristic)
         state = .ready
         isDrivingHighlight = true
         connectedDeviceName = peripheral.name ?? AACScannerProtocol.deviceName
+        refreshKeyboardLink()
         DebugLog.info("AAC Scanner GATT ready", tag: "Scanner")
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+        guard characteristic.uuid == Self.statusUUID else { return }
+        if let error {
+            DebugLog.warn("Status notify failed: \(error.localizedDescription)", tag: "Scanner")
+            guard !statusNotifyRetried else { return }
+            statusNotifyRetried = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                guard let self, let current = self.peripheral, current === peripheral,
+                      current.state == .connected else { return }
+                current.setNotifyValue(true, for: characteristic)
+            }
+        }
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
@@ -330,11 +574,12 @@ extension AACScannerManager: CBPeripheralDelegate {
         }
         guard let value = characteristic.value else { return }
         if characteristic.uuid == Self.configUUID {
-            lastConfigData = value
-            if AACScannerProtocol.decodeConfig(value) == nil {
+            guard let config = AACScannerProtocol.decodeConfig(value) else {
                 DebugLog.warn("AAC Scanner config rejected (len=\(value.count))", tag: "Scanner")
                 return
             }
+            lastConfigData = value
+            boardChoiceCount = Int(config.numChoices)
             writeChoiceCountIfNeeded()
         } else if characteristic.uuid == Self.statusUUID {
             guard let status = AACScannerProtocol.decodeStatus(value) else {
@@ -342,13 +587,26 @@ extension AACScannerManager: CBPeripheralDelegate {
                 return
             }
             lastStatus = status
-            isDrivingHighlight = true
+            if !isDrivingHighlight {
+                isDrivingHighlight = true
+            }
+            if status.keyboardConnected, !isKeyboardLinked {
+                setKeyboardLinked(true)
+            }
+            requestConfigResyncIfNeeded(for: status)
         }
     }
 
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
+        guard characteristic.uuid == Self.configUUID else { return }
+        isConfigWriteInFlight = false
         if let error {
             DebugLog.warn("AAC Scanner config write failed: \(error.localizedDescription)", tag: "Scanner")
+            // Re-read; the read handler retries the write if attempts remain.
+            readConfigBack(after: 0.5)
+            return
         }
+        // Confirm what the board stored rather than assuming the write landed.
+        readConfigBack(after: 0.3)
     }
 }
