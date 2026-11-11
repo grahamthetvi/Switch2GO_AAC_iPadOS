@@ -1094,6 +1094,14 @@ class GazeTrackingManager: ObservableObject {
             }
             .store(in: &cancellables)
 
+        scannerManager.$isKeyboardLinked
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] linked in
+                self?.switchManager.setScannerKeyboardLinked(linked)
+            }
+            .store(in: &cancellables)
+
         scannerManager.$isDrivingHighlight
             .receive(on: DispatchQueue.main)
             .sink { [weak self] driving in

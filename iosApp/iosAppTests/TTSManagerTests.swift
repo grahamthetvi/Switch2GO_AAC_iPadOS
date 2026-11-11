@@ -82,4 +82,16 @@ class TTSManagerTests: XCTestCase {
         XCTAssertFalse(ttsManager.isSpeaking)
         XCTAssertEqual(ttsManager.currentText, "")
     }
+
+    func testAudioSessionOptionsAreValidForPlayback() {
+        // defaultToSpeaker is only legal with playAndRecord; with playback it
+        // makes setCategory fail.
+        XCTAssertFalse(TTSManager.audioSessionOptions.contains(.defaultToSpeaker))
+        XCTAssertTrue(TTSManager.audioSessionOptions.contains(.mixWithOthers))
+    }
+
+    func testStartWatchdogAllowsSlowVoicesToLoad() {
+        XCTAssertGreaterThanOrEqual(TTSManager.startTimeout, 2.0)
+        XCTAssertLessThanOrEqual(TTSManager.startTimeout, 4.0)
+    }
 }

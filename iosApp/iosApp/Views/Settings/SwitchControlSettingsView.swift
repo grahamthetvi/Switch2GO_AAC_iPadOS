@@ -477,6 +477,10 @@ private struct AACScannerCard: View {
     @ObservedObject var scanner: AACScannerManager
     @StateObject private var settings = AppSettings.shared
 
+    private var ipadChoices: Int {
+        min(max(settings.symbolCount, 1), 4)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("AAC Scanner")
@@ -509,6 +513,25 @@ private struct AACScannerCard: View {
                 Text("Pair AAC Scanner in iPad Settings → Bluetooth. The board scans the choices; a long press types 1–N and selects that phrase here.")
                     .font(.caption)
                     .foregroundColor(.secondary)
+
+                if scanner.isReady, let boardChoices = scanner.boardChoiceCount {
+                    Text("Board: \(boardChoices) choices · iPad: \(ipadChoices) phrases per page")
+                        .font(.caption.bold())
+                        .foregroundColor(boardChoices == ipadChoices ? .secondary : .orange)
+                    if boardChoices != ipadChoices {
+                        Text(scanner.choiceSyncFailed
+                             ? "The board did not accept the new choice count. Tap Connect to try again, or power-cycle AAC Scanner."
+                             : "Updating the board to match the iPad…")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                } else if !scanner.isReady, scanner.isKeyboardLinked {
+                    Text("AAC Scanner keys are working: choice 1–4 picks phrase 1–4. The light on the iPad will follow the board once it reconnects.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
                 if scanner.isReady, let status = scanner.lastStatus, !status.keyboardConnected {
                     Text("Config only: selections will not arrive until a normal reboot. Do not hold Pause while powering on.")
