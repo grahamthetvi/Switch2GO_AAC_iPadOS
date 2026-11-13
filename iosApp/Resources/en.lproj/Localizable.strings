@@ -135,6 +135,7 @@
 "Could not open file" = "Could not open file";
 "Could not open phrase pack" = "Could not open phrase pack";
 "Could not write backup file" = "Could not write backup file";
+"Couldn't see a face. Try again." = "Couldn't see a face. Try again.";
 "Create another copy" = "Create another copy";
 "Creates a .switch2go file you can send by Mail, AirDrop, or Files. Videos should be 20 seconds or shorter. Files larger than 24.75 MB may not send by school email." = "Creates a .switch2go file you can send by Mail, AirDrop, or Files. Videos should be 20 seconds or shorter. Files larger than 24.75 MB may not send by school email.";
 "Creates a JSON file you can share or save to Files." = "Creates a JSON file you can share or save to Files.";
@@ -296,6 +297,7 @@
 "Loading..." = "Loading...";
 "Logs will appear here as tracking runs" = "Logs will appear here as tracking runs";
 "Look at point %d of %d" = "Look at point %d of %d";
+"Look at the center of the screen" = "Look at the center of the screen";
 "Look at the circle" = "Look at the circle";
 "Look back at the screen to resume" = "Look back at the screen to resume";
 "Look directly at each circle as it appears" = "Look directly at each circle as it appears";

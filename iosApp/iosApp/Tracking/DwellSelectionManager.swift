@@ -140,6 +140,15 @@ class DwellSelectionManager: ObservableObject {
         cancelDwell()
     }
 
+    /// Call when the cursor is hidden (face lost, gaze off-screen, warmup).
+    /// Without this the dwell timer kept running while hidden, and looking back
+    /// at the same tile fired it on the first frame.
+    func cancelDwellForTrackingLoss() {
+        guard hoveredButtonId != nil || exitGraceTimer != nil else { return }
+        DebugLog.debug("Dwell: cancelled (cursor hidden)", tag: "Dwell")
+        cancelDwell()
+    }
+
     // MARK: - Gaze Position Updates
 
     /// Update with the current gaze cursor position.

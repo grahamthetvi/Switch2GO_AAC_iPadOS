@@ -36,10 +36,9 @@ final class MediaPlaybackCoordinator: ObservableObject {
             return
         }
 
-        if armedPhrase?.id == phrase.id, phase == .armed {
-            return
-        }
-
+        // Selecting again (same or different phrase) restarts the idle delay.
+        // Returning early here left the phrase armed with no timer, so its
+        // clip never played.
         armedPhrase = phrase
         phase = .armed
 

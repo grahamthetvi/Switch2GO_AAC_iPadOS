@@ -9,7 +9,10 @@ import MediaPipeTasksVision
 class GazeTrackingManager: ObservableObject {
     @Published var gazePosition: CGPoint = .zero {
         didSet {
-            // Feed gaze position to dwell selection system
+            // Feed gaze position to dwell selection system. Skip while the cursor
+            // is hidden (e.g. gaze off-screen still writes an edge-clamped
+            // position) so a hidden cursor cannot select anything.
+            guard isCursorVisible else { return }
             dwellManager.updateGazePosition(gazePosition)
         }
     }
@@ -18,7 +21,20 @@ class GazeTrackingManager: ObservableObject {
     @Published var isTracking = false
     /// Whether a face/gaze is currently detected. Independent of [isTracking].
     @Published var isFaceDetected = false
-    @Published var isCursorVisible = true
+    @Published var isCursorVisible = true {
+        didSet {
+            guard oldValue, !isCursorVisible else { return }
+            // Hidden cursor must not keep a dwell armed (prevents an instant,
+            // unintended selection when the face or gaze comes back).
+            if Thread.isMainThread {
+                dwellManager.cancelDwellForTrackingLoss()
+            } else {
+                DispatchQueue.main.async { [weak self] in
+                    self?.dwellManager.cancelDwellForTrackingLoss()
+                }
+            }
+        }
+    }
     @Published var isGazeOutOfBounds = false
     @Published var showTrackingError = false
     @Published var calibrationProgress: Double = 0.0
@@ -83,6 +99,9 @@ class GazeTrackingManager: ObservableObject {
     private var headWasBlinking = false
     private var headBlinkStartTime: TimeInterval = 0
     private var headLastBlinkEndTime: TimeInterval = 0
+    /// Most recent face landmarks in head tracking mode, for the recenter button.
+    private var lastHeadLandmarks: [NormalizedLandmark]?
+    private var lastHeadLandmarksTime: TimeInterval = 0
 
     // Gaze offset for recentering (applied before screen mapping)
     private var gazeOffsetX: Float = 0.0
@@ -368,8 +387,30 @@ class GazeTrackingManager: ObservableObject {
         logger.info(message: "Gaze tracking stopped")
     }
     
-    func recenter() {
+    /// Recenter on where the user is looking right now. Call while tracking is
+    /// running (the main-screen recenter button), not while Settings is open.
+    /// - Returns: false when there was no recent face to recenter on.
+    @discardableResult
+    func recenter() -> Bool {
+        if AppSettings.shared.selectionMode == "face" {
+            // Head tracking: same steps as the double-blink recenter.
+            guard let landmarks = lastHeadLandmarks,
+                  CACurrentMediaTime() - lastHeadLandmarksTime < 0.5 else {
+                DebugLog.warn("Recenter skipped: no recent face", tag: "HeadTracking")
+                return false
+            }
+            headPoseTracker.recenter(landmarks: landmarks)
+            saveHeadCalibration()
+            headPoseTracker.reset()
+            return true
+        }
+        guard lastRawGazeX != nil, lastRawGazeY != nil,
+              CACurrentMediaTime() - lastLandmarkTime < 0.5 else {
+            DebugLog.warn("Recenter skipped: no recent gaze", tag: "EyeGaze")
+            return false
+        }
         recenterCursor()
+        return true
     }
     
     private func setupBodyGestureCallbacks() {
@@ -527,6 +568,8 @@ class GazeTrackingManager: ObservableObject {
             lastValidPosition = nil
         }
         lastSuccessfulDetectionTime = now
+        lastHeadLandmarks = landmarks
+        lastHeadLandmarksTime = now
         isRecovering = false
         if AppSettings.shared.enableTrackingDiagnostics {
             diagnosticsSuccessCount += 1
