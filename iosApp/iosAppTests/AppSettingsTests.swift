@@ -71,7 +71,8 @@ class AppSettingsTests: XCTestCase {
         settings.sensitivity = 2
         settings.speechRate = 1.25
         settings.speechVoiceIdentifier = "com.apple.voice.example"
-        
+        settings.enableAutoRecenter = true
+
         // Reset
         settings.resetToDefaults()
         
@@ -83,6 +84,7 @@ class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.smoothingMode, "adaptive")
         XCTAssertEqual(settings.speechRate, 1.0, accuracy: 0.0001)
         XCTAssertEqual(settings.speechVoiceIdentifier, "")
+        XCTAssertFalse(settings.enableAutoRecenter)
     }
 
     func testClampSpeechRateHelper() {

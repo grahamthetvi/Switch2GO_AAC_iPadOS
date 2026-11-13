@@ -135,6 +135,7 @@
 "Could not open file" = "無法開啟檔案";
 "Could not open phrase pack" = "無法開啟語句包";
 "Could not write backup file" = "無法寫入備份檔";
+"Couldn't see a face. Try again." = "未偵測到臉部，請再試一次。";
 "Create another copy" = "再建立一份副本";
 "Creates a .switch2go file you can send by Mail, AirDrop, or Files. Videos should be 20 seconds or shorter. Files larger than 24.75 MB may not send by school email." = "建立一個可透過郵件、AirDrop 或「檔案」傳送的 .switch2go 檔。影片應在 20 秒以內。大於 24.75 MB 的檔案可能無法用學校郵件寄出。";
 "Creates a JSON file you can share or save to Files." = "建立一個可分享或儲存到「檔案」的 JSON 檔。";
@@ -296,6 +297,7 @@
 "Loading..." = "載入中...";
 "Logs will appear here as tracking runs" = "追蹤執行時紀錄會顯示在這裡";
 "Look at point %d of %d" = "請看第 %d 點，共 %d 點";
+"Look at the center of the screen" = "請看螢幕中央";
 "Look at the circle" = "請看圓圈";
 "Look back at the screen to resume" = "請看回螢幕以繼續";
 "Look directly at each circle as it appears" = "圓圈出現時請直視它";

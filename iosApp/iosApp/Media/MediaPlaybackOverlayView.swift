@@ -339,6 +339,8 @@ final class MediaPlayerHolder: ObservableObject {
     @Published var player: AVPlayer?
 
     private var endObserver: NSObjectProtocol?
+    private var failObserver: NSObjectProtocol?
+    private var statusObservation: NSKeyValueObservation?
 
     func prepare(phrase: PhraseDisplayModel, coordinator: MediaPlaybackCoordinator) {
         teardown()
@@ -362,6 +364,28 @@ final class MediaPlayerHolder: ObservableObject {
             coordinator.onNaturalEnd()
         }
 
+        // A clip that cannot decode or stops partway must close the overlay;
+        // otherwise phase stays .playing and phrase selection is blocked.
+        failObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemFailedToPlayToEndTime,
+            object: item,
+            queue: .main
+        ) { note in
+            let error = note.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
+            DebugLog.error("Clip stopped before the end: \(error?.localizedDescription ?? "unknown error")", tag: "MediaPlayback")
+            coordinator.onNaturalEnd()
+        }
+        statusObservation = item.observe(\.status, options: [.new]) { [weak self] observedItem, _ in
+            guard observedItem.status == .failed else { return }
+            let message = observedItem.error?.localizedDescription ?? "unknown error"
+            DispatchQueue.main.async {
+                // Ignore a late failure from an item that is no longer playing.
+                guard let self, self.player?.currentItem === observedItem else { return }
+                DebugLog.error("Clip failed to load: \(message)", tag: "MediaPlayback")
+                coordinator.onNaturalEnd()
+            }
+        }
+
         avPlayer.play()
     }
 
@@ -379,6 +403,12 @@ final class MediaPlayerHolder: ObservableObject {
             NotificationCenter.default.removeObserver(endObserver)
             self.endObserver = nil
         }
+        if let failObserver {
+            NotificationCenter.default.removeObserver(failObserver)
+            self.failObserver = nil
+        }
+        statusObservation?.invalidate()
+        statusObservation = nil
         player?.pause()
         player = nil
     }

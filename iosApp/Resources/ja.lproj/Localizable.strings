@@ -135,6 +135,7 @@
 "Could not open file" = "ファイルを開けませんでした";
 "Could not open phrase pack" = "フレーズパックを開けませんでした";
 "Could not write backup file" = "バックアップを書き込めませんでした";
+"Couldn't see a face. Try again." = "顔が見つかりません。もう一度お試しください。";
 "Create another copy" = "もう1つコピーを作る";
 "Creates a .switch2go file you can send by Mail, AirDrop, or Files. Videos should be 20 seconds or shorter. Files larger than 24.75 MB may not send by school email." = ".switch2goファイルを作り、メール、AirDrop、ファイルで送れます。動画は20秒以内。24.75MB超は学校メールで送れないことがあります。";
 "Creates a JSON file you can share or save to Files." = "共有またはファイルに保存できるJSONを作ります。";
@@ -296,6 +297,7 @@
 "Loading..." = "読み込み中...";
 "Logs will appear here as tracking runs" = "追跡中にログがここに出ます";
 "Look at point %d of %d" = "ポイント %d / %d を見てください";
+"Look at the center of the screen" = "画面の中央を見てください";
 "Look at the circle" = "円を見てください";
 "Look back at the screen to resume" = "画面を見て再開してください";
 "Look directly at each circle as it appears" = "円が出たらまっすぐ見てください";

@@ -135,6 +135,7 @@
 "Could not open file" = "Không mở được tệp";
 "Could not open phrase pack" = "Không mở được gói cụm từ";
 "Could not write backup file" = "Không ghi được tệp sao lưu";
+"Couldn't see a face. Try again." = "Không thấy khuôn mặt. Hãy thử lại.";
 "Create another copy" = "Tạo bản sao khác";
 "Creates a .switch2go file you can send by Mail, AirDrop, or Files. Videos should be 20 seconds or shorter. Files larger than 24.75 MB may not send by school email." = "Tạo tệp .switch2go gửi bằng Mail, AirDrop hoặc Tệp. Video nên từ 20 giây trở xuống. Tệp lớn hơn 24,75 MB có thể không gửi được bằng email trường.";
 "Creates a JSON file you can share or save to Files." = "Tạo tệp JSON để chia sẻ hoặc lưu vào Tệp.";
@@ -296,6 +297,7 @@
 "Loading..." = "Đang tải...";
 "Logs will appear here as tracking runs" = "Nhật ký sẽ hiện khi đang theo dõi";
 "Look at point %d of %d" = "Nhìn điểm %d / %d";
+"Look at the center of the screen" = "Hãy nhìn vào giữa màn hình";
 "Look at the circle" = "Nhìn vào vòng tròn";
 "Look back at the screen to resume" = "Nhìn lại màn hình để tiếp tục";
 "Look directly at each circle as it appears" = "Nhìn thẳng vào mỗi vòng khi nó hiện";

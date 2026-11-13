@@ -17,23 +17,8 @@ struct MainSettingsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    Button(action: {
-                        NotificationCenter.default.post(name: Notification.Name("RecenterGaze"), object: nil)
-                    }) {
-                        HStack {
-                            Image(systemName: "crosshair")
-                                .font(.title3)
-                                .foregroundColor(.white)
-                            Text(l10n: "Recenter Cursor")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.orange.opacity(0.9))
-                        .cornerRadius(12)
-                    }
-                    .padding(.horizontal)
+                    // Recenter lives on the main screen (next to the gear) because
+                    // tracking is paused while Settings is open.
 
                     // Settings Options Grid
                     VStack(spacing: 12) {

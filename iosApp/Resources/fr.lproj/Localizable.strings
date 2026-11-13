@@ -135,6 +135,7 @@
 "Could not open file" = "Impossible d’ouvrir le fichier";
 "Could not open phrase pack" = "Impossible d’ouvrir le pack de phrases";
 "Could not write backup file" = "Impossible d’écrire le fichier de sauvegarde";
+"Couldn't see a face. Try again." = "Aucun visage détecté. Réessayez.";
 "Create another copy" = "Créer une autre copie";
 "Creates a .switch2go file you can send by Mail, AirDrop, or Files. Videos should be 20 seconds or shorter. Files larger than 24.75 MB may not send by school email." = "Crée un fichier .switch2go à envoyer par Mail, AirDrop ou Fichiers. Vidéos de 20 s ou moins. Au-delà de 24,75 Mo, l’e-mail scolaire peut refuser.";
 "Creates a JSON file you can share or save to Files." = "Crée un fichier JSON à partager ou enregistrer dans Fichiers.";
@@ -296,6 +297,7 @@
 "Loading..." = "Chargement...";
 "Logs will appear here as tracking runs" = "Les journaux apparaîtront ici pendant le suivi";
 "Look at point %d of %d" = "Regardez le point %d sur %d";
+"Look at the center of the screen" = "Regardez le centre de l’écran";
 "Look at the circle" = "Regardez le cercle";
 "Look back at the screen to resume" = "Regardez à nouveau l’écran pour reprendre";
 "Look directly at each circle as it appears" = "Regardez chaque cercle dès qu’il apparaît";

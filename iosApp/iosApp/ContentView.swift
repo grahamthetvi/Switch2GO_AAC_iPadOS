@@ -16,6 +16,11 @@ struct ContentView: View {
     @State private var showOnboarding = false
     @State private var orientationBanner: OrientationBannerInfo?
     @State private var currentOrientationText: String = "Unknown"
+    /// Seconds left in the recenter countdown; nil when not recentering.
+    @State private var recenterCountdown: Int?
+    @State private var recenterFailed = false
+    /// Bumped on every start/cancel so stale countdown ticks do nothing.
+    @State private var recenterGeneration = 0
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -41,6 +46,13 @@ struct ContentView: View {
                 settings: settings,
                 isTrackingEnabled: appState.isTrackingEnabled
             )
+
+            if recenterCountdown != nil || recenterFailed {
+                RecenterCountdownOverlay(remaining: recenterCountdown, failed: recenterFailed) {
+                    cancelRecenterCountdown()
+                }
+                .zIndex(25)
+            }
 
             // Gaze pointer — hidden when face lost / cursor hidden / body-gesture modes
             if !GazeTrackingManager.isBodyGestureMode(settings.selectionMode)
@@ -150,19 +162,39 @@ struct ContentView: View {
         // Explicit window inset is required because .ignoresSafeArea() zeroes
         // SwiftUI safe-area padding for descendants/overlays.
         .overlay(alignment: .topTrailing) {
-            VStack(spacing: 12) {
-                Button {
-                    showSettings = true
-                } label: {
-                    Image(systemName: "gear")
-                        .font(.title3)
-                        .foregroundColor(.white)
-                        .padding(12)
-                        .background(Color.blue.opacity(0.85))
-                        .clipShape(Circle())
-                        .shadow(radius: 4)
+            VStack(alignment: .trailing, spacing: 12) {
+                HStack(spacing: 12) {
+                    // Touch-only (not dwell-selectable), like the gear, so a
+                    // student cannot start a recenter by accident.
+                    if showRecenterButton {
+                        Button {
+                            startRecenterCountdown()
+                        } label: {
+                            Image(systemName: "scope")
+                                .font(.title3)
+                                .foregroundColor(.white)
+                                .padding(12)
+                                .background(Color.orange.opacity(0.9))
+                                .clipShape(Circle())
+                                .shadow(radius: 4)
+                        }
+                        .disabled(recenterCountdown != nil)
+                        .accessibilityLabel(L("Recenter Cursor"))
+                    }
+
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gear")
+                            .font(.title3)
+                            .foregroundColor(.white)
+                            .padding(12)
+                            .background(Color.blue.opacity(0.85))
+                            .clipShape(Circle())
+                            .shadow(radius: 4)
+                    }
+                    .accessibilityLabel(L("Settings"))
                 }
-                .accessibilityLabel(L("Settings"))
 
                 if settings.switchControlEnabled {
                     SwitchControlStatusBadge(switchManager: gazeManager.switchManager)
@@ -191,6 +223,7 @@ struct ContentView: View {
         .onChange(of: showSettings) { _, isOpen in
             updateModalTracking()
             if isOpen {
+                cancelRecenterCountdown()
                 gazeManager.stopTracking()
             } else {
                 if !showOnboarding && !phrasePacks.showImportSheet {
@@ -207,6 +240,7 @@ struct ContentView: View {
         .onChange(of: showOnboarding) { _, isOpen in
             updateModalTracking()
             if isOpen {
+                cancelRecenterCountdown()
                 gazeManager.stopTracking()
             } else {
                 if !showSettings && !phrasePacks.showImportSheet {
@@ -220,6 +254,7 @@ struct ContentView: View {
         .onChange(of: phrasePacks.showImportSheet) { _, isOpen in
             updateModalTracking()
             if isOpen {
+                cancelRecenterCountdown()
                 gazeManager.stopTracking()
             } else if !showSettings && !showOnboarding {
                 updateTrackingForSelectionMode()
@@ -265,9 +300,6 @@ struct ContentView: View {
         }
         .onChange(of: settings.switchControlEnabled) { _, _ in
             updateTrackingForSelectionMode()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("RecenterGaze"))) { _ in
-            gazeManager.recenter()
         }
         .onReceive(NotificationCenter.default.publisher(for: GazeTrackingManager.orientationTrackingChanged)) { notification in
             let trackingSupported = notification.object as? Bool ?? false
@@ -340,6 +372,64 @@ struct ContentView: View {
 
         // Start/stop scanning mode based on switch control settings
         updateSwitchScanningMode()
+    }
+
+    // MARK: - Recenter button
+
+    private var showRecenterButton: Bool {
+        (settings.selectionMode == "eyeGaze" || settings.selectionMode == "face")
+            && appState.isTrackingEnabled
+            && gazeManager.isTracking
+            && mediaCoordinator.phase != .playing
+            && gameCoordinator.phase != .playing
+    }
+
+    /// Show "look at the center" with a 3-2-1 countdown, then recenter from
+    /// live tracking. Tile selection is blocked while it counts down.
+    private func startRecenterCountdown() {
+        guard recenterCountdown == nil else { return }
+        recenterGeneration += 1
+        recenterFailed = false
+        gazeManager.dwellManager.setAllowedButtonIds([])
+        recenterCountdown = 3
+        scheduleRecenterTick(generation: recenterGeneration)
+    }
+
+    private func scheduleRecenterTick(generation: Int) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            guard generation == recenterGeneration, let remaining = recenterCountdown else { return }
+            if remaining > 1 {
+                recenterCountdown = remaining - 1
+                scheduleRecenterTick(generation: generation)
+                return
+            }
+            let succeeded = gazeManager.recenter()
+            recenterCountdown = nil
+            restoreDwellAfterRecenter()
+            if !succeeded {
+                // Tell the adult it did not work instead of failing silently.
+                recenterFailed = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    if generation == recenterGeneration {
+                        recenterFailed = false
+                    }
+                }
+            }
+        }
+    }
+
+    private func cancelRecenterCountdown() {
+        guard recenterCountdown != nil || recenterFailed else { return }
+        recenterGeneration += 1
+        recenterCountdown = nil
+        recenterFailed = false
+        restoreDwellAfterRecenter()
+    }
+
+    private func restoreDwellAfterRecenter() {
+        // Media/game overlays manage their own allow-list; don't clear it.
+        guard mediaCoordinator.phase != .playing, gameCoordinator.phase != .playing else { return }
+        gazeManager.dwellManager.setAllowedButtonIds(nil)
     }
 
     private func showOrientationBanner(trackingSupported: Bool) {
@@ -551,6 +641,57 @@ struct SwitchControlStatusBadge: View {
                 ? L("Switch device connected")
                 : L("Switch device not detected")
         )
+    }
+}
+
+/// Full-screen "look here" target shown while the recenter button counts down.
+struct RecenterCountdownOverlay: View {
+    let remaining: Int?
+    let failed: Bool
+    let onCancel: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.75)
+                .ignoresSafeArea()
+                .onTapGesture { onCancel() }
+
+            VStack(spacing: 28) {
+                if failed {
+                    Text(l10n: "Couldn't see a face. Try again.")
+                        .font(.largeTitle.bold())
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                } else {
+                    Text(l10n: "Look at the center of the screen")
+                        .font(.largeTitle.bold())
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+
+                    // High-contrast bullseye at the exact screen center.
+                    ZStack {
+                        Circle()
+                            .stroke(Color.white, lineWidth: 8)
+                            .frame(width: 160, height: 160)
+                        Circle()
+                            .stroke(Color.orange, lineWidth: 8)
+                            .frame(width: 100, height: 100)
+                        Circle()
+                            .fill(Color.orange)
+                            .frame(width: 36, height: 36)
+                        if let remaining {
+                            Text("\(remaining)")
+                                .font(.system(size: 22, weight: .heavy))
+                                .foregroundColor(.black)
+                        }
+                    }
+                }
+            }
+            .padding(32)
+            .allowsHitTesting(false)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.updatesFrequently)
     }
 }
 
