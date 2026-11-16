@@ -71,6 +71,9 @@ class DwellSelectionManager: ObservableObject {
     private let dwellUpdateInterval: TimeInterval = 1.0 / 30.0  // 30 FPS UI updates
     private let exitMargin: CGFloat = 35.0   // Pixels of margin before exiting a button (was 20)
     private let hitTestPadding: CGFloat = 16.0 // Extra padding on hit-test frames for gaze noise (was 8)
+    /// After a one-shot dwell, shrink the tile so a glance at the screen edge
+    /// or the gap between tiles releases hover and a second look can select again.
+    private let postActivationBorderInset: CGFloat = 14.0
 
     // Cooldown after activation to prevent re-triggering
     private var lastActivationTime: TimeInterval = 0
@@ -80,6 +83,9 @@ class DwellSelectionManager: ObservableObject {
     // the dwell immediately — gaze jitter can cause momentary exits.
     private var exitGraceTimer: Timer?
     private let exitGracePeriod: TimeInterval = 0.25  // 250ms grace (was 150ms) — helps top-left/edge tiles
+    /// Tile the user just activated and then left. Padding must not grab it
+    /// again until the cursor returns to the tile interior.
+    private var releasedAfterActivationButtonId: String?
 
     // Switch control integration
     private var switchCancellables = Set<AnyCancellable>()
@@ -88,6 +94,11 @@ class DwellSelectionManager: ObservableObject {
     private var lastDwellDebugTime: TimeInterval = 0
 
     init() {}
+
+    deinit {
+        dwellTimer?.invalidate()
+        exitGraceTimer?.invalidate()
+    }
 
     // MARK: - Button Registration
 
@@ -118,12 +129,16 @@ class DwellSelectionManager: ObservableObject {
         if hoveredButtonId == id {
             cancelDwell()
         }
+        if releasedAfterActivationButtonId == id {
+            releasedAfterActivationButtonId = nil
+        }
     }
 
     /// Clear all registered buttons (e.g., when leaving a screen).
     func clearAllButtons() {
         buttonFrames.removeAll()
         orderedButtonIds.removeAll()
+        releasedAfterActivationButtonId = nil
         cancelDwell()
     }
 
@@ -137,6 +152,17 @@ class DwellSelectionManager: ObservableObject {
     /// Reset in-progress dwell after orientation changes without clearing registered frames.
     /// Frames update in place via each button's GeometryReader as SwiftUI relayouts.
     func cancelDwellForLayoutChange() {
+        releasedAfterActivationButtonId = nil
+        cancelDwell()
+    }
+
+    /// Call when the cursor is hidden (face lost, gaze off-screen, warmup).
+    /// Without this the dwell timer kept running while hidden, and looking back
+    /// at the same tile fired it on the first frame.
+    func cancelDwellForTrackingLoss() {
+        guard hoveredButtonId != nil || exitGraceTimer != nil || dwellTimer != nil else { return }
+        DebugLog.debug("Dwell: cancelled (cursor hidden)", tag: "Dwell")
+        releasedAfterActivationButtonId = nil
         cancelDwell()
     }
 
@@ -151,10 +177,6 @@ class DwellSelectionManager: ObservableObject {
         }
 
         let now = CACurrentMediaTime()
-
-        // Cooldown after activation — only block re-activation, not hover tracking.
-        let inActivationCooldown = now - lastActivationTime < activationCooldown
-
         let hitButtonId = hitTestButtonId(at: position)
 
         if let hitId = hitButtonId {
@@ -163,10 +185,10 @@ class DwellSelectionManager: ObservableObject {
             exitGraceTimer = nil
 
             if hitId == hoveredButtonId {
-                // Still on the same button — update progress
-                if !inActivationCooldown || !hasActivatedCurrentDwell {
-                    updateDwellProgress(now: now)
-                }
+                // Still on the same button — update progress. The 30 Hz timer
+                // also advances this, using wall-clock elapsed, so a steady
+                // cursor still selects if the camera stream pauses.
+                updateDwellProgress(now: now)
             } else {
                 // Moved to a different button
                 DebugLog.debug("Dwell: entered \(hitId)", tag: "Dwell")
@@ -174,13 +196,23 @@ class DwellSelectionManager: ObservableObject {
             }
         } else if hoveredButtonId != nil {
             // Left the sticky region — grace period before cancelling so brief
-            // jitter off all tiles does not reset dwell.
+            // jitter off all tiles does not reset dwell. After a one-shot
+            // activation the grace is short so a glance at the margin releases.
             if exitGraceTimer == nil {
-                exitGraceTimer = Timer.scheduledTimer(withTimeInterval: exitGracePeriod, repeats: false) { [weak self] _ in
-                    self?.exitGraceTimer = nil
+                let releaseAfterActivation = hasActivatedCurrentDwell && !AppSettings.shared.enableRepeatDwell
+                let grace = releaseAfterActivation ? 0.08 : exitGracePeriod
+                let releasingId = releaseAfterActivation ? hoveredButtonId : nil
+                let timer = Timer(timeInterval: grace, repeats: false) { [weak self] _ in
+                    guard let self else { return }
+                    self.exitGraceTimer = nil
+                    if let releasingId {
+                        self.releasedAfterActivationButtonId = releasingId
+                    }
                     DebugLog.debug("Dwell: cancelled (exited outside margin)", tag: "Dwell")
-                    self?.cancelDwell()
+                    self.cancelDwell()
                 }
+                RunLoop.main.add(timer, forMode: .common)
+                exitGraceTimer = timer
             }
         } else {
             cancelDwell()
@@ -192,14 +224,23 @@ class DwellSelectionManager: ObservableObject {
     /// right-hand choice). While hovering, stay on that tile until the cursor
     /// leaves its exit margin unless another tile's real frame contains the point.
     private func hitTestButtonId(at position: CGPoint) -> String? {
+        let releaseAfterActivation = hasActivatedCurrentDwell && !AppSettings.shared.enableRepeatDwell
         var unpadded: [(id: String, frame: CGRect)] = []
         var padded: [(id: String, frame: CGRect)] = []
 
         for id in orderedButtonIds {
             guard isButtonAllowed(id), let frame = buttonFrames[id] else { continue }
-            if frame.contains(position) {
+            // After a one-shot selection, only the tile interior counts, so the
+            // 12pt screen margin and the gap between tiles can release hover.
+            // The released id stays shrunk after the dwell is cancelled; otherwise
+            // the next gaze frame's padding grabs the margin again.
+            let holdInterior = id == releasedAfterActivationButtonId
+                || (releaseAfterActivation && id == hoveredButtonId)
+            let core = holdInterior ? postActivationRetentionFrame(for: frame) : frame
+            if core.contains(position) {
                 unpadded.append((id, frame))
-            } else if frame.insetBy(dx: -hitTestPadding, dy: -hitTestPadding).contains(position) {
+            } else if !holdInterior,
+                      frame.insetBy(dx: -hitTestPadding, dy: -hitTestPadding).contains(position) {
                 padded.append((id, frame))
             }
         }
@@ -210,12 +251,22 @@ class DwellSelectionManager: ObservableObject {
 
         if let current = hoveredButtonId,
            isButtonAllowed(current),
-           let frame = buttonFrames[current],
-           frame.insetBy(dx: -exitMargin, dy: -exitMargin).contains(position) {
-            return current
+           let frame = buttonFrames[current] {
+            let retention = releaseAfterActivation
+                ? postActivationRetentionFrame(for: frame)
+                : frame.insetBy(dx: -exitMargin, dy: -exitMargin)
+            if retention.contains(position) {
+                return current
+            }
         }
 
         return nearestButtonId(padded, to: position)
+    }
+
+    private func postActivationRetentionFrame(for frame: CGRect) -> CGRect {
+        let insetX = min(postActivationBorderInset, max(0, frame.width * 0.15))
+        let insetY = min(postActivationBorderInset, max(0, frame.height * 0.15))
+        return frame.insetBy(dx: insetX, dy: insetY)
     }
 
     private func nearestButtonId(_ hits: [(id: String, frame: CGRect)], to position: CGPoint) -> String? {
@@ -234,16 +285,43 @@ class DwellSelectionManager: ObservableObject {
         dwellProgress = 0
         hasActivatedCurrentDwell = false
         activatedButtonId = nil  // Clear previous activation
+        releasedAfterActivationButtonId = nil
+        startDwellTimer()
+    }
+
+    /// Advances dwell from wall-clock time so a cursor that is not moving
+    /// still selects. Gaze updates and this timer share the same elapsed clock.
+    private func startDwellTimer() {
+        dwellTimer?.invalidate()
+        let timer = Timer(timeInterval: dwellUpdateInterval, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            guard self.isEnabled,
+                  let currentId = self.hoveredButtonId,
+                  self.isButtonAllowed(currentId),
+                  self.exitGraceTimer == nil else { return }
+            self.updateDwellProgress(now: CACurrentMediaTime())
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        dwellTimer = timer
     }
 
     private func updateDwellProgress(now: TimeInterval) {
         guard let startTime = dwellStartTime else { return }
 
-        let dwellTime = AppSettings.shared.dwellTime
-        let elapsed = now - startTime
+        if hasActivatedCurrentDwell && !AppSettings.shared.enableRepeatDwell {
+            if dwellProgress != 1.0 {
+                dwellProgress = 1.0
+            }
+            return
+        }
+
+        let dwellTime = max(0.05, AppSettings.shared.dwellTime)
+        // A repeat faster than the activation cooldown would be swallowed.
+        let repeatTime = max(AppSettings.shared.repeatDwellDelay, activationCooldown)
+        let elapsed = max(0, now - startTime)
         
         // If we've already activated and repeat is enabled, we use the repeat delay instead
-        let targetTime = hasActivatedCurrentDwell ? AppSettings.shared.repeatDwellDelay : dwellTime
+        let targetTime = hasActivatedCurrentDwell ? repeatTime : dwellTime
         let progress = min(elapsed / targetTime, 1.0)
         
         dwellProgress = progress
@@ -256,36 +334,39 @@ class DwellSelectionManager: ObservableObject {
 
         if progress >= 1.0 {
             if !hasActivatedCurrentDwell {
-                // First activation
-                hasActivatedCurrentDwell = true
-                activateCurrentButton()
-                
-                if AppSettings.shared.enableRepeatDwell {
-                    // Reset start time to now to start the repeat delay countdown
+                // Only mark the dwell finished when the activation actually fired.
+                // A cooldown miss used to set the flag and then never retry.
+                if activateCurrentButton(now: now) {
+                    hasActivatedCurrentDwell = true
+                    if AppSettings.shared.enableRepeatDwell {
+                        dwellStartTime = now
+                        dwellProgress = 0
+                    }
+                }
+            } else if AppSettings.shared.enableRepeatDwell {
+                if activateCurrentButton(now: now) {
                     dwellStartTime = now
                     dwellProgress = 0
                 }
-            } else if AppSettings.shared.enableRepeatDwell {
-                // Repeat activation
-                activateCurrentButton()
-                // Reset start time to now to start the next repeat delay countdown
-                dwellStartTime = now
-                dwellProgress = 0
             }
         }
     }
 
-    private func activateCurrentButton() {
-        guard let buttonId = hoveredButtonId else { return }
+    @discardableResult
+    private func activateCurrentButton(now: TimeInterval = CACurrentMediaTime()) -> Bool {
+        guard let buttonId = hoveredButtonId, isButtonAllowed(buttonId) else { return false }
+        guard now - lastActivationTime >= activationCooldown else { return false }
 
-        let now = CACurrentMediaTime()
-        guard now - lastActivationTime >= activationCooldown else { return }
-
-        publishActivation(buttonId: buttonId, hapticStyle: .medium)
+        publishActivation(buttonId: buttonId, hapticStyle: .medium, now: now)
+        return true
     }
 
     /// Record an activation and notify observers (haptic optional).
-    private func publishActivation(buttonId: String, hapticStyle: UIImpactFeedbackGenerator.FeedbackStyle?) {
+    private func publishActivation(
+        buttonId: String,
+        hapticStyle: UIImpactFeedbackGenerator.FeedbackStyle?,
+        now: TimeInterval = CACurrentMediaTime()
+    ) {
         activationToken &+= 1
         let activation = DwellActivation(token: activationToken, buttonId: buttonId)
         DebugLog.debug("Dwell: activated \(buttonId) (token=\(activation.token))", tag: "Dwell")
@@ -293,7 +374,7 @@ class DwellSelectionManager: ObservableObject {
         // snapshot last so `$lastActivation` subscribers always see a matching id.
         activatedButtonId = buttonId
         lastActivation = activation
-        lastActivationTime = CACurrentMediaTime()
+        lastActivationTime = now
 
         if let hapticStyle {
             let generator = UIImpactFeedbackGenerator(style: hapticStyle)
@@ -302,6 +383,8 @@ class DwellSelectionManager: ObservableObject {
     }
 
     private func cancelDwell() {
+        dwellTimer?.invalidate()
+        dwellTimer = nil
         exitGraceTimer?.invalidate()
         exitGraceTimer = nil
         hoveredButtonId = nil
@@ -313,6 +396,7 @@ class DwellSelectionManager: ObservableObject {
     // MARK: - Reset
 
     func reset() {
+        releasedAfterActivationButtonId = nil
         cancelDwell()
         activatedButtonId = nil
         lastActivationTime = 0
@@ -361,7 +445,8 @@ class DwellSelectionManager: ObservableObject {
         guard now - lastActivationTime >= activationCooldown else { return }
 
         guard switchManager.controlMode == .scanning,
-              let id = scanHighlightedButtonId else { return }
+              let id = scanHighlightedButtonId,
+              isButtonAllowed(id) else { return }
 
         publishActivation(buttonId: id, hapticStyle: .heavy)
         

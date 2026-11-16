@@ -78,22 +78,34 @@ class Eyeball3DGazeCalculator(
 
         return try {
             val noseTip = landmarks[NOSE_TIP]
-            val chin = landmarks[CHIN]
             val forehead = landmarks[FOREHEAD]
             val leftEar = landmarks[LEFT_EAR]
             val rightEar = landmarks[RIGHT_EAR]
+            // 33 and 263 match IrisGazeCalculator's eye-corner pair. In this
+            // class 263 is named RIGHT_EYE_INNER; 362 is the other right-eye corner.
+            val leftEye = landmarks[LEFT_EYE_OUTER]
+            val rightEye = landmarks[RIGHT_EYE_INNER]
 
             // Yaw from nose relative to ears
             val earMidX = (leftEar.x + rightEar.x) / 2f
             val yaw = (noseTip.x - earMidX) * 100f
 
-            // Pitch from nose relative to forehead/chin
+            // Pitch anchored on forehead, eye line, and nose so speech does not
+            // move the cursor. Chin is intentionally unused.
             val noseY = noseTip.y
-            val foreheadY = forehead.y
-            val chinY = chin.y
-            val faceHeight = chinY - foreheadY
-            val noseRelative = if (faceHeight != 0f) (noseY - foreheadY) / faceHeight else 0.45f
-            val expectedNosePos = 0.45f
+            val eyeMidY = (leftEye.y + rightEye.y) / 2f
+            val pitchEyeDeltaY = rightEye.y - leftEye.y
+            val pitchEyeDeltaX = rightEye.x - leftEye.x
+            val eyeDist = sqrt(pitchEyeDeltaX * pitchEyeDeltaX + pitchEyeDeltaY * pitchEyeDeltaY)
+            val foreheadToEyeY = eyeMidY - forehead.y
+            val upperFaceScale = when {
+                foreheadToEyeY > 0.01f && eyeDist > 0.01f -> eyeDist * 0.65f + (foreheadToEyeY * 1.6f) * 0.35f
+                eyeDist > 0.01f -> eyeDist
+                foreheadToEyeY > 0.01f -> foreheadToEyeY * 1.6f
+                else -> 0f
+            }
+            val expectedNosePos = 0.52f
+            val noseRelative = if (upperFaceScale > 0.01f) (noseY - eyeMidY) / upperFaceScale else expectedNosePos
             val pitch = (noseRelative - expectedNosePos) * 150f
 
             // Roll from eye angle

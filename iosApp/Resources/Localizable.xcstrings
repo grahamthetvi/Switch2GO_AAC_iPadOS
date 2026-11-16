@@ -8025,6 +8025,65 @@
         }
       }
     },
+    "Couldn't see a face. Try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't see a face. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se detectó ninguna cara. Inténtelo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun visage détecté. Réessayez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Gesicht erkannt. Bitte erneut versuchen."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر رؤية وجه. حاول مرة أخرى."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未检测到面部，请重试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未偵測到臉部，請再試一次。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "顔が見つかりません。もう一度お試しください。"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thấy khuôn mặt. Hãy thử lại."
+          }
+        }
+      }
+    },
     "Create another copy": {
       "extractionState": "manual",
       "localizations": {
@@ -17756,6 +17815,65 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nhìn điểm %d / %d"
+          }
+        }
+      }
+    },
+    "Look at the center of the screen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look at the center of the screen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mire al centro de la pantalla"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regardez le centre de l’écran"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schauen Sie auf die Mitte des Bildschirms"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انظر إلى منتصف الشاشة"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请看屏幕中央"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請看螢幕中央"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画面の中央を見てください"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy nhìn vào giữa màn hình"
           }
         }
       }
@@ -32687,61 +32805,61 @@
         }
       }
     },
-    "Try tapping the Recenter Cursor button at the top of Settings if the cursor seems offset.": {
+    "Try the orange Recenter Cursor button to the left of the gear if the cursor seems offset.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Try tapping the Recenter Cursor button at the top of Settings if the cursor seems offset."
+            "value": "Try the orange Recenter Cursor button to the left of the gear if the cursor seems offset."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si el cursor está desplazado, pulse Recentrar cursor arriba en Ajustes."
+            "value": "Si el cursor está desplazado, pulse el botón naranja Recentrar cursor a la izquierda del engranaje."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si le curseur est décalé, touchez Recentrer le curseur en haut des Réglages."
+            "value": "Si le curseur est décalé, touchez le bouton orange Recentrer le curseur à gauche de l’engrenage."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wenn der Zeiger versetzt wirkt, oben in Einstellungen auf Zeiger zentrieren tippen."
+            "value": "Wenn der Zeiger versetzt wirkt, tippen Sie auf die orangefarbene Taste „Zeiger zentrieren“ links neben dem Zahnrad."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "إن بدا المؤشر مزاحًا جرّب «إعادة توسيط المؤشر» أعلى الإعدادات."
+            "value": "إن بدا المؤشر مزاحًا، جرّب زر «إعادة توسيط المؤشر» البرتقالي على يسار الترس."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "若光标偏移，请点设置顶部的“重新居中光标”。"
+            "value": "若光标偏移，请点齿轮左侧的橙色“重新居中光标”。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "若游標偏移，請點設定頂部的「重新置中游標」。"
+            "value": "若游標偏移，請點齒輪左側的橘色「重新置中游標」。"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "カーソルがずれて見えるときは、設定の上の「カーソルを中央に」を試してください。"
+            "value": "カーソルがずれて見えるときは、歯車の左にあるオレンジの「カーソルを中央に」を試してください。"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nếu con trỏ lệch, chạm Căn lại con trỏ ở đầu Cài đặt."
+            "value": "Nếu con trỏ lệch, hãy chạm nút Căn lại con trỏ màu cam bên trái bánh răng."
           }
         }
       }

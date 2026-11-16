@@ -52,7 +52,7 @@ struct TroubleshootingView: View {
                         "Make sure your face is clearly visible to the front camera -- avoid covering your face or wearing reflective glasses.",
                         "Ensure you have good, even lighting. Avoid backlighting (bright light behind you) as it makes your face harder to detect.",
                         "Check that you are in the correct landscape orientation (home button / USB-C on the right).",
-                        "Try tapping the Recenter Cursor button at the top of Settings if the cursor seems offset.",
+                        "Try the orange Recenter Cursor button to the left of the gear if the cursor seems offset.",
                         "If tracking was working before but stopped, try closing and reopening the app.",
                         "For eye gaze tracking, keep your iPad at a comfortable arm's length distance (roughly 40-60 cm / 16-24 inches)."
                     ]

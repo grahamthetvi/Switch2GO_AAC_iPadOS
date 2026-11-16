@@ -135,6 +135,7 @@
 "Could not open file" = "无法打开文件";
 "Could not open phrase pack" = "无法打开语句包";
 "Could not write backup file" = "无法写入备份文件";
+"Couldn't see a face. Try again." = "未检测到面部，请重试。";
 "Create another copy" = "再创建一份副本";
 "Creates a .switch2go file you can send by Mail, AirDrop, or Files. Videos should be 20 seconds or shorter. Files larger than 24.75 MB may not send by school email." = "创建一个可通过邮件、隔空投送或“文件”发送的 .switch2go 文件。视频应不超过 20 秒。大于 24.75 MB 的文件可能无法通过学校邮箱发送。";
 "Creates a JSON file you can share or save to Files." = "创建一个可共享或保存到“文件”的 JSON 文件。";
@@ -296,6 +297,7 @@
 "Loading..." = "加载中...";
 "Logs will appear here as tracking runs" = "追踪运行时日志会显示在这里";
 "Look at point %d of %d" = "请看第 %d 点，共 %d 点";
+"Look at the center of the screen" = "请看屏幕中央";
 "Look at the circle" = "请看圆圈";
 "Look back at the screen to resume" = "请看回屏幕以继续";
 "Look directly at each circle as it appears" = "圆圈出现时请直视它";
@@ -519,7 +521,7 @@
 "Tracking Not Working" = "追踪不工作";
 "Tracking lost" = "追踪丢失";
 "Troubleshooting" = "故障排除";
-"Try tapping the Recenter Cursor button at the top of Settings if the cursor seems offset." = "若光标偏移，请点设置顶部的“重新居中光标”。";
+"Try the orange Recenter Cursor button to the left of the gear if the cursor seems offset." = "若光标偏移，请点齿轮左侧的橙色“重新居中光标”。";
 "Type a phrase" = "输入语句";
 "Unknown" = "未知";
 "Use 2 switches to move a highlight across phrases, then select. Works with or without auto-scan." = "用 2 个开关移动高亮再选择。可配合或不配合自动扫描。";
