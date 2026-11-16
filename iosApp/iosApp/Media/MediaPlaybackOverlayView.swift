@@ -103,6 +103,7 @@ struct MediaPlaybackOverlayView: View {
     }
 
     private func preparePlayback(for phrase: PhraseDisplayModel) {
+        TTSManager.shared.ensureAudioSessionActive()
         if phrase.style?.isYouTube() == true {
             guard let ref = phrase.style?.mediaRef,
                   PhraseStyle.companion.extractYouTubeVideoId(ref: ref) != nil else {
@@ -185,7 +186,7 @@ struct MediaPlaybackOverlayView: View {
 
     private var mediaGazeZones: some View {
         GeometryReader { geo in
-            let globalOrigin = geo.frame(in: .global).origin
+            let globalOrigin = geo.frame(in: .named(GazeCoordinateSpace.name)).origin
             let size = geo.size
             let centerFrame = CGRect(
                 x: globalOrigin.x + size.width * 0.35,
@@ -339,6 +340,13 @@ final class MediaPlayerHolder: ObservableObject {
     @Published var player: AVPlayer?
 
     private var endObserver: NSObjectProtocol?
+    private var failObserver: NSObjectProtocol?
+    private var interruptionObserver: NSObjectProtocol?
+    private var statusObservation: NSKeyValueObservation?
+
+    deinit {
+        teardown()
+    }
 
     func prepare(phrase: PhraseDisplayModel, coordinator: MediaPlaybackCoordinator) {
         teardown()
@@ -349,6 +357,8 @@ final class MediaPlayerHolder: ObservableObject {
             }
             return
         }
+
+        TTSManager.shared.ensureAudioSessionActive()
 
         let item = AVPlayerItem(url: url)
         let avPlayer = AVPlayer(playerItem: item)
@@ -362,6 +372,45 @@ final class MediaPlayerHolder: ObservableObject {
             coordinator.onNaturalEnd()
         }
 
+        // A clip that cannot decode or stops partway must close the overlay.
+        // Otherwise phase stays .playing and phrase selection is blocked.
+        failObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemFailedToPlayToEndTime,
+            object: item,
+            queue: .main
+        ) { note in
+            let error = note.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
+            DebugLog.error(
+                "Clip stopped before the end: \(error?.localizedDescription ?? url.lastPathComponent)",
+                tag: "MediaPlayback"
+            )
+            coordinator.onNaturalEnd()
+        }
+        statusObservation = item.observe(\.status, options: [.new]) { [weak self] observedItem, _ in
+            guard observedItem.status == .failed else { return }
+            let message = observedItem.error?.localizedDescription ?? url.lastPathComponent
+            DispatchQueue.main.async {
+                guard let self, self.player?.currentItem === observedItem else { return }
+                DebugLog.error("Clip failed to load: \(message)", tag: "MediaPlayback")
+                coordinator.onNaturalEnd()
+            }
+        }
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { [weak self] notification in
+            guard let self,
+                  coordinator.phase == .playing,
+                  !coordinator.isPaused,
+                  let userInfo = notification.userInfo,
+                  let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+                  let type = AVAudioSession.InterruptionType(rawValue: typeValue),
+                  type == .ended else { return }
+            TTSManager.shared.ensureAudioSessionActive()
+            self.player?.play()
+        }
+
         avPlayer.play()
     }
 
@@ -370,6 +419,7 @@ final class MediaPlayerHolder: ObservableObject {
         if paused {
             player.pause()
         } else {
+            TTSManager.shared.ensureAudioSessionActive()
             player.play()
         }
     }
@@ -379,6 +429,16 @@ final class MediaPlayerHolder: ObservableObject {
             NotificationCenter.default.removeObserver(endObserver)
             self.endObserver = nil
         }
+        if let failObserver {
+            NotificationCenter.default.removeObserver(failObserver)
+            self.failObserver = nil
+        }
+        if let interruptionObserver {
+            NotificationCenter.default.removeObserver(interruptionObserver)
+            self.interruptionObserver = nil
+        }
+        statusObservation?.invalidate()
+        statusObservation = nil
         player?.pause()
         player = nil
     }

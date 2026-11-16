@@ -137,19 +137,51 @@ enum MediaStorage {
     }
 
     /// Resolves a stored ref (relative, absolute path, or file://) to a file URL if it exists.
+    /// Absolute paths from a previous app container are matched by file name under
+    /// the current Documents/Media or Documents/Images folder.
     static func resolveURL(mediaRef: String?) -> URL? {
         guard isLocalMediaRef(mediaRef), let ref = mediaRef, !ref.isEmpty else { return nil }
 
-        if ref.hasPrefix("file://"), let url = URL(string: ref) {
-            return FileManager.default.fileExists(atPath: url.path) ? url : nil
-        }
-        if ref.hasPrefix("/") {
-            let url = URL(fileURLWithPath: ref)
-            return FileManager.default.fileExists(atPath: url.path) ? url : nil
+        if ref.hasPrefix("file://") || ref.hasPrefix("/") {
+            let url = ref.hasPrefix("file://") ? URL(string: ref) : URL(fileURLWithPath: ref)
+            if let url, FileManager.default.fileExists(atPath: url.path) {
+                return url
+            }
+            return fallbackURL(forStaleAbsolutePath: url?.path ?? ref)
         }
         // Relative path under Documents
         let url = documentsDirectory.appendingPathComponent(ref)
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+
+    /// Find a file that moved when the app container UUID changed.
+    private static func fallbackURL(forStaleAbsolutePath path: String) -> URL? {
+        let fileName = (path as NSString).lastPathComponent
+        guard !fileName.isEmpty, fileName != "/", !fileName.contains("/") else { return nil }
+
+        var folders: [String] = []
+        if path.contains("/\(mediaFolderName)/") {
+            folders.append(mediaFolderName)
+        } else if path.contains("/\(imagesFolderName)/") {
+            folders.append(imagesFolderName)
+        }
+        for folder in [mediaFolderName, imagesFolderName] where !folders.contains(folder) {
+            folders.append(folder)
+        }
+        for folder in folders {
+            let candidate = documentsDirectory
+                .appendingPathComponent(folder, isDirectory: true)
+                .appendingPathComponent(fileName)
+            if FileManager.default.fileExists(atPath: candidate.path) {
+                return candidate
+            }
+        }
+        // Images saved before the Images/ folder existed live directly in Documents.
+        let legacy = documentsDirectory.appendingPathComponent(fileName)
+        if FileManager.default.fileExists(atPath: legacy.path) {
+            return legacy
+        }
+        return nil
     }
 
     /// Alias for image refs (same resolution rules).

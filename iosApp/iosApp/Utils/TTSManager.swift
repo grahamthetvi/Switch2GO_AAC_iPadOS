@@ -282,6 +282,18 @@ class TTSManager: NSObject, ObservableObject, @unchecked Sendable, AVSpeechSynth
 
     static let audioSessionOptions: AVAudioSession.CategoryOptions = [.duckOthers, .mixWithOthers]
 
+    /// Reactivate the shared playback session before a clip starts or resumes.
+    /// Safe to call from the media player; speech uses the same category.
+    func ensureAudioSessionActive() {
+        if Thread.isMainThread {
+            configureAudioSession()
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.configureAudioSession()
+            }
+        }
+    }
+
     private func configureAudioSession() {
         let session = AVAudioSession.sharedInstance()
         // mixWithOthers keeps TTS audible while the eye-tracking camera

@@ -37,6 +37,24 @@ final class MediaStorageTests: XCTestCase {
         XCTAssertNil(MediaStorage.resolveURL(mediaRef: "Images/does_not_exist_\(UUID().uuidString).jpg"))
     }
 
+    func testStaleContainerPathResolvesByFileName() throws {
+        let payload = Data([0x01, 0x02, 0x03, 0x04])
+        let source = FileManager.default.temporaryDirectory
+            .appendingPathComponent("clip-\(UUID().uuidString).m4a")
+        try payload.write(to: source)
+        defer { try? FileManager.default.removeItem(at: source) }
+        guard let ref = MediaStorage.saveMedia(from: source, preferredExtension: "m4a") else {
+            XCTFail("saveMedia failed")
+            return
+        }
+        defer { MediaStorage.deleteMedia(mediaRef: ref) }
+        let fileName = (ref as NSString).lastPathComponent
+        let stale = "file:///var/mobile/Containers/Data/Application/00000000-0000-0000-0000-000000000000/Documents/Media/\(fileName)"
+        let resolved = MediaStorage.resolveURL(mediaRef: stale)
+        XCTAssertEqual(resolved?.lastPathComponent, fileName)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: resolved?.path ?? ""))
+    }
+
     func testVideoPosterRefDetection() {
         XCTAssertTrue(MediaStorage.isVideoPosterRef("Images/video_poster_abc.jpg"))
         XCTAssertTrue(MediaStorage.isVideoPosterRef("/tmp/video_poster_abc.jpg"))

@@ -134,7 +134,7 @@ struct GameOverlayView: View {
 
     private var gameGazeZones: some View {
         GeometryReader { geo in
-            let globalOrigin = geo.frame(in: .global).origin
+            let globalOrigin = geo.frame(in: .named(GazeCoordinateSpace.name)).origin
             let size = geo.size
             let exitFrame = CGRect(
                 x: globalOrigin.x,
