@@ -23,6 +23,7 @@ final class PoseLandmarkService: NSObject, ObservableObject {
     private var pendingRequest = false
     private var isDetecting = false
     private var detectionStartTime: TimeInterval = 0
+    private var lastSentTimestampMs: Int = 0
     private let detectionTimeout: TimeInterval = 0.4
 
     var onPoseDetected: PoseResultHandler?
@@ -49,6 +50,7 @@ final class PoseLandmarkService: NSObject, ObservableObject {
         pendingRequest = false
         isDetecting = false
         latestPixelBuffer = nil
+        lastSentTimestampMs = 0
 
         do {
             guard let modelPath = Self.modelPath() else {
@@ -121,6 +123,7 @@ final class PoseLandmarkService: NSObject, ObservableObject {
         pendingRequest = false
         isDetecting = false
         latestPixelBuffer = nil
+        lastSentTimestampMs = 0
         DispatchQueue.main.async { [weak self] in
             self?.currentLandmarks = []
             self?.isTracking = false
@@ -135,8 +138,9 @@ final class PoseLandmarkService: NSObject, ObservableObject {
 
         guard pendingRequest, !isDetecting else { return }
 
+        pendingRequest = false
+
         guard let pixelBuffer = latestPixelBuffer else {
-            pendingRequest = false
             notifyNoPose()
             return
         }
@@ -153,7 +157,9 @@ final class PoseLandmarkService: NSObject, ObservableObject {
 
         isDetecting = true
         detectionStartTime = CACurrentMediaTime()
-        let timestamp = Int(CACurrentMediaTime() * 1000)
+        let nowMs = Int(CACurrentMediaTime() * 1000)
+        let timestamp = max(nowMs, lastSentTimestampMs + 1)
+        lastSentTimestampMs = timestamp
 
         do {
             try poseLandmarker.detectAsync(image: image, timestampInMilliseconds: timestamp)
@@ -171,8 +177,8 @@ final class PoseLandmarkService: NSObject, ObservableObject {
                 self.isTracking = true
             }
             self.onPoseDetected?(landmarks)
-            self.pendingRequest = false
             self.isDetecting = false
+            self.triggerDetectionIfNeeded()
         }
     }
 
@@ -184,8 +190,8 @@ final class PoseLandmarkService: NSObject, ObservableObject {
                 self.isTracking = false
             }
             self.onNoPoseDetected?()
-            self.pendingRequest = false
             self.isDetecting = false
+            self.triggerDetectionIfNeeded()
         }
     }
 

@@ -153,6 +153,7 @@ struct CategoriesView: View {
     private func dispatchDwellCategoryActivation(_ activation: DwellActivation) {
         guard activation.token != lastHandledActivationToken else { return }
         guard !navigateToPhases else { return }
+        guard !viewModel.isLoading else { return }
         guard activation.buttonId.hasPrefix("cat_") else { return }
         let categoryId = String(activation.buttonId.dropFirst("cat_".count))
         guard viewModel.categories.contains(where: { $0.id == categoryId }) else {

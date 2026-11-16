@@ -49,7 +49,51 @@ struct PhraseStyleData: Codable {
 /// Helper to convert PhraseStyle to/from JSON
 extension PhraseStyle {
     static let EMOJI_PREFIX = "emoji:"
-    
+
+    /// Empty style with all defaults. A Swift `init()` is avoided because
+    /// Kotlin/Native marks `-init` unavailable on its exported base class.
+    static func empty() -> PhraseStyle {
+        PhraseStyle(imageRef: nil)
+    }
+
+    convenience init(imageRef: String?) {
+        self.init(
+            backgroundColor: nil,
+            textColor: nil,
+            textSizeSp: nil,
+            isBold: false,
+            borderColor: nil,
+            borderWidthDp: nil,
+            imageRef: imageRef,
+            mediaRef: nil,
+            mediaType: nil,
+            gameType: nil
+        )
+    }
+
+    convenience init(
+        backgroundColor: UInt32?,
+        textColor: UInt32?,
+        textSizeSp: Float?,
+        isBold: Bool = false,
+        borderColor: UInt32? = nil,
+        borderWidthDp: Float? = nil,
+        imageRef: String? = nil
+    ) {
+        self.init(
+            backgroundColor: backgroundColor.map { KotlinUInt(value: $0) },
+            textColor: textColor.map { KotlinUInt(value: $0) },
+            textSizeSp: textSizeSp.map { KotlinFloat(value: $0) },
+            isBold: isBold,
+            borderColor: borderColor.map { KotlinUInt(value: $0) },
+            borderWidthDp: borderWidthDp.map { KotlinFloat(value: $0) },
+            imageRef: imageRef,
+            mediaRef: nil,
+            mediaType: nil,
+            gameType: nil
+        )
+    }
+
     /// Extract emoji from imageRef if it's an emoji reference
     static func extractEmoji(ref: String?) -> String? {
         guard let ref = ref, !ref.isEmpty else { return nil }

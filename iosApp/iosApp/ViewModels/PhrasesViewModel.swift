@@ -22,7 +22,9 @@ class PhrasesViewModel: ObservableObject {
     
     /// Load phrases for category
     func loadPhrases() {
-        isLoading = true
+        if phrases.isEmpty {
+            isLoading = true
+        }
         
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
@@ -31,23 +33,59 @@ class PhrasesViewModel: ObservableObject {
             
             // Check if it's Recents category
             if self.categoryId == "preset_recents" {
+                var recentCandidates: [(lastSpoken: Int64, model: PhraseDisplayModel)] = []
+
                 // Get recent phrases from preset phrases
                 let recentPresets = self.database.presetPhraseQueries
                     .getAllPresetPhrases()
                     .executeAsList()
                     .filter { $0.last_spoken_date != nil }
-                    .sorted { ($0.last_spoken_date?.int64Value ?? 0) > ($1.last_spoken_date?.int64Value ?? 0) }
-                    .prefix(8)
-                
+
                 for phrase in recentPresets {
                     let phraseText = self.getPhraseText(for: phrase.phrase_id)
                     let parsedStyle = self.parseStyle(from: phrase.style)
+                    recentCandidates.append((
+                        lastSpoken: phrase.last_spoken_date?.int64Value ?? 0,
+                        model: PhraseDisplayModel(
+                            id: phrase.phrase_id,
+                            text: phraseText,
+                            sortOrder: Int(phrase.sort_order),
+                            isPreset: true,
+                            style: parsedStyle
+                        )
+                    ))
+                }
+
+                // Get recent phrases from custom phrases
+                let recentCustoms = self.database.phraseQueries
+                    .getRecentPhrases()
+                    .executeAsList()
+
+                for phrase in recentCustoms {
+                    let parsedStyle = self.parseStyle(from: phrase.style)
+                    recentCandidates.append((
+                        lastSpoken: phrase.last_spoken_date?.int64Value ?? 0,
+                        model: PhraseDisplayModel(
+                            id: phrase.phrase_id,
+                            text: phrase.localized_utterance ?? "",
+                            sortOrder: Int(phrase.sort_order),
+                            isPreset: false,
+                            style: parsedStyle
+                        )
+                    ))
+                }
+
+                let topRecents = recentCandidates
+                    .sorted { $0.lastSpoken > $1.lastSpoken }
+                    .prefix(8)
+
+                for (index, entry) in topRecents.enumerated() {
                     displayModels.append(PhraseDisplayModel(
-                        id: phrase.phrase_id,
-                        text: phraseText,
-                        sortOrder: Int(phrase.sort_order),
-                        isPreset: true,
-                        style: parsedStyle
+                        id: entry.model.id,
+                        text: entry.model.text,
+                        sortOrder: index,
+                        isPreset: entry.model.isPreset,
+                        style: entry.model.style
                     ))
                 }
             } else {
@@ -103,8 +141,12 @@ class PhrasesViewModel: ObservableObject {
         DispatchQueue.global(qos: .background).async { [weak self] in
             guard let self = self else { return }
             
-            // Update last spoken date
+            // Update last spoken date for both preset and custom phrases
             self.database.presetPhraseQueries.updatePresetPhraseLastSpoken(
+                last_spoken_date: KotlinLong(value: timestamp),
+                phrase_id: phraseId
+            )
+            self.database.phraseQueries.updatePhraseLastSpoken(
                 last_spoken_date: KotlinLong(value: timestamp),
                 phrase_id: phraseId
             )

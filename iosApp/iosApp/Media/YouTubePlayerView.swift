@@ -47,7 +47,7 @@ struct YouTubePlayerView: UIViewRepresentable {
 
     static func dismantleUIView(_ webView: WKWebView, coordinator: Coordinator) {
         webView.configuration.userContentController.removeScriptMessageHandler(forName: "playback")
-        coordinator.holder.detach()
+        coordinator.holder.detach(matching: webView)
     }
 
     final class Coordinator: NSObject, WKScriptMessageHandler {
@@ -228,7 +228,11 @@ final class YouTubePlayerHolder: ObservableObject {
         self.webView = webView
     }
 
-    func detach() {
+    func detach(matching targetWebView: WKWebView? = nil) {
+        if let targetWebView, let current = webView, current !== targetWebView {
+            targetWebView.loadHTMLString("", baseURL: nil)
+            return
+        }
         webView?.loadHTMLString("", baseURL: nil)
         webView = nil
         onEnded = nil

@@ -30,6 +30,7 @@ class CameraManager: NSObject, ObservableObject {
     @Published private(set) var currentVideoRotationAngle: CGFloat = 0
 
     @Published var isRunning = false
+    @Published private(set) var isStarting = false
     @Published var permissionGranted = false
     @Published var error: CameraError?
 
@@ -189,16 +190,19 @@ class CameraManager: NSObject, ObservableObject {
                     if granted {
                         onGranted?()
                     } else {
+                        self?.isStarting = false
                         self?.error = .permissionDenied
                     }
                 }
             }
 
         case .denied, .restricted:
+            isStarting = false
             permissionGranted = false
             error = .permissionDenied
 
         @unknown default:
+            isStarting = false
             permissionGranted = false
         }
     }
@@ -212,6 +216,7 @@ class CameraManager: NSObject, ObservableObject {
 
     private func configureSession() {
         captureSession.beginConfiguration()
+        captureSession.automaticallyConfiguresApplicationAudioSession = false
         captureSession.sessionPreset = .medium  // 480p — lower noise, faster processing
 
         // Get front camera
@@ -306,8 +311,10 @@ class CameraManager: NSObject, ObservableObject {
     ///   .landscapeRight  → home button on the RIGHT  (what the user wants)
     ///   .landscapeLeft   → home button on the LEFT
     static var isTrackingSupportedOrientation: Bool {
-        guard let scene = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene }).first else {
+        let windowScenes = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+        guard let scene = windowScenes.first(where: { $0.activationState == .foregroundActive })
+            ?? windowScenes.first else {
             return false
         }
 
@@ -324,6 +331,7 @@ class CameraManager: NSObject, ObservableObject {
 
     /// Start camera capture. Requests permission on first use if still undetermined.
     func start() {
+        isStarting = true
         checkPermission { [weak self] in
             self?.startSessionIfNeeded()
         }
@@ -337,14 +345,23 @@ class CameraManager: NSObject, ObservableObject {
                 self.configureSession()
             }
 
-            guard !self.captureSession.inputs.isEmpty else { return }
+            guard !self.captureSession.inputs.isEmpty else {
+                DispatchQueue.main.async {
+                    self.isStarting = false
+                }
+                return
+            }
             guard !self.captureSession.isRunning else {
-                DispatchQueue.main.async { self.isRunning = true }
+                DispatchQueue.main.async {
+                    self.isStarting = false
+                    self.isRunning = true
+                }
                 return
             }
 
             self.captureSession.startRunning()
             DispatchQueue.main.async {
+                self.isStarting = false
                 self.isRunning = true
             }
         }
@@ -352,12 +369,17 @@ class CameraManager: NSObject, ObservableObject {
 
     /// Stop camera capture.
     func stop() {
+        DispatchQueue.main.async { [weak self] in
+            self?.isStarting = false
+        }
         sessionQueue.async { [weak self] in
-            guard let self = self, self.captureSession.isRunning else { return }
-
-            self.captureSession.stopRunning()
+            guard let self = self else { return }
+            if self.captureSession.isRunning {
+                self.captureSession.stopRunning()
+            }
 
             DispatchQueue.main.async {
+                self.isStarting = false
                 self.isRunning = false
             }
         }

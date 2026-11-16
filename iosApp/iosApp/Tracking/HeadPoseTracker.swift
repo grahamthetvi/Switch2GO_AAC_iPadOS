@@ -62,36 +62,79 @@ class HeadPoseTracker {
     struct TrackingResult {
         let screenX: Float
         let screenY: Float
+        let normalizedX: Float
+        let normalizedY: Float
         let headPose: HeadPose
         let isOutOfBounds: Bool
     }
 
+    /// Most recently estimated head pose for recentering.
+    private(set) var lastEstimatedPose: HeadPose?
+
     // MARK: - Head pose estimation
 
     /// Estimate head orientation from face landmarks.
-    /// Uses nose, ears, chin, forehead, and eye corners for robust estimation.
+    /// Uses nose, ears, forehead, and eye corners for robust estimation.
     func estimateHeadPose(landmarks: [NormalizedLandmark]) -> HeadPose? {
         let maxIdx = max(noseTip, chin, forehead, leftEyeOuter, rightEyeOuter, leftEar, rightEar)
         guard landmarks.count > maxIdx else { return nil }
+        return computeHeadPose(
+            nose: LandmarkPoint(x: landmarks[noseTip].x, y: landmarks[noseTip].y, z: landmarks[noseTip].z),
+            forehead: LandmarkPoint(x: landmarks[forehead].x, y: landmarks[forehead].y, z: landmarks[forehead].z),
+            leftEar: LandmarkPoint(x: landmarks[leftEar].x, y: landmarks[leftEar].y, z: landmarks[leftEar].z),
+            rightEar: LandmarkPoint(x: landmarks[rightEar].x, y: landmarks[rightEar].y, z: landmarks[rightEar].z),
+            leftEye: LandmarkPoint(x: landmarks[leftEyeOuter].x, y: landmarks[leftEyeOuter].y, z: landmarks[leftEyeOuter].z),
+            rightEye: LandmarkPoint(x: landmarks[rightEyeOuter].x, y: landmarks[rightEyeOuter].y, z: landmarks[rightEyeOuter].z)
+        )
+    }
 
-        let nose = landmarks[noseTip]
-        let chinLm = landmarks[chin]
-        let foreheadLm = landmarks[forehead]
-        let leftEarLm = landmarks[leftEar]
-        let rightEarLm = landmarks[rightEar]
-        let leftEye = landmarks[leftEyeOuter]
-        let rightEye = landmarks[rightEyeOuter]
+    /// Estimate head orientation from value-type `LandmarkPoint` array (used in unit tests).
+    func estimateHeadPose(points: [LandmarkPoint]) -> HeadPose? {
+        let maxIdx = max(noseTip, chin, forehead, leftEyeOuter, rightEyeOuter, leftEar, rightEar)
+        guard points.count > maxIdx else { return nil }
+        return computeHeadPose(
+            nose: points[noseTip],
+            forehead: points[forehead],
+            leftEar: points[leftEar],
+            rightEar: points[rightEar],
+            leftEye: points[leftEyeOuter],
+            rightEye: points[rightEyeOuter]
+        )
+    }
 
+    private func computeHeadPose(
+        nose: LandmarkPoint,
+        forehead: LandmarkPoint,
+        leftEar: LandmarkPoint,
+        rightEar: LandmarkPoint,
+        leftEye: LandmarkPoint,
+        rightEye: LandmarkPoint
+    ) -> HeadPose? {
         // Yaw: nose position relative to ear midpoint
         // More robust than eye midpoint, especially with off-center cameras
-        let earMidX = (leftEarLm.x + rightEarLm.x) / 2.0
+        let earMidX = (leftEar.x + rightEar.x) / 2.0
         let rawYaw = (nose.x - earMidX) * 100.0
 
-        // Pitch: nose vertical position relative to forehead-chin axis
-        let faceHeight = chinLm.y - foreheadLm.y
-        guard faceHeight > 0.01 else { return nil }
-        let noseRelative = (nose.y - foreheadLm.y) / faceHeight
-        let expectedNosePos: Float = 0.45
+        // Pitch: anchor vertical pitch on rigid upper-face geometry
+        // (forehead 10, eye midpoint 33/263, and nose tip 1) rather than chin (152),
+        // so jaw/mouth movement (vocalizing, smiling, open mouth) does not cause
+        // false vertical pitch spikes.
+        let eyeMidY = (leftEye.y + rightEye.y) / 2.0
+        let eyeDist = hypot(rightEye.x - leftEye.x, rightEye.y - leftEye.y)
+        let foreheadToEyeY = eyeMidY - forehead.y
+        let upperFaceScale: Float
+        if foreheadToEyeY > 0.01 && eyeDist > 0.01 {
+            upperFaceScale = eyeDist * 0.65 + (foreheadToEyeY * 1.6) * 0.35
+        } else if eyeDist > 0.01 {
+            upperFaceScale = eyeDist
+        } else if foreheadToEyeY > 0.01 {
+            upperFaceScale = foreheadToEyeY * 1.6
+        } else {
+            return nil
+        }
+        let noseToEyeY = nose.y - eyeMidY
+        let noseRelative = noseToEyeY / upperFaceScale
+        let expectedNosePos: Float = 0.52
         let rawPitch = (noseRelative - expectedNosePos) * 150.0
 
         // Roll: angle between eye corners
@@ -101,11 +144,13 @@ class HeadPoseTracker {
             ? atan2(eyeDeltaY, eyeDeltaX) * (180.0 / .pi)
             : 0
 
-        return HeadPose(
+        let pose = HeadPose(
             yaw: clamp(rawYaw, -45, 45),
             pitch: clamp(rawPitch, -45, 45),
             roll: clamp(rawRoll, -45, 45)
         )
+        lastEstimatedPose = pose
+        return pose
     }
 
     // MARK: - Full processing pipeline
@@ -120,21 +165,54 @@ class HeadPoseTracker {
         lerpFactor: Float
     ) -> TrackingResult? {
         guard let pose = estimateHeadPose(landmarks: landmarks) else { return nil }
+        return processEstimatedPose(
+            pose,
+            screenWidth: screenWidth,
+            screenHeight: screenHeight,
+            smoothingMode: smoothingMode,
+            lerpFactor: lerpFactor
+        )
+    }
 
+    /// Process value-type `LandmarkPoint` array through the full head tracking pipeline.
+    func processLandmarks(
+        points: [LandmarkPoint],
+        screenWidth: Float,
+        screenHeight: Float,
+        smoothingMode: String,
+        lerpFactor: Float
+    ) -> TrackingResult? {
+        guard let pose = estimateHeadPose(points: points) else { return nil }
+        return processEstimatedPose(
+            pose,
+            screenWidth: screenWidth,
+            screenHeight: screenHeight,
+            smoothingMode: smoothingMode,
+            lerpFactor: lerpFactor
+        )
+    }
+
+    private func processEstimatedPose(
+        _ pose: HeadPose,
+        screenWidth: Float,
+        screenHeight: Float,
+        smoothingMode: String,
+        lerpFactor: Float
+    ) -> TrackingResult {
         // 1. Apply camera offset (neutral pose calibration)
         let adjustedYaw = pose.yaw - cameraOffsetYaw
         let adjustedPitch = pose.pitch - cameraOffsetPitch
 
         // 2. Map head pose to normalized coordinates (-1 to 1)
         let maxAngle: Float = 30.0  // typical usable head rotation range
-        var normalizedX = (adjustedYaw / maxAngle) * sensitivityX
-        var normalizedY = (adjustedPitch / maxAngle) * sensitivityY
+        let rawNormalizedX = (adjustedYaw / maxAngle) * sensitivityX
+        let rawNormalizedY = (adjustedPitch / maxAngle) * sensitivityY
 
         // Out-of-bounds must use pre-clamp values (clamping then checking >1.1 is dead).
-        let isOutOfBounds = abs(normalizedX) > 1.1 || abs(normalizedY) > 1.1
+        let isOutOfBounds = abs(rawNormalizedX) > 1.1 || abs(rawNormalizedY) > 1.1
 
-        normalizedX = clamp(normalizedX, -1, 1)
-        normalizedY = clamp(normalizedY, -1, 1)
+        let normalizedX = clamp(rawNormalizedX, -1, 1)
+        let normalizedY = clamp(rawNormalizedY, -1, 1)
 
         // 3. Apply smoothing
         let now = CACurrentMediaTime()
@@ -162,6 +240,8 @@ class HeadPoseTracker {
         return TrackingResult(
             screenX: screenX,
             screenY: screenY,
+            normalizedX: rawNormalizedX,
+            normalizedY: rawNormalizedY,
             headPose: pose,
             isOutOfBounds: isOutOfBounds
         )
@@ -211,6 +291,17 @@ class HeadPoseTracker {
         guard let pose = estimateHeadPose(landmarks: landmarks) else { return }
         cameraOffsetYaw = pose.yaw
         cameraOffsetPitch = pose.pitch
+        reset()
+    }
+
+    /// Recenter using the most recently estimated head pose if landmarks are not immediately on hand.
+    @discardableResult
+    func recenterFromLastPose() -> Bool {
+        guard let pose = lastEstimatedPose else { return false }
+        cameraOffsetYaw = pose.yaw
+        cameraOffsetPitch = pose.pitch
+        reset()
+        return true
     }
 
     /// Apply a pre-set camera position offset for common device layouts.

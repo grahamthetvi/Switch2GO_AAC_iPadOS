@@ -53,31 +53,43 @@ class ImageCache {
             return cached
         }
         
-        // Validate the URL is a file URL and the file exists
+        // Validate the URL is a file URL and resolve across container UUID changes if needed
         guard url.isFileURL else {
             DebugLog.error("URL is not a file URL: \(url)", tag: "ImageCache")
             return nil
         }
         
-        guard FileManager.default.fileExists(atPath: url.path) else {
+        var resolvedURL = url
+        if !FileManager.default.fileExists(atPath: resolvedURL.path) {
+            let fileName = url.lastPathComponent
+            if !fileName.isEmpty,
+               let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+                let fallback = documents.appendingPathComponent(fileName)
+                if FileManager.default.fileExists(atPath: fallback.path) {
+                    resolvedURL = fallback
+                }
+            }
+        }
+        
+        guard FileManager.default.fileExists(atPath: resolvedURL.path) else {
             DebugLog.warn("File does not exist at path: \(url.path)", tag: "ImageCache")
             return nil
         }
         
         // Load from file with error handling
         do {
-            let data = try Data(contentsOf: url)
+            let data = try Data(contentsOf: resolvedURL)
             guard let image = UIImage(data: data) else {
-                DebugLog.error("Failed to create UIImage from data at: \(url.path)", tag: "ImageCache")
+                DebugLog.error("Failed to create UIImage from data at: \(resolvedURL.path)", tag: "ImageCache")
                 // Check file size and format
-                let fileSize = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64) ?? 0
+                let fileSize = (try? FileManager.default.attributesOfItem(atPath: resolvedURL.path)[.size] as? Int64) ?? 0
                 DebugLog.debug("File size: \(fileSize) bytes", tag: "ImageCache")
                 return nil
             }
             set(key: key, image: image)
             return image
         } catch {
-            DebugLog.error("Error loading image from \(url.path): \(error.localizedDescription)", tag: "ImageCache")
+            DebugLog.error("Error loading image from \(resolvedURL.path): \(error.localizedDescription)", tag: "ImageCache")
             return nil
         }
     }

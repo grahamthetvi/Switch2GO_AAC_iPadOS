@@ -21,8 +21,14 @@ struct PhrasesView: View {
         _viewModel = StateObject(wrappedValue: PhrasesViewModel(categoryId: categoryId, database: database))
     }
     
+    private static let navBackButtonId = "phrase_nav_back"
+    private static let navPrevPageButtonId = "phrase_nav_prev"
+    private static let navNextPageButtonId = "phrase_nav_next"
+
     var body: some View {
         VStack(spacing: 0) {
+            topNavigationBar
+
             if viewModel.isLoading {
                 ProgressView("Loading phrases...")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -44,19 +50,8 @@ struct PhrasesView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    HStack {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
-                    }
-                }
-            }
-        }
+        .toolbar(.hidden, for: .navigationBar)
         .background(settings.appBorderColor)
-        .toolbarBackground(settings.appBorderColor, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
         .tint(.blue)
         .onAppear {
             gazeManager.dwellManager.unregisterButtons(withPrefix: "cat_")
@@ -64,9 +59,12 @@ struct PhrasesView: View {
             lastHandledActivationToken = gazeManager.dwellManager.activationToken
         }
         .onDisappear {
-            gazeManager.dwellManager.clearAllButtons()
+            gazeManager.dwellManager.unregisterButtons(withPrefix: "phrase_")
             mediaCoordinator.cancelPending()
             gameCoordinator.cancelPending()
+        }
+        .onChange(of: currentPage) { _, _ in
+            gazeManager.dwellManager.cancelDwellForLayoutChange()
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PhrasesUpdated"))) { _ in
             viewModel.loadPhrases()
@@ -82,6 +80,133 @@ struct PhrasesView: View {
             guard settings.selectionMode == "handGesture" else { return }
             selectPhraseBySide(side, onPage: currentPage)
         }
+    }
+
+    private var windowTopSafeInset: CGFloat {
+        guard let scene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene }).first else {
+            return 24
+        }
+        let inset = scene.windows.first(where: \.isKeyWindow)?.safeAreaInsets.top
+            ?? scene.windows.first?.safeAreaInsets.top
+            ?? 0
+        return inset > 0 ? inset : 24
+    }
+
+    private var topNavigationBar: some View {
+        HStack(spacing: 16) {
+            Button(action: { dismiss() }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "chevron.left")
+                        .font(.title3.weight(.bold))
+                    Text("Back")
+                        .font(.title3.weight(.semibold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 22)
+                .frame(minHeight: 52)
+                .background(Color.blue.opacity(0.9))
+                .cornerRadius(14)
+                .shadow(radius: 3)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Back to categories")
+            .dwellSelectable(
+                id: Self.navBackButtonId,
+                manager: gazeManager.dwellManager,
+                isActive: !binarySelectionActive,
+                onActivate: {
+                    if let activation = gazeManager.dwellManager.lastActivation,
+                       activation.buttonId == Self.navBackButtonId {
+                        dispatchDwellPhraseActivation(activation)
+                    }
+                }
+            )
+
+            Spacer(minLength: 12)
+
+            if totalPages > 1 && !viewModel.phrases.isEmpty {
+                HStack(spacing: 14) {
+                    Button(action: { goToPreviousPage() }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "chevron.left")
+                                .font(.headline.weight(.bold))
+                            Text("Prev")
+                                .font(.headline.weight(.semibold))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 18)
+                        .frame(minHeight: 52)
+                        .background(Color.blue.opacity(0.85))
+                        .cornerRadius(14)
+                        .shadow(radius: 3)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Previous page")
+                    .dwellSelectable(
+                        id: Self.navPrevPageButtonId,
+                        manager: gazeManager.dwellManager,
+                        isActive: !binarySelectionActive && totalPages > 1 && !viewModel.phrases.isEmpty,
+                        onActivate: {
+                            if let activation = gazeManager.dwellManager.lastActivation,
+                               activation.buttonId == Self.navPrevPageButtonId {
+                                dispatchDwellPhraseActivation(activation)
+                            }
+                        }
+                    )
+
+                    Text("Page \(currentPage + 1) of \(totalPages)")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(.primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial, in: Capsule())
+
+                    Button(action: { goToNextPage() }) {
+                        HStack(spacing: 6) {
+                            Text("Next")
+                                .font(.headline.weight(.semibold))
+                            Image(systemName: "chevron.right")
+                                .font(.headline.weight(.bold))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 18)
+                        .frame(minHeight: 52)
+                        .background(Color.blue.opacity(0.85))
+                        .cornerRadius(14)
+                        .shadow(radius: 3)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Next page")
+                    .dwellSelectable(
+                        id: Self.navNextPageButtonId,
+                        manager: gazeManager.dwellManager,
+                        isActive: !binarySelectionActive && totalPages > 1 && !viewModel.phrases.isEmpty,
+                        onActivate: {
+                            if let activation = gazeManager.dwellManager.lastActivation,
+                               activation.buttonId == Self.navNextPageButtonId {
+                                dispatchDwellPhraseActivation(activation)
+                            }
+                        }
+                    )
+                }
+            }
+        }
+        .padding(.top, windowTopSafeInset + 8)
+        .padding(.leading, 12)
+        // Leave trailing space clear for ContentView's floating Settings gear icon.
+        .padding(.trailing, 80)
+        .padding(.bottom, 4)
+    }
+
+    private func goToPreviousPage() {
+        guard totalPages > 1 else { return }
+        currentPage = (currentPage - 1 + totalPages) % totalPages
+    }
+
+    private func goToNextPage() {
+        guard totalPages > 1 else { return }
+        currentPage = (currentPage + 1) % totalPages
     }
 
     private var armRaiseActive: Bool { settings.selectionMode == "armRaise" }
@@ -118,36 +243,30 @@ struct PhrasesView: View {
     
     private var phrasesContent: some View {
         GeometryReader { geometry in
-            ZStack(alignment: .bottom) {
-                TabView(selection: $currentPage) {
-                    // Use Array(...) instead of bare Range so SwiftUI
-                    // treats it as dynamic data that updates when totalPages changes.
-                    ForEach(Array(0..<totalPages), id: \.self) { page in
-                        phrasesGridForPage(page, in: geometry)
-                            .tag(page)
-                    }
-                }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                // Force the TabView to fully recreate when symbolCount changes.
-                // Without this, the paged TabView caches stale children and
-                // won't show the correct number of phrases per page.
-                .id(settings.symbolCount)
-
-                if totalPages > 1 {
-                    Text("Page \(currentPage + 1) of \(totalPages)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(.ultraThinMaterial, in: Capsule())
-                        .padding(.bottom, 8)
+            TabView(selection: $currentPage) {
+                // Use Array(...) instead of bare Range so SwiftUI
+                // treats it as dynamic data that updates when totalPages changes.
+                ForEach(Array(0..<totalPages), id: \.self) { page in
+                    phrasesGridForPage(page, in: geometry)
+                        .tag(page)
                 }
             }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            // Force the TabView to fully recreate when symbolCount changes.
+            // Without this, the paged TabView caches stale children and
+            // won't show the correct number of phrases per page.
+            .id(settings.symbolCount)
         }
         .onChange(of: settings.symbolCount) { _, _ in
             // Reset to page 0 when symbol count changes so we don't
             // land on an out-of-bounds page (e.g. page 3 when there are now only 2 pages)
             currentPage = 0
+        }
+        .onChange(of: viewModel.phrases.count) { _, _ in
+            let maxPage = max(0, totalPages - 1)
+            if currentPage > maxPage {
+                currentPage = maxPage
+            }
         }
     }
     
@@ -262,9 +381,29 @@ struct PhrasesView: View {
     private func dispatchDwellPhraseActivation(_ activation: DwellActivation) {
         guard activation.token != lastHandledActivationToken else { return }
         guard activation.buttonId.hasPrefix("phrase_") else { return }
+        guard mediaCoordinator.phase != .playing, gameCoordinator.phase != .playing else { return }
+
+        if activation.buttonId == Self.navBackButtonId {
+            lastHandledActivationToken = activation.token
+            dismiss()
+            return
+        }
+
         // Ignore stale activations replayed while phrases are still loading
         // (onReceive resubscribes and can redeliver CurrentValueSubject values).
         guard !viewModel.isLoading else { return }
+
+        if activation.buttonId == Self.navPrevPageButtonId {
+            lastHandledActivationToken = activation.token
+            goToPreviousPage()
+            return
+        }
+
+        if activation.buttonId == Self.navNextPageButtonId {
+            lastHandledActivationToken = activation.token
+            goToNextPage()
+            return
+        }
 
         let phraseId = String(activation.buttonId.dropFirst("phrase_".count))
         guard let phrase = viewModel.phrases.first(where: { $0.id == phraseId }) else {
@@ -284,6 +423,16 @@ struct PhraseButton: View {
     let height: CGFloat
     var isGestureHighlighted: Bool = false
     let action: () -> Void
+
+    private struct FontSizeCacheKey: Hashable {
+        let text: String
+        let width: Int
+        let height: Int
+        let isBold: Bool
+    }
+
+    private static var fontSizeCache: [FontSizeCacheKey: CGFloat] = [:]
+    private static let fontSizeCacheLock = NSLock()
     
     var body: some View {
         Button(action: action) {
@@ -402,11 +551,26 @@ struct PhraseButton: View {
         let reservedHeight: CGFloat = reservedImageHeight + 8 + 12
         let availableWidth = max(size.width - 12, 40)
         let availableHeight = max(size.height - reservedHeight, 20)
+        let isBold = (fontWeight == .bold)
+        let cacheKey = FontSizeCacheKey(
+            text: phrase.text,
+            width: Int(availableWidth.rounded()),
+            height: Int(availableHeight.rounded()),
+            isBold: isBold
+        )
+
+        Self.fontSizeCacheLock.lock()
+        if let cached = Self.fontSizeCache[cacheKey] {
+            Self.fontSizeCacheLock.unlock()
+            return cached
+        }
+        Self.fontSizeCacheLock.unlock()
+
         let isSingleWord = !phrase.text.contains { $0.isWhitespace }
 
         let maxSize = min(96, availableHeight)
         let minSize: CGFloat = 18
-        let uiWeight: UIFont.Weight = (fontWeight == .bold) ? .bold : .medium
+        let uiWeight: UIFont.Weight = isBold ? .bold : .medium
 
         var low = minSize
         var high = maxSize
@@ -433,6 +597,13 @@ struct PhraseButton: View {
                 high = mid
             }
         }
+
+        Self.fontSizeCacheLock.lock()
+        if Self.fontSizeCache.count > 512 {
+            Self.fontSizeCache.removeAll(keepingCapacity: true)
+        }
+        Self.fontSizeCache[cacheKey] = best
+        Self.fontSizeCacheLock.unlock()
 
         return best
     }

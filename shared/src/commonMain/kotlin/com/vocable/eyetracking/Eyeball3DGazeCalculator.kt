@@ -77,28 +77,37 @@ class Eyeball3DGazeCalculator(
 
         return try {
             val noseTip = landmarks[NOSE_TIP]
-            val chin = landmarks[CHIN]
             val forehead = landmarks[FOREHEAD]
             val leftEar = landmarks[LEFT_EAR]
             val rightEar = landmarks[RIGHT_EAR]
+            val leftEye = landmarks[LEFT_EYE_OUTER]
+            val rightEye = landmarks[RIGHT_EYE_INNER]
 
             // Yaw from nose relative to ears
             val earMidX = (leftEar.x + rightEar.x) / 2f
             val yaw = (noseTip.x - earMidX) * 100f
 
-            // Pitch from nose relative to forehead/chin
+            // Pitch anchored on rigid upper-face geometry (forehead 10, eye corners 33/263, nose tip 1)
             val noseY = noseTip.y
-            val foreheadY = forehead.y
-            val chinY = chin.y
-            val faceHeight = chinY - foreheadY
-            val noseRelative = if (faceHeight != 0f) (noseY - foreheadY) / faceHeight else 0.45f
-            val expectedNosePos = 0.45f
+            val eyeMidY = (leftEye.y + rightEye.y) / 2f
+            val eyeDeltaY = rightEye.y - leftEye.y
+            val eyeDeltaX = rightEye.x - leftEye.x
+            val eyeDist = sqrt(eyeDeltaX * eyeDeltaX + eyeDeltaY * eyeDeltaY)
+            val foreheadToEyeY = if (forehead.y > 0f) (eyeMidY - forehead.y) else 0f
+            val upperFaceScale = when {
+                foreheadToEyeY > 0.01f && eyeDist > 0.01f -> eyeDist * 0.65f + (foreheadToEyeY * 1.6f) * 0.35f
+                eyeDist > 0.01f -> eyeDist
+                foreheadToEyeY > 0.01f -> foreheadToEyeY * 1.6f
+                else -> 0f
+            }
+            val expectedNosePos = 0.52f
+            val noseRelative = if (upperFaceScale > 0.01f) (noseY - eyeMidY) / upperFaceScale else expectedNosePos
             val pitch = (noseRelative - expectedNosePos) * 150f
 
             // Roll from eye angle
-            val eyeDeltaY = landmarks[RIGHT_EYE_OUTER].y - landmarks[LEFT_EYE_OUTER].y
-            val eyeDeltaX = landmarks[RIGHT_EYE_OUTER].x - landmarks[LEFT_EYE_OUTER].x
-            val roll = atan2(eyeDeltaY, eyeDeltaX) * (180f / PI.toFloat())
+            val rollDeltaY = landmarks[RIGHT_EYE_OUTER].y - landmarks[LEFT_EYE_OUTER].y
+            val rollDeltaX = landmarks[RIGHT_EYE_OUTER].x - landmarks[LEFT_EYE_OUTER].x
+            val roll = atan2(rollDeltaY, rollDeltaX) * (180f / PI.toFloat())
 
             Triple(
                 yaw.coerceIn(-45f, 45f),

@@ -31,8 +31,11 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
     private var latestOrientation: UIImage.Orientation = .up
     private var latestFrameSize: CGSize = .zero
     private var pendingRequest = false
+    private var needsDetectorCallback = false
+    private var publishLandmarksToMain = true
     private var isDetecting = false
     private var detectionStartTime: TimeInterval = 0
+    private var lastSentTimestampMs: Int = 0
     private let detectionTimeout: TimeInterval = 0.4  // Max time to wait for MediaPipe callback
     private weak var detector: PlatformFaceLandmarkDetector?
  
@@ -60,6 +63,7 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
     private func initializeOnQueue(useGpu: Bool) -> Bool {
         if isInitialized && lastUseGpu == useGpu && faceLandmarker != nil {
             pendingRequest = false
+            needsDetectorCallback = false
             isDetecting = false
             latestPixelBuffer = nil
             DebugLog.info("Reused existing FaceLandmarker (GPU: \(useGpu))", tag: "MediaPipe")
@@ -72,8 +76,10 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
 
         lastUseGpu = useGpu
         pendingRequest = false
+        needsDetectorCallback = false
         isDetecting = false
         latestPixelBuffer = nil
+        lastSentTimestampMs = 0
 
         do {
             let modelPath: String
@@ -135,7 +141,9 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
             DebugLog.debug("Sending \(Int(image.width))x\(Int(image.height)) image, orientation: \(orientation.rawValue)", tag: "MediaPipe")
         }
  
-        let timestamp = Int(CACurrentMediaTime() * 1000)
+        let nowMs = Int(CACurrentMediaTime() * 1000)
+        let timestamp = max(nowMs, lastSentTimestampMs + 1)
+        lastSentTimestampMs = timestamp
  
         do {
             try faceLandmarker.detectAsync(image: image, timestampInMilliseconds: timestamp)
@@ -162,11 +170,24 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
         }
     }
 
-    /// Request a detection cycle for the latest frame.
+    /// Request a detection cycle for the latest frame from the Kotlin eye-gaze bridge.
     func requestDetection() {
         detectionQueue.async { [weak self] in
             guard let self else { return }
             self.pendingRequest = true
+            self.needsDetectorCallback = true
+            self.publishLandmarksToMain = AppSettings.shared.showDebugCameraPreview
+            self.triggerDetectionIfNeeded()
+        }
+    }
+
+    /// Request a local Swift-only detection cycle (used in head-tracking mode where
+    /// the Kotlin detector bridge is not awaiting a coroutine callback).
+    func requestLocalDetection() {
+        detectionQueue.async { [weak self] in
+            guard let self else { return }
+            self.pendingRequest = true
+            self.publishLandmarksToMain = true
             self.triggerDetectionIfNeeded()
         }
     }
@@ -175,13 +196,21 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
         if isDetecting && (CACurrentMediaTime() - detectionStartTime) > detectionTimeout {
             DebugLog.warn("Detection timed out — resetting state", tag: "MediaPipe")
             isDetecting = false
+            if needsDetectorCallback {
+                needsDetectorCallback = false
+                detector?.onNoFaceDetected()
+            }
         }
 
         guard pendingRequest, !isDetecting else { return }
 
+        pendingRequest = false
+
         guard let pixelBuffer = latestPixelBuffer else {
-            pendingRequest = false
-            detector?.onNoFaceDetected()
+            if needsDetectorCallback {
+                needsDetectorCallback = false
+                detector?.onNoFaceDetected()
+            }
             return
         }
 
@@ -197,6 +226,10 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
             self.pendingRequest = false
             self.isDetecting = false
             self.latestPixelBuffer = nil
+            if self.needsDetectorCallback {
+                self.needsDetectorCallback = false
+                self.detector?.onNoFaceDetected()
+            }
             DebugLog.debug("Processing state reset for orientation change", tag: "MediaPipe")
         }
         DispatchQueue.main.async { [weak self] in
@@ -234,6 +267,11 @@ class FaceLandmarkService: NSObject, ObservableObject, IOSFaceLandmarkBridge {
         isDetecting = false
         latestPixelBuffer = nil
         latestFrameSize = .zero
+        lastSentTimestampMs = 0
+        if needsDetectorCallback {
+            needsDetectorCallback = false
+            detector?.onNoFaceDetected()
+        }
         DispatchQueue.main.async {
             self.currentLandmarks = nil
             self.isTracking = false
@@ -261,9 +299,11 @@ extension FaceLandmarkService: FaceLandmarkerLiveStreamDelegate {
             if AppSettings.shared.showDebugCameraPreview {
                 DebugLog.warn("No face detected in frame", tag: "MediaPipe")
             }
-            DispatchQueue.main.async {
-                self.currentLandmarks = nil
-                self.isTracking = false
+            if publishLandmarksToMain || AppSettings.shared.showDebugCameraPreview {
+                DispatchQueue.main.async {
+                    self.currentLandmarks = nil
+                    self.isTracking = false
+                }
             }
             notifyDetectorNoFace()
             return
@@ -272,11 +312,13 @@ extension FaceLandmarkService: FaceLandmarkerLiveStreamDelegate {
         if AppSettings.shared.showDebugCameraPreview && firstFace.count < 478 {
             DebugLog.warn("Face detected but missing irises (count: \(firstFace.count))", tag: "MediaPipe")
         }
- 
-        DispatchQueue.main.async {
-            self.currentLandmarks = firstFace
-            self.isTracking = true
-            self.lastTimestamp = timestampInMilliseconds
+
+        if publishLandmarksToMain || AppSettings.shared.showDebugCameraPreview {
+            DispatchQueue.main.async {
+                self.currentLandmarks = firstFace
+                self.isTracking = true
+                self.lastTimestamp = timestampInMilliseconds
+            }
         }
 
         notifyDetectorLandmarks(firstFace, timestamp: timestampInMilliseconds)
@@ -288,36 +330,39 @@ private extension FaceLandmarkService {
     func notifyDetectorLandmarks(_ landmarks: [NormalizedLandmark], timestamp: Int) {
         detectionQueue.async { [weak self] in
             guard let self else { return }
-            guard let detector = self.detector else {
-                self.pendingRequest = false
-                self.isDetecting = false
-                return
-            }
-
-            let width = Int32(self.latestFrameSize.width)
-            let height = Int32(self.latestFrameSize.height)
-            let landmarkArrays = landmarks.map { landmark in
-                self.toKotlinFloatArray([landmark.x, landmark.y, landmark.z])
-            }
-
-            detector.onLandmarksDetectedRaw(
-                landmarks: landmarkArrays,
-                frameWidth: width,
-                frameHeight: height,
-                timestamp: Int64(timestamp)
-            )
-
-            self.pendingRequest = false
             self.isDetecting = false
+
+            if self.needsDetectorCallback, let detector = self.detector {
+                self.needsDetectorCallback = false
+                let width = Int32(self.latestFrameSize.width)
+                let height = Int32(self.latestFrameSize.height)
+                let landmarkArrays = landmarks.map { landmark in
+                    self.toKotlinFloatArray([landmark.x, landmark.y, landmark.z])
+                }
+
+                detector.onLandmarksDetectedRaw(
+                    landmarks: landmarkArrays,
+                    frameWidth: width,
+                    frameHeight: height,
+                    timestamp: Int64(timestamp)
+                )
+            } else {
+                self.needsDetectorCallback = false
+            }
+
+            self.triggerDetectionIfNeeded()
         }
     }
 
     func notifyDetectorNoFace() {
         detectionQueue.async { [weak self] in
             guard let self else { return }
-            self.detector?.onNoFaceDetected()
-            self.pendingRequest = false
             self.isDetecting = false
+            if self.needsDetectorCallback {
+                self.needsDetectorCallback = false
+                self.detector?.onNoFaceDetected()
+            }
+            self.triggerDetectionIfNeeded()
         }
     }
 

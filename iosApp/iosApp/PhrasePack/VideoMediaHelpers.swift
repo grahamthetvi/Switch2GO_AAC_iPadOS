@@ -68,12 +68,26 @@ enum PhraseImageStore {
         guard let ref, !ref.isEmpty, !ref.hasPrefix("emoji:"), !ref.hasPrefix("youtube:") else {
             return nil
         }
-        if ref.hasPrefix("file://"), let url = URL(string: ref) {
-            return FileManager.default.fileExists(atPath: url.path) ? url : nil
+        let candidateURL: URL?
+        if ref.hasPrefix("file://") {
+            candidateURL = URL(string: ref)
+        } else if ref.hasPrefix("/") {
+            candidateURL = URL(fileURLWithPath: ref)
+        } else {
+            candidateURL = nil
         }
-        if ref.hasPrefix("/") {
-            let url = URL(fileURLWithPath: ref)
-            return FileManager.default.fileExists(atPath: url.path) ? url : nil
+
+        if let url = candidateURL {
+            if FileManager.default.fileExists(atPath: url.path) {
+                return url
+            }
+            let fileName = url.lastPathComponent
+            if !fileName.isEmpty {
+                let docsFallback = documentsDirectory.appendingPathComponent(fileName)
+                if FileManager.default.fileExists(atPath: docsFallback.path) {
+                    return docsFallback
+                }
+            }
         }
         return nil
     }

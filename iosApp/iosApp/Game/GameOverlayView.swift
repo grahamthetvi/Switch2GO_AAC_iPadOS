@@ -61,15 +61,22 @@ struct GameOverlayView: View {
             )
             .onAppear {
                 dwellManager.setAllowedButtonIds(gameAllowedButtons)
-                dwellManager.clearAllButtons()
             }
             .onDisappear {
-                dwellManager.setAllowedButtonIds(nil)
+                guard coordinator.phase != .playing else { return }
+                dwellManager.unregisterButton(id: gameExitButtonId)
+                if dwellManager.allowedButtonIds == gameAllowedButtons {
+                    dwellManager.setAllowedButtonIds(nil)
+                }
             }
             .onChange(of: coordinator.phase) { _, newPhase in
                 if newPhase != .playing {
                     touchTarget = nil
                     touchRevealedExit = false
+                    dwellManager.unregisterButton(id: gameExitButtonId)
+                    if dwellManager.allowedButtonIds == gameAllowedButtons {
+                        dwellManager.setAllowedButtonIds(nil)
+                    }
                 }
             }
             }
@@ -135,7 +142,7 @@ struct GameOverlayView: View {
 
     private var gameGazeZones: some View {
         GeometryReader { geo in
-            let globalOrigin = geo.frame(in: .global).origin
+            let globalOrigin = geo.frame(in: .named(GazeCoordinateSpace.name)).origin
             let size = geo.size
             let exitFrame = CGRect(
                 x: globalOrigin.x,

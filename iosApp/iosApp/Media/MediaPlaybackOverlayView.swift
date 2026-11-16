@@ -65,11 +65,19 @@ struct MediaPlaybackOverlayView: View {
             )
             .onAppear {
                 dwellManager.setAllowedButtonIds(mediaPlaybackAllowedButtons)
-                dwellManager.clearAllButtons()
+                preparePlayback(for: phrase)
+            }
+            .onChange(of: phrase.id) { _, _ in
+                dwellManager.setAllowedButtonIds(mediaPlaybackAllowedButtons)
                 preparePlayback(for: phrase)
             }
             .onDisappear {
-                dwellManager.setAllowedButtonIds(nil)
+                guard coordinator.phase != .playing else { return }
+                dwellManager.unregisterButton(id: mediaPlayPauseButtonId)
+                dwellManager.unregisterButton(id: mediaExitButtonId)
+                if dwellManager.allowedButtonIds == mediaPlaybackAllowedButtons {
+                    dwellManager.setAllowedButtonIds(nil)
+                }
                 teardownPlayback()
             }
             .onChange(of: coordinator.isPaused) { _, paused in
@@ -83,6 +91,11 @@ struct MediaPlaybackOverlayView: View {
                 if newPhase != .playing {
                     touchRevealedCenter = false
                     touchRevealedExit = false
+                    dwellManager.unregisterButton(id: mediaPlayPauseButtonId)
+                    dwellManager.unregisterButton(id: mediaExitButtonId)
+                    if dwellManager.allowedButtonIds == mediaPlaybackAllowedButtons {
+                        dwellManager.setAllowedButtonIds(nil)
+                    }
                     teardownPlayback()
                 }
             }
@@ -110,6 +123,7 @@ struct MediaPlaybackOverlayView: View {
                 coordinator.onNaturalEnd()
                 return
             }
+            TTSManager.shared.ensureAudioSessionActive()
             youtubeHolder.onEnded = { [coordinator] in
                 coordinator.onNaturalEnd()
             }
@@ -186,7 +200,7 @@ struct MediaPlaybackOverlayView: View {
 
     private var mediaGazeZones: some View {
         GeometryReader { geo in
-            let globalOrigin = geo.frame(in: .global).origin
+            let globalOrigin = geo.frame(in: .named(GazeCoordinateSpace.name)).origin
             let size = geo.size
             let centerFrame = CGRect(
                 x: globalOrigin.x + size.width * 0.35,
@@ -340,6 +354,13 @@ final class MediaPlayerHolder: ObservableObject {
     @Published var player: AVPlayer?
 
     private var endObserver: NSObjectProtocol?
+    private var failObserver: NSObjectProtocol?
+    private var interruptionObserver: NSObjectProtocol?
+    private var statusCancellable: AnyCancellable?
+
+    deinit {
+        teardown()
+    }
 
     func prepare(phrase: PhraseDisplayModel, coordinator: MediaPlaybackCoordinator) {
         teardown()
@@ -350,6 +371,8 @@ final class MediaPlayerHolder: ObservableObject {
             }
             return
         }
+
+        TTSManager.shared.ensureAudioSessionActive()
 
         let item = AVPlayerItem(url: url)
         let avPlayer = AVPlayer(playerItem: item)
@@ -363,6 +386,41 @@ final class MediaPlayerHolder: ObservableObject {
             coordinator.onNaturalEnd()
         }
 
+        failObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemFailedToPlayToEndTime,
+            object: item,
+            queue: .main
+        ) { _ in
+            DebugLog.error("Media item failed to play to end time: \(url.lastPathComponent)", tag: "MediaPlayer")
+            coordinator.onNaturalEnd()
+        }
+
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { [weak self, weak coordinator] notification in
+            guard let self,
+                  let coordinator,
+                  coordinator.phase == .playing,
+                  let userInfo = notification.userInfo,
+                  let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+                  let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
+            if type == .ended, !coordinator.isPaused {
+                TTSManager.shared.ensureAudioSessionActive()
+                self.player?.play()
+            }
+        }
+
+        statusCancellable = item.publisher(for: \.status)
+            .receive(on: DispatchQueue.main)
+            .sink { status in
+                if status == .failed {
+                    DebugLog.error("Media item failed to load: \(url.lastPathComponent)", tag: "MediaPlayer")
+                    coordinator.onNaturalEnd()
+                }
+            }
+
         avPlayer.play()
     }
 
@@ -371,6 +429,7 @@ final class MediaPlayerHolder: ObservableObject {
         if paused {
             player.pause()
         } else {
+            TTSManager.shared.ensureAudioSessionActive()
             player.play()
         }
     }
@@ -380,6 +439,16 @@ final class MediaPlayerHolder: ObservableObject {
             NotificationCenter.default.removeObserver(endObserver)
             self.endObserver = nil
         }
+        if let failObserver {
+            NotificationCenter.default.removeObserver(failObserver)
+            self.failObserver = nil
+        }
+        if let interruptionObserver {
+            NotificationCenter.default.removeObserver(interruptionObserver)
+            self.interruptionObserver = nil
+        }
+        statusCancellable?.cancel()
+        statusCancellable = nil
         player?.pause()
         player = nil
     }

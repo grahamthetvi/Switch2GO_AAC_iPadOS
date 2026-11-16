@@ -6,7 +6,7 @@ import VocableShared
 class PhraseStyleTests: XCTestCase {
     
     func testDefaultStyle() {
-        let style = PhraseStyle()
+        let style = PhraseStyle.empty()
         
         XCTAssertNil(style.backgroundColor)
         XCTAssertNil(style.textColor)
@@ -17,10 +17,11 @@ class PhraseStyleTests: XCTestCase {
         XCTAssertNil(style.imageRef)
         XCTAssertNil(style.mediaRef)
         XCTAssertNil(style.mediaType)
+        XCTAssertNil(style.gameType)
     }
     
     func testEffectiveValues() {
-        let style = PhraseStyle()
+        let style = PhraseStyle.empty()
         
         // Should return defaults when not set
         XCTAssertEqual(style.effectiveBackgroundColor(), PhraseStyle.companion.DEFAULT_BACKGROUND_COLOR)
@@ -32,21 +33,21 @@ class PhraseStyleTests: XCTestCase {
     
     func testCustomStyle() {
         let style = PhraseStyle(
-            backgroundColor: 0xFFE53935,
-            textColor: 0xFFFFFFFF,
-            textSizeSp: 24.0,
+            backgroundColor: UInt32(0xFFE53935),
+            textColor: UInt32(0xFFFFFFFF),
+            textSizeSp: Float(24.0),
             isBold: true,
-            borderColor: 0xFF000000,
-            borderWidthDp: 10.0,
+            borderColor: UInt32(0xFF000000),
+            borderWidthDp: Float(10.0),
             imageRef: "ic_symbol_happy"
         )
         
-        XCTAssertEqual(style.backgroundColor, 0xFFE53935)
-        XCTAssertEqual(style.textColor, 0xFFFFFFFF)
-        XCTAssertEqual(style.textSizeSp, 24.0)
+        XCTAssertEqual(style.backgroundColor?.uint32Value, 0xFFE53935)
+        XCTAssertEqual(style.textColor?.uint32Value, 0xFFFFFFFF)
+        XCTAssertEqual(style.textSizeSp?.floatValue, 24.0)
         XCTAssertTrue(style.isBold)
-        XCTAssertEqual(style.borderColor, 0xFF000000)
-        XCTAssertEqual(style.borderWidthDp, 10.0)
+        XCTAssertEqual(style.borderColor?.uint32Value, 0xFF000000)
+        XCTAssertEqual(style.borderWidthDp?.floatValue, 10.0)
         XCTAssertEqual(style.imageRef, "ic_symbol_happy")
     }
     
@@ -64,7 +65,7 @@ class PhraseStyleTests: XCTestCase {
         let styleWithImage = PhraseStyle(imageRef: "ic_symbol_happy")
         XCTAssertTrue(styleWithImage.hasImage())
         
-        let styleNoImage = PhraseStyle()
+        let styleNoImage = PhraseStyle.empty()
         XCTAssertFalse(styleNoImage.hasImage())
         
         let styleEmptyImage = PhraseStyle(imageRef: "")
@@ -79,12 +80,12 @@ class PhraseStyleTests: XCTestCase {
     func testTextSizeOptions() {
         let sizes = PhraseStyle.companion.TEXT_SIZE_OPTIONS
         XCTAssertEqual(sizes.count, 7, "Should have 7 text size options")
-        XCTAssertTrue(sizes.contains(18.0), "Should include default size 18sp")
+        XCTAssertTrue(sizes.contains(KotlinFloat(value: 18.0)), "Should include default size 18sp")
     }
     
     func testBorderWidthOptions() {
         let widths = PhraseStyle.companion.BORDER_WIDTH_OPTIONS
         XCTAssertEqual(widths.count, 6, "Should have 6 border width options")
-        XCTAssertTrue(widths.contains(0.0), "Should include 'None' option")
+        XCTAssertTrue(widths.contains(KotlinFloat(value: 0.0)), "Should include 'None' option")
     }
 }

@@ -21,10 +21,13 @@ final class MediaPlaybackCoordinator: ObservableObject {
     private let settings = AppSettings.shared
 
     func onPhraseSelected(_ phrase: PhraseDisplayModel) {
-        idleWorkItem?.cancel()
-        idleWorkItem = nil
+        if phase == .playing {
+            return
+        }
 
         guard phrase.style?.triggersDelayedPlayback() == true else {
+            idleWorkItem?.cancel()
+            idleWorkItem = nil
             if phase == .armed {
                 phase = .idle
                 armedPhrase = nil
@@ -32,23 +35,27 @@ final class MediaPlaybackCoordinator: ObservableObject {
             return
         }
 
-        if phase == .playing {
+        // If this phrase is already armed with a pending countdown, keep the existing
+        // timer running so continuous repeat-dwell activations (e.g. every 1s) do not
+        // starve a 5s mediaPlaybackDelay from ever firing.
+        if phase == .armed, armedPhrase?.id == phrase.id, idleWorkItem != nil {
+            armedPhrase = phrase
             return
         }
 
-        if armedPhrase?.id == phrase.id, phase == .armed {
-            return
-        }
+        idleWorkItem?.cancel()
+        idleWorkItem = nil
 
         armedPhrase = phrase
         phase = .armed
 
+        let delay = max(0.0, settings.mediaPlaybackDelay)
         let work = DispatchWorkItem { [weak self] in
             self?.beginPlayback()
         }
         idleWorkItem = work
         DispatchQueue.main.asyncAfter(
-            deadline: .now() + settings.mediaPlaybackDelay,
+            deadline: .now() + delay,
             execute: work
         )
     }

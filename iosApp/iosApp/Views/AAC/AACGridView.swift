@@ -76,13 +76,7 @@ struct AACGridView: View {
 
     private func speakPhrase(_ phrase: String) {
         guard !phrase.isEmpty else { return }
-
-        let utterance = AVSpeechUtterance(string: phrase)
-        utterance.rate = AVSpeechUtteranceDefaultSpeechRate
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-
-        let synthesizer = AVSpeechSynthesizer()
-        synthesizer.speak(utterance)
+        TTSManager.shared.speak(phrase)
     }
 }
 

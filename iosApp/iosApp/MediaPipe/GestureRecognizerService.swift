@@ -23,6 +23,7 @@ final class GestureRecognizerService: NSObject, ObservableObject {
     private var pendingRequest = false
     private var isDetecting = false
     private var detectionStartTime: TimeInterval = 0
+    private var lastSentTimestampMs: Int = 0
     private let detectionTimeout: TimeInterval = 0.4
 
     var onGesturesDetected: GestureResultHandler?
@@ -49,6 +50,7 @@ final class GestureRecognizerService: NSObject, ObservableObject {
         pendingRequest = false
         isDetecting = false
         latestPixelBuffer = nil
+        lastSentTimestampMs = 0
 
         do {
             guard let modelPath = Self.modelPath() else {
@@ -125,6 +127,7 @@ final class GestureRecognizerService: NSObject, ObservableObject {
         pendingRequest = false
         isDetecting = false
         latestPixelBuffer = nil
+        lastSentTimestampMs = 0
         DispatchQueue.main.async { [weak self] in
             self?.currentHands = []
             self?.isTracking = false
@@ -139,8 +142,9 @@ final class GestureRecognizerService: NSObject, ObservableObject {
 
         guard pendingRequest, !isDetecting else { return }
 
+        pendingRequest = false
+
         guard let pixelBuffer = latestPixelBuffer else {
-            pendingRequest = false
             notifyNoGestures()
             return
         }
@@ -157,7 +161,9 @@ final class GestureRecognizerService: NSObject, ObservableObject {
 
         isDetecting = true
         detectionStartTime = CACurrentMediaTime()
-        let timestamp = Int(CACurrentMediaTime() * 1000)
+        let nowMs = Int(CACurrentMediaTime() * 1000)
+        let timestamp = max(nowMs, lastSentTimestampMs + 1)
+        lastSentTimestampMs = timestamp
 
         do {
             try gestureRecognizer.recognizeAsync(image: image, timestampInMilliseconds: timestamp)
@@ -175,8 +181,8 @@ final class GestureRecognizerService: NSObject, ObservableObject {
                 self.isTracking = !hands.isEmpty
             }
             self.onGesturesDetected?(hands)
-            self.pendingRequest = false
             self.isDetecting = false
+            self.triggerDetectionIfNeeded()
         }
     }
 
@@ -188,8 +194,8 @@ final class GestureRecognizerService: NSObject, ObservableObject {
                 self.isTracking = false
             }
             self.onNoGesturesDetected?()
-            self.pendingRequest = false
             self.isDetecting = false
+            self.triggerDetectionIfNeeded()
         }
     }
 

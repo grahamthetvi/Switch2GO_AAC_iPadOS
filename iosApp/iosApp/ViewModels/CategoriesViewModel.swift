@@ -18,7 +18,9 @@ class CategoriesViewModel: ObservableObject {
     
     /// Load all visible categories
     func loadCategories() {
-        isLoading = true
+        if categories.isEmpty {
+            isLoading = true
+        }
         
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }

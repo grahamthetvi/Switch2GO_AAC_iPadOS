@@ -37,6 +37,7 @@ class IrisGazeCalculator(
 
         // Landmark indices
         const val NOSE_TIP = 1
+        const val FOREHEAD = 10
         const val CHIN = 152
         const val LEFT_EYE_CORNER = 33
         const val RIGHT_EYE_CORNER = 263
@@ -51,14 +52,14 @@ class IrisGazeCalculator(
      * @return Triple of (yaw, pitch, roll) in degrees
      */
     fun estimateHeadPose(landmarks: List<LandmarkPoint>): Triple<Float, Float, Float> {
-        if (landmarks.size <= maxOf(NOSE_TIP, CHIN, LEFT_EYE_CORNER, RIGHT_EYE_CORNER)) {
+        if (landmarks.size <= maxOf(NOSE_TIP, FOREHEAD, CHIN, LEFT_EYE_CORNER, RIGHT_EYE_CORNER)) {
             return Triple(0f, 0f, 0f)
         }
 
         try {
             // Get key landmarks for head pose estimation
             val noseTip = landmarks[NOSE_TIP]
-            val chin = landmarks[CHIN]
+            val forehead = landmarks[FOREHEAD]
             val leftEye = landmarks[LEFT_EYE_CORNER]
             val rightEye = landmarks[RIGHT_EYE_CORNER]
 
@@ -69,21 +70,28 @@ class IrisGazeCalculator(
             // Scale to approximate degrees (-30 to +30 typical range)
             val yaw = (noseTipX - eyeMidX) * 100f
 
-            // Calculate pitch (vertical rotation) from nose-chin relationship
+            // Calculate pitch (vertical rotation) anchored on rigid upper-face geometry
+            // (forehead 10, eye midpoint 33/263, and nose tip 1) rather than chin (152),
+            // so jaw/mouth movement (vocalizing, smiling, open mouth) does not cause
+            // false vertical pitch spikes.
             val noseY = noseTip.y
-            val chinY = chin.y
             val eyeMidY = (leftEye.y + rightEye.y) / 2f
-            // If nose is higher relative to chin, head is tilted up (positive pitch)
+            val eyeDeltaY = rightEye.y - leftEye.y
+            val eyeDeltaX = rightEye.x - leftEye.x
+            val eyeDist = sqrt(eyeDeltaX * eyeDeltaX + eyeDeltaY * eyeDeltaY)
+            val foreheadToEyeY = if (forehead.y > 0f) (eyeMidY - forehead.y) else 0f
+            val upperFaceScale = when {
+                foreheadToEyeY > 0.01f && eyeDist > 0.01f -> eyeDist * 0.65f + (foreheadToEyeY * 1.6f) * 0.35f
+                eyeDist > 0.01f -> eyeDist
+                foreheadToEyeY > 0.01f -> foreheadToEyeY * 1.6f
+                else -> 0f
+            }
             val noseToEyeY = noseY - eyeMidY
-            val noseToChinY = chinY - noseY
-            // Ratio changes with head pitch
-            val expectedRatio = 0.6f  // typical frontal ratio
-            val actualRatio = if (noseToChinY > 0.01f) noseToEyeY / noseToChinY else expectedRatio
+            val expectedRatio = 0.52f  // typical frontal nose-to-eye / upper-face ratio
+            val actualRatio = if (upperFaceScale > 0.01f) noseToEyeY / upperFaceScale else expectedRatio
             val pitch = (actualRatio - expectedRatio) * 150f
 
             // Calculate roll (tilt) from eye angle
-            val eyeDeltaY = rightEye.y - leftEye.y
-            val eyeDeltaX = rightEye.x - leftEye.x
             val roll = if (eyeDeltaX > 0.01f) {
                 atan2(eyeDeltaY, eyeDeltaX) * (180f / PI.toFloat())
             } else {
