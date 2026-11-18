@@ -135,6 +135,7 @@
 "Could not open file" = "Impossible d’ouvrir le fichier";
 "Could not open phrase pack" = "Impossible d’ouvrir le pack de phrases";
 "Could not write backup file" = "Impossible d’écrire le fichier de sauvegarde";
+"Couldn't see a face. Try again." = "Aucun visage détecté. Réessayez.";
 "Create another copy" = "Créer une autre copie";
 "Creates a .switch2go file you can send by Mail, AirDrop, or Files. Videos should be 20 seconds or shorter. Files larger than 24.75 MB may not send by school email." = "Crée un fichier .switch2go à envoyer par Mail, AirDrop ou Fichiers. Vidéos de 20 s ou moins. Au-delà de 24,75 Mo, l’e-mail scolaire peut refuser.";
 "Creates a JSON file you can share or save to Files." = "Crée un fichier JSON à partager ou enregistrer dans Fichiers.";
@@ -296,6 +297,7 @@
 "Loading..." = "Chargement...";
 "Logs will appear here as tracking runs" = "Les journaux apparaîtront ici pendant le suivi";
 "Look at point %d of %d" = "Regardez le point %d sur %d";
+"Look at the center of the screen" = "Regardez le centre de l’écran";
 "Look at the circle" = "Regardez le cercle";
 "Look back at the screen to resume" = "Regardez à nouveau l’écran pour reprendre";
 "Look directly at each circle as it appears" = "Regardez chaque cercle dès qu’il apparaît";
@@ -519,7 +521,7 @@
 "Tracking Not Working" = "Le suivi ne fonctionne pas";
 "Tracking lost" = "Suivi perdu";
 "Troubleshooting" = "Dépannage";
-"Try tapping the Recenter Cursor button at the top of Settings if the cursor seems offset." = "Si le curseur est décalé, touchez Recentrer le curseur en haut des Réglages.";
+"Try the orange Recenter Cursor button to the left of the gear if the cursor seems offset." = "Si le curseur est décalé, touchez le bouton orange Recentrer le curseur à gauche de l’engrenage.";
 "Type a phrase" = "Saisissez une phrase";
 "Unknown" = "Inconnu";
 "Use 2 switches to move a highlight across phrases, then select. Works with or without auto-scan." = "Utilisez 2 switches pour déplacer le surlignage, puis sélectionner. Avec ou sans balayage auto.";

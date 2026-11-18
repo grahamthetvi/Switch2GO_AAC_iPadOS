@@ -211,6 +211,9 @@ class CameraManager: NSObject, ObservableObject {
     }
 
     private func configureSession() {
+        // Leave the shared playback session alone. The default (true) makes
+        // the camera deactivate TTS and clip audio while eye tracking runs.
+        captureSession.automaticallyConfiguresApplicationAudioSession = false
         captureSession.beginConfiguration()
         captureSession.sessionPreset = .medium  // 480p — lower noise, faster processing
 

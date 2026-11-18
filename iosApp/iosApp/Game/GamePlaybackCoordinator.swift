@@ -27,22 +27,13 @@ final class GamePlaybackCoordinator: ObservableObject {
     }
 
     func onPhraseSelected(_ phrase: PhraseDisplayModel) {
-        idleWorkItem?.cancel()
-        idleWorkItem = nil
-
-        if phrase.style?.triggersDelayedGame() == true {
-            guard GameSelectionMode.supportsGames(selectionMode: settings.selectionMode) else {
-                showUnsupportedGameNotice()
-                if phase == .armed {
-                    phase = .idle
-                    armedPhrase = nil
-                }
-                return
-            }
-            clearUnsupportedGameNotice()
+        if phase == .playing {
+            return
         }
 
         guard phrase.style?.triggersDelayedGame() == true else {
+            idleWorkItem?.cancel()
+            idleWorkItem = nil
             if phase == .armed {
                 phase = .idle
                 armedPhrase = nil
@@ -50,25 +41,38 @@ final class GamePlaybackCoordinator: ObservableObject {
             return
         }
 
-        if phase == .playing {
+        guard GameSelectionMode.supportsGames(selectionMode: settings.selectionMode) else {
+            idleWorkItem?.cancel()
+            idleWorkItem = nil
+            showUnsupportedGameNotice()
+            if phase == .armed {
+                phase = .idle
+                armedPhrase = nil
+            }
+            return
+        }
+        clearUnsupportedGameNotice()
+
+        // Same contract as media playback: a live countdown for this phrase
+        // survives repeat-dwell ticks. Canceling it first, then returning,
+        // armed the game and never launched it.
+        if phase == .armed, armedPhrase?.id == phrase.id, idleWorkItem != nil {
+            armedPhrase = phrase
             return
         }
 
-        if armedPhrase?.id == phrase.id, phase == .armed {
-            return
-        }
+        idleWorkItem?.cancel()
+        idleWorkItem = nil
 
         armedPhrase = phrase
         phase = .armed
 
+        let delay = max(0.0, settings.mediaPlaybackDelay)
         let work = DispatchWorkItem { [weak self] in
             self?.beginGame()
         }
         idleWorkItem = work
-        DispatchQueue.main.asyncAfter(
-            deadline: .now() + settings.mediaPlaybackDelay,
-            execute: work
-        )
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
     }
 
     func cancelPending() {

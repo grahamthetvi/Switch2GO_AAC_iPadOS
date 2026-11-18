@@ -9,7 +9,9 @@ import MediaPipeTasksVision
 class GazeTrackingManager: ObservableObject {
     @Published var gazePosition: CGPoint = .zero {
         didSet {
-            // Feed gaze position to dwell selection system
+            // Skip while the cursor is hidden. Off-screen gaze still writes an
+            // edge-clamped position, and that used to select the edge tile.
+            guard isCursorVisible else { return }
             dwellManager.updateGazePosition(gazePosition)
         }
     }
@@ -18,7 +20,21 @@ class GazeTrackingManager: ObservableObject {
     @Published var isTracking = false
     /// Whether a face/gaze is currently detected. Independent of [isTracking].
     @Published var isFaceDetected = false
-    @Published var isCursorVisible = true
+    @Published var isCursorVisible = true {
+        didSet {
+            guard oldValue, !isCursorVisible else { return }
+            // A hidden cursor must not keep a dwell armed. Looking back at the
+            // same tile would otherwise select it on the first frame.
+            let cancel = { [weak self] in
+                self?.dwellManager.cancelDwellForTrackingLoss()
+            }
+            if Thread.isMainThread {
+                cancel()
+            } else {
+                DispatchQueue.main.async(execute: cancel)
+            }
+        }
+    }
     @Published var isGazeOutOfBounds = false
     @Published var showTrackingError = false
     @Published var calibrationProgress: Double = 0.0
@@ -83,6 +99,9 @@ class GazeTrackingManager: ObservableObject {
     private var headWasBlinking = false
     private var headBlinkStartTime: TimeInterval = 0
     private var headLastBlinkEndTime: TimeInterval = 0
+    /// Most recent face landmarks in head tracking mode, for the recenter button.
+    private var lastHeadLandmarks: [NormalizedLandmark]?
+    private var lastHeadLandmarksTime: TimeInterval = 0
 
     // Gaze offset for recentering (applied before screen mapping)
     private var gazeOffsetX: Float = 0.0
@@ -361,6 +380,8 @@ class GazeTrackingManager: ObservableObject {
         armState = ArmRaiseState(leftRaised: false, rightRaised: false)
         handState = HandGestureState(leftPose: nil, rightPose: nil)
         bodyTrackingErrorMessage = nil
+        // Stop any in-progress dwell before the cursor is forced visible again.
+        dwellManager.cancelDwellForTrackingLoss()
         isCursorVisible = true
         isGazeOutOfBounds = false
         showTrackingError = false
@@ -368,8 +389,29 @@ class GazeTrackingManager: ObservableObject {
         logger.info(message: "Gaze tracking stopped")
     }
     
-    func recenter() {
-        recenterCursor()
+    /// Recenter on where the user is looking right now. Call while tracking is
+    /// running (the main-screen recenter button), not while Settings is open.
+    /// - Returns: false when there was no recent face, or eye recenter was still
+    ///   inside the blink cooldown and did not move the cursor.
+    @discardableResult
+    func recenter() -> Bool {
+        if AppSettings.shared.selectionMode == "face" {
+            guard let landmarks = lastHeadLandmarks,
+                  CACurrentMediaTime() - lastHeadLandmarksTime < 0.5 else {
+                DebugLog.warn("Recenter skipped: no recent face", tag: "HeadTracking")
+                return false
+            }
+            headPoseTracker.recenter(landmarks: landmarks)
+            saveHeadCalibration()
+            headPoseTracker.reset()
+            return true
+        }
+        guard lastRawGazeX != nil, lastRawGazeY != nil,
+              CACurrentMediaTime() - lastLandmarkTime < 0.5 else {
+            DebugLog.warn("Recenter skipped: no recent gaze", tag: "EyeGaze")
+            return false
+        }
+        return recenterCursor()
     }
     
     private func setupBodyGestureCallbacks() {
@@ -527,6 +569,8 @@ class GazeTrackingManager: ObservableObject {
             lastValidPosition = nil
         }
         lastSuccessfulDetectionTime = now
+        lastHeadLandmarks = landmarks
+        lastHeadLandmarksTime = now
         isRecovering = false
         if AppSettings.shared.enableTrackingDiagnostics {
             diagnosticsSuccessCount += 1
@@ -576,9 +620,12 @@ class GazeTrackingManager: ObservableObject {
         if isWarmingUp {
             isCursorVisible = false
         } else {
-            gazePosition = target
+            // Hide before writing an edge-clamped point so dwell never sees it.
             isCursorVisible = !outOfBounds
-            lastValidPosition = target
+            if isCursorVisible {
+                gazePosition = target
+                lastValidPosition = target
+            }
         }
     }
 
@@ -1273,11 +1320,12 @@ class GazeTrackingManager: ObservableObject {
         headPoseTracker.reset()
     }
 
-    private func recenterCursor() {
+    @discardableResult
+    private func recenterCursor() -> Bool {
         let now = CACurrentMediaTime()
 
         if lastRecenterTime > 0, now - lastRecenterTime < blinkCooldown {
-            return
+            return false
         }
 
         if let rawX = lastRawGazeX, let rawY = lastRawGazeY {
@@ -1307,6 +1355,7 @@ class GazeTrackingManager: ObservableObject {
         }
 
         lastRecenterTime = now
+        return true
     }
 
     private func processBlinkDetection(isBlinking: Bool, now: TimeInterval) {
@@ -1336,6 +1385,12 @@ class GazeTrackingManager: ObservableObject {
 
     private func processAutoRecenter(rawX: Float, rawY: Float, now: TimeInterval) {
         guard AppSettings.shared.enableAutoRecenter && autoRecenterEnabled else { return }
+        // Don't jump the zero point while a tile is being selected.
+        guard dwellManager.hoveredButtonId == nil else {
+            isGazeCentered = false
+            gazeCenteredStartTime = 0
+            return
+        }
 
         let adjustedX = rawX - gazeOffsetX
         let adjustedY = rawY - gazeOffsetY

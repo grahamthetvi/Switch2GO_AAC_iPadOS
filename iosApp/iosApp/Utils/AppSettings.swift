@@ -432,7 +432,7 @@ class AppSettings: ObservableObject {
         self.enableOutOfBoundsHiding = defaults.object(forKey: Keys.enableOutOfBoundsHiding) as? Bool ?? true
         self.showTrackingErrorBanner = defaults.object(forKey: Keys.showTrackingErrorBanner) as? Bool ?? true
         self.enableDoubleBlinkRecenter = defaults.object(forKey: Keys.enableDoubleBlinkRecenter) as? Bool ?? true
-        self.enableAutoRecenter = defaults.object(forKey: Keys.enableAutoRecenter) as? Bool ?? true
+        self.enableAutoRecenter = defaults.object(forKey: Keys.enableAutoRecenter) as? Bool ?? false
         self.enableRepeatDwell = defaults.object(forKey: Keys.enableRepeatDwell) as? Bool ?? false
         self.repeatDwellDelay = defaults.object(forKey: Keys.repeatDwellDelay) as? Double ?? 1.0
         self.mediaPlaybackDelay = defaults.object(forKey: Keys.mediaPlaybackDelay) as? Double ?? 3.0
@@ -490,7 +490,9 @@ class AppSettings: ObservableObject {
         enableOutOfBoundsHiding = true
         showTrackingErrorBanner = true
         enableDoubleBlinkRecenter = true
-        enableAutoRecenter = true
+        // Off by default: it moved the zero point and jumped the cursor to the
+        // screen center (often the gap between tiles) during normal use.
+        enableAutoRecenter = false
         enableRepeatDwell = false
         repeatDwellDelay = 1.0
         mediaPlaybackDelay = 3.0
