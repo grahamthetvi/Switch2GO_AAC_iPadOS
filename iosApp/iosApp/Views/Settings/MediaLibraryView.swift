@@ -93,7 +93,9 @@ struct MediaLibraryView: View {
                 } else {
                     ForEach(visibleItems) { item in
                         NavigationLink {
-                            MediaLibraryDetailView(relativePath: item.relativePath)
+                            // Pass the model in. This destination's body runs while SwiftUI
+                            // resolves the navigation bar, before EnvironmentObject is installed.
+                            MediaLibraryDetailView(model: model, relativePath: item.relativePath)
                         } label: {
                             MediaLibraryRow(item: item)
                         }
@@ -124,7 +126,6 @@ struct MediaLibraryView: View {
         } message: {
             Text(model.errorMessage ?? "")
         }
-        .environmentObject(model)
         .onAppear { model.reload() }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PhrasesUpdated"))) { _ in
             model.reload()
@@ -163,7 +164,7 @@ struct MediaLibraryView: View {
 struct MediaLibraryDetailView: View {
     let relativePath: String
 
-    @EnvironmentObject private var model: MediaLibraryModel
+    @ObservedObject var model: MediaLibraryModel
     @StateObject private var settings = AppSettings.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.settingsHomeAction) private var settingsHomeAction
