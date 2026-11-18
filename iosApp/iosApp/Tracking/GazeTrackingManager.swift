@@ -25,8 +25,11 @@ class GazeTrackingManager: ObservableObject {
             guard oldValue, !isCursorVisible else { return }
             // A hidden cursor must not keep a dwell armed. Looking back at the
             // same tile would otherwise select it on the first frame.
-            let cancel = { [weak self] in
+            // Optional chaining would type this as () -> Void?, which
+            // DispatchQueue.async cannot take. The explicit return makes it Void.
+            let cancel: () -> Void = { [weak self] in
                 self?.dwellManager.cancelDwellForTrackingLoss()
+                return
             }
             if Thread.isMainThread {
                 cancel()
